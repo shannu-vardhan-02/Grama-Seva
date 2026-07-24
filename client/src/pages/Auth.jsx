@@ -443,6 +443,7 @@ export default function Auth() {
               size="large"
               text="signin_with"
               logo_alignment="left"
+              useOneTap={false}
             />
           </div>
 

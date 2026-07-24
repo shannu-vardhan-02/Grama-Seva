@@ -433,15 +433,16 @@ export default function Auth() {
             </button>
           </form>
 
-          <div style={{ marginTop: "12px" }}>
+          <div style={{ marginTop: "16px", display: "flex", justifyContent: "center" }}>
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={() => setError("Google sign-in failed.")}
-              width="100%"
-              shape="pill"
+              width="360"
+              shape="rectangular"
               theme="outline"
               size="large"
               text="signin_with"
+              logo_alignment="left"
             />
           </div>
 

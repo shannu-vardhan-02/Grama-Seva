@@ -9,6 +9,12 @@ Minimal split deployment setup.
 
 ## Run locally
 
+From the workspace root, run both apps together:
+
+```bash
+npm run app
+```
+
 ### Frontend
 
 ```bash

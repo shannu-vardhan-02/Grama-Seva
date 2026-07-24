@@ -1,0 +1,9 @@
+{
+  "name": "grama-seva",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "app": "node scripts/app.mjs"
+  }
+}

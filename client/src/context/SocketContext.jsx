@@ -80,7 +80,13 @@ export const SocketProvider = ({ children }) => {
     const token = localStorage.getItem('gs_token');
     if (!token) return;
 
-    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:3000', {
+    const API_URL =
+      import.meta.env.VITE_API_URL ||
+      (typeof window !== "undefined" && !window.location.hostname.includes("localhost")
+        ? "https://grama-seva-api.onrender.com"
+        : "http://localhost:3000");
+
+    const socket = io(API_URL, {
       auth: { token },
     });
 

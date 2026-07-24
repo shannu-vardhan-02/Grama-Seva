@@ -17,9 +17,6 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
-console.log("Client ID:", process.env.GOOGLE_CLIENT_ID);
-console.log("Secret:", process.env.GOOGLE_CLIENT_SECRET);
-
 const allowedOrigins = [
   process.env.CLIENT_URL,
   "http://localhost:5173",

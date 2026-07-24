@@ -438,7 +438,7 @@ export default function Auth() {
               onSuccess={handleGoogleSuccess}
               onError={() => setError("Google sign-in failed.")}
               width="360"
-              shape="rectangular"
+              shape="pill"
               theme="outline"
               size="large"
               text="signin_with"

@@ -122,7 +122,7 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ""}>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "268660327430-78mr3oh6eomhjtcbai9fvm35v1v5ogfq.apps.googleusercontent.com"}>
       <AuthProvider>
         <SocketProvider>
           <ToastProvider>

@@ -320,10 +320,10 @@ export default function BookService() {
   };
 
   return (
-    <div style={{ padding: "40px 24px", background: "#faf9f5", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
+    <div className="bookservice-page-padding" style={{ background: "#faf9f5", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
       
       {/* ── HEADER ── */}
-      <div style={{ maxWidth: "1200px", margin: "0 auto 32px" }}>
+      <div className="bookservice-header" style={{ maxWidth: "1200px", margin: "0 auto 32px" }}>
         <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "36px", fontWeight: 400, color: "#141413", letterSpacing: "-0.02em" }}>
           Search Local Skilled Workers
         </div>
@@ -333,12 +333,10 @@ export default function BookService() {
       </div>
 
       {/* ── SEARCH, LOCATION & SORT BY RADIUS ── */}
-      <div style={{ maxWidth: "1200px", margin: "0 auto 32px" }}>
-        <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginBottom: "20px" }}>
+      <div style={{ maxWidth: "1200px", margin: "0 auto 32px" }} className="bookservice-search-section">
+        <div className="bookservice-search-row">
           {/* Search Input */}
-          <div style={{
-            flex: 1,
-            minWidth: "280px",
+          <div className="bookservice-search-input" style={{
             display: "flex",
             alignItems: "center",
             background: "#ffffff",
@@ -364,6 +362,7 @@ export default function BookService() {
 
           {/* Sort by Radius Toggle */}
           <button
+            className="bookservice-radius-btn"
             onClick={() => {
               if (!sortByRadius && geoStatus !== "granted") {
                 handleRequestLocation();
@@ -395,6 +394,7 @@ export default function BookService() {
           </button>
           {geoStatus === "denied" && (
             <button
+              className="bookservice-loc-btn"
               onClick={handleRequestLocation}
               style={{
                 padding: "12px 16px", background: "#fff5e6", color: "#c07000",
@@ -408,7 +408,7 @@ export default function BookService() {
         </div>
 
         {/* Category Pills */}
-        <div style={{ display: "flex", gap: "10px", overflowX: "auto", paddingBottom: "8px" }}>
+        <div className="category-pills-scroll">
           {SKILL_CATEGORIES.map((cat) => {
             const active = selectedSkill === cat.id;
             return (
@@ -451,7 +451,7 @@ export default function BookService() {
             <p style={{ fontSize: "15px", color: "#6c6a64", marginTop: "6px" }}>Try clearing your search filters or choosing another skill.</p>
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "24px" }}>
+          <div className="worker-cards-grid">
             {filteredWorkers.map((worker) => {
               const prof = worker.workerProfile || {};
               const photo = prof.proofOfWork?.[0]?.url || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400";
@@ -549,15 +549,11 @@ export default function BookService() {
 
       {/* ── WORKER PROFILE POP-UP MODAL (Services, Gallery, Reviews Tabs) ── */}
       {activeModalWorker && (
-        <div style={{
+        <div className="worker-modal-backdrop" style={{
           position: "fixed", inset: 0, background: "rgba(24,23,21,0.65)", backdropFilter: "blur(6px)",
           display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px"
         }}>
-          <div style={{
-            background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "20px",
-            maxWidth: "560px", width: "100%", maxHeight: "90vh", overflowY: "auto", padding: "32px", position: "relative",
-            boxShadow: "0 20px 40px rgba(0,0,0,0.2)"
-          }}>
+          <div className="worker-modal-container">
             {/* Close Button */}
             <button
               onClick={() => setActiveModalWorker(null)}
@@ -572,12 +568,13 @@ export default function BookService() {
             {/* Header Info */}
             <div style={{ display: "flex", gap: "20px", alignItems: "flex-start", marginBottom: "20px" }}>
               <img
+                className="worker-modal-header-img"
                 src={activeModalWorker.workerProfile?.proofOfWork?.[0]?.url || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400"}
                 alt={activeModalWorker.name}
                 style={{ width: "88px", height: "88px", borderRadius: "16px", objectFit: "cover", border: "2px solid #cc785c", flexShrink: 0 }}
               />
               <div>
-                <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "24px", fontWeight: 600, color: "#141413", margin: 0 }}>
+                <h2 className="worker-modal-name" style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "24px", fontWeight: 600, color: "#141413", margin: 0 }}>
                   {activeModalWorker.name}
                 </h2>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "4px" }}>

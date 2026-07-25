@@ -27,14 +27,14 @@ export default function VettingQueue() {
   const rejected = workers.filter((w) => !w.workerProfile?.isVerified && w.workerProfile?.proofOfWork?.every((p) => p.status === "Rejected"));
 
   return (
-    <div style={T.page}>
+    <div className="vetting-page-padding" style={{ background: "#f5f5f7", minHeight: "100vh", fontFamily: "SF Pro Text, system-ui, -apple-system, Inter, sans-serif" }}>
       <div style={{ marginBottom: "32px" }}>
         <div style={T.h1}>Vetting Queue</div>
         <div style={{ ...T.muted, marginTop: "6px" }}>Review and approve worker profile submissions.</div>
       </div>
 
       {/* Summary row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "28px" }}>
+      <div className="admin-stats-grid" style={{ marginBottom: "28px" }}>
         {[
           { label: "Pending Review", num: pending.length,  color: "#c07000" },
           { label: "Verified",       num: verified.length, color: "#248a3d" },

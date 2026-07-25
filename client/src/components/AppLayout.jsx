@@ -16,21 +16,46 @@ import {
   X,
   Menu,
   Landmark,
+  Home,
+  Search,
+  User,
 } from "lucide-react";
 
 const NAV = [
-  { to: "/dashboard",    label: "Dashboard",       icon: LayoutDashboard },
-  { to: "/book-service", label: "Search Workers",  icon: Wrench },
-  { to: "/reviews",      label: "Reviews",         icon: MessageSquare },
-  { to: "/vetting-queue",label: "Vetting Queue",   icon: ShieldAlert },
-  { to: "/users",        label: "Manage Users",    icon: Users },
-  { to: "/settings",     label: "Settings",        icon: Settings },
+  { to: "/dashboard",    label: "Dashboard",      icon: LayoutDashboard },
+  { to: "/book-service", label: "Search Workers", icon: Wrench },
+  { to: "/reviews",      label: "Reviews",        icon: MessageSquare },
+  { to: "/vetting-queue",label: "Vetting Queue",  icon: ShieldAlert },
+  { to: "/users",        label: "Manage Users",   icon: Users },
+  { to: "/settings",     label: "Settings",       icon: Settings },
 ];
 
 const ROLE_ACCESS = {
   Customer: ["/dashboard", "/book-service", "/reviews", "/settings"],
   Worker:   ["/dashboard", "/reviews", "/settings"],
   Admin:    ["/dashboard", "/vetting-queue", "/users", "/settings"],
+};
+
+// Bottom nav tabs per role (mobile only)
+const BOTTOM_NAV = {
+  Customer: [
+    { to: "/",            label: "Home",     icon: Home },
+    { to: "/book-service",label: "Search",   icon: Search },
+    { to: "/dashboard",   label: "Dashboard",icon: LayoutDashboard },
+    { to: "/settings",    label: "Profile",  icon: User },
+  ],
+  Worker: [
+    { to: "/",            label: "Home",     icon: Home },
+    { to: "/dashboard",   label: "Dashboard",icon: LayoutDashboard },
+    { to: "/reviews",     label: "Reviews",  icon: MessageSquare },
+    { to: "/settings",    label: "Profile",  icon: User },
+  ],
+  Admin: [
+    { to: "/dashboard",      label: "Panel",    icon: LayoutDashboard },
+    { to: "/vetting-queue",  label: "Vetting",  icon: ShieldAlert },
+    { to: "/users",          label: "Users",    icon: Users },
+    { to: "/settings",       label: "Settings", icon: Settings },
+  ],
 };
 
 export default function AppLayout({ children }) {
@@ -46,6 +71,16 @@ export default function AppLayout({ children }) {
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
+
+  // Body scroll lock when drawer is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.classList.add("drawer-open");
+    } else {
+      document.body.classList.remove("drawer-open");
+    }
+    return () => document.body.classList.remove("drawer-open");
+  }, [mobileMenuOpen]);
 
   if (!currentUser) return <>{children}</>;
 
@@ -63,6 +98,7 @@ export default function AppLayout({ children }) {
   const unread    = userNotifs.filter((n) => !n.isRead).length;
   const allowed   = ROLE_ACCESS[currentUser.role] || [];
   const visibleNav = NAV.filter((item) => allowed.includes(item.to));
+  const bottomNavItems = BOTTOM_NAV[currentUser.role] || BOTTOM_NAV.Admin;
 
   const initials = (currentUser.name || "U")
     .split(" ")
@@ -76,15 +112,11 @@ export default function AppLayout({ children }) {
   return (
     <div className="app-layout" style={{ display: "flex", minHeight: "100vh", background: "#faf9f5", fontFamily: "'Inter', sans-serif" }}>
 
-      {/* ── Mobile overlay ── */}
+      {/* ── Mobile overlay backdrop ── */}
       {mobileMenuOpen && (
         <div
           className="mobile-overlay"
           onClick={() => setMobileMenuOpen(false)}
-          style={{
-            position: "fixed", inset: 0, background: "rgba(20,20,19,0.5)",
-            zIndex: 49, display: "none",
-          }}
         />
       )}
 
@@ -106,6 +138,28 @@ export default function AppLayout({ children }) {
           zIndex: 50,
         }}
       >
+        {/* Mobile close button inside drawer */}
+        <button
+          onClick={() => setMobileMenuOpen(false)}
+          className="hamburger-btn"
+          style={{
+            position: "absolute",
+            top: "16px",
+            right: "12px",
+            background: "rgba(255,255,255,0.08)",
+            border: "none",
+            cursor: "pointer",
+            color: "#a09d96",
+            borderRadius: "8px",
+            padding: "6px",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          aria-label="Close menu"
+        >
+          <X size={18} />
+        </button>
+
         {/* Brand */}
         <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid #252320" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -143,13 +197,15 @@ export default function AppLayout({ children }) {
             <NavLink
               key={item.to}
               to={item.to}
+              onClick={() => setMobileMenuOpen(false)}
               style={({ isActive }) => ({
                 display: "flex", alignItems: "center", gap: "10px",
-                padding: "10px 12px", borderRadius: "8px",
+                padding: "11px 12px", borderRadius: "8px",
                 fontSize: "14px", fontWeight: isActive ? 600 : 400,
                 color: isActive ? "#ffffff" : "rgba(255,255,255,0.55)",
                 background: isActive ? "rgba(255,255,255,0.10)" : "transparent",
                 textDecoration: "none", transition: "all 0.15s", letterSpacing: "-0.01em",
+                minHeight: "44px",
               })}
               onMouseEnter={(e) => {
                 if (!e.currentTarget.getAttribute("aria-current")) {
@@ -208,7 +264,7 @@ export default function AppLayout({ children }) {
       {/* ── RIGHT CONTENT AREA ── */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
 
-        {/* ── SUB-NAV frosted parchment ── */}
+        {/* ── TOP HEADER ── */}
         <header className="top-header" style={{
           height: "52px", display: "flex", alignItems: "center",
           justifyContent: "space-between", padding: "0 24px",
@@ -217,15 +273,18 @@ export default function AppLayout({ children }) {
           borderBottom: "1px solid rgba(0,0,0,0.08)", position: "sticky", top: 0, zIndex: 40,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            {/* Hamburger — CSS controls display (flex on mobile, none on desktop) */}
             <button
               className="hamburger-btn"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               style={{
                 background: "none", border: "none", cursor: "pointer", color: "#141413",
-                display: "none", alignItems: "center", padding: "4px",
+                alignItems: "center", padding: "4px", borderRadius: "6px",
               }}
+              aria-label="Open menu"
+              aria-expanded={mobileMenuOpen}
             >
-              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+              <Menu size={22} />
             </button>
             <span style={{
               fontFamily: "'Playfair Display', Georgia, serif", fontSize: "18px",
@@ -248,6 +307,7 @@ export default function AppLayout({ children }) {
                   border: "1px solid rgba(0,0,0,0.08)", borderRadius: "50%",
                   cursor: "pointer", color: "#1d1d1f", transition: "background 0.15s", position: "relative",
                 }}
+                aria-label="Notifications"
               >
                 <Bell size={15} />
                 {unread > 0 && (
@@ -272,7 +332,11 @@ export default function AppLayout({ children }) {
                     padding: "14px 18px", borderBottom: "1px solid #e6dfd8",
                   }}>
                     <span style={{ fontSize: "14px", fontWeight: 600, color: "#141413" }}>Notifications</span>
-                    <button onClick={() => setShowNotif(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#8e8b82", display: "flex" }}>
+                    <button
+                      onClick={() => setShowNotif(false)}
+                      className="no-min-height"
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "#8e8b82", display: "flex" }}
+                    >
                       <X size={14} />
                     </button>
                   </div>
@@ -298,7 +362,7 @@ export default function AppLayout({ children }) {
               )}
             </div>
 
-            {/* Sign out button */}
+            {/* Sign out button — hidden on mobile via .signout-btn CSS */}
             <button
               className="signout-btn"
               onClick={handleLogout}
@@ -318,10 +382,30 @@ export default function AppLayout({ children }) {
         </header>
 
         {/* ── Main content ── */}
-        <main style={{ flex: 1, overflowY: "auto" }}>
+        <main className="app-main-content" style={{ flex: 1, overflowY: "auto" }}>
           {children}
         </main>
       </div>
+
+      {/* ── BOTTOM NAVIGATION — Mobile only (CSS hides on desktop) ── */}
+      <nav className="bottom-nav" aria-label="Mobile navigation">
+        {bottomNavItems.map((item) => {
+          const isActive = location.pathname === item.to ||
+            (item.to !== "/" && location.pathname.startsWith(item.to));
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={`bottom-nav-item no-min-height ${isActive ? "active" : ""}`}
+              aria-label={item.label}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <item.icon size={20} />
+              <span>{item.label}</span>
+            </NavLink>
+          );
+        })}
+      </nav>
     </div>
   );
 }

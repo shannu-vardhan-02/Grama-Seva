@@ -77,7 +77,7 @@ export default function ManageUsers() {
   const tdStyle = { padding: "14px 20px", fontSize: "14px", color: "#1d1d1f", letterSpacing: "-0.013em", borderBottom: "1px solid #f0f0f0" };
 
   return (
-    <div style={T.page}>
+    <div className="manage-users-page" style={{ background: "#f5f5f7", minHeight: "100vh", fontFamily: "SF Pro Text, system-ui, -apple-system, Inter, sans-serif" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "28px" }}>
         <div>
           <div style={T.h1}>Member Registry</div>
@@ -103,7 +103,8 @@ export default function ManageUsers() {
 
 
       <div style={T.card}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        {/* Desktop Table */}
+        <table className="users-table" style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>
               <th style={thStyle}>Name</th>
@@ -159,6 +160,49 @@ export default function ManageUsers() {
             ))}
           </tbody>
         </table>
+
+        {/* Mobile Card List — CSS shows this only on mobile */}
+        <div className="users-card-list" style={{ padding: "16px", gap: "14px" }}>
+          {users.map((u) => (
+            <div key={u.id} className="user-mobile-card">
+              <div className="user-mobile-card-row">
+                <div>
+                  <div style={{ fontSize: "15px", fontWeight: 600, color: "#1d1d1f" }}>{u.name}</div>
+                  <div style={{ fontSize: "13px", color: "#7a7a7a", marginTop: "2px" }}>{u.email}</div>
+                </div>
+                <span style={T.chip(u.role === "Admin" ? "admin" : u.role === "Worker" ? "worker" : "blue")}>
+                  {u.role}
+                </span>
+              </div>
+              <div className="user-mobile-card-row" style={{ marginTop: "4px" }}>
+                <div style={{ fontSize: "13px", color: "#7a7a7a", textTransform: "capitalize" }}>
+                  {u.role === "Worker" && u.workerProfile
+                    ? `${u.workerProfile.skill} · ${u.workerProfile.experience} yrs`
+                    : u.role}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  {u.role === "Worker" && u.workerProfile && (
+                    <span style={T.chip(u.workerProfile.isVerified ? "green" : "worker")}>
+                      {u.workerProfile.isVerified ? "Verified" : "Pending"}
+                    </span>
+                  )}
+                  <button
+                    onClick={() => confirmDelete(u.id || u._id)}
+                    disabled={(u.id || u._id) === (currentUser.id || currentUser._id)}
+                    style={{
+                      background: "none", border: "none",
+                      cursor: (u.id || u._id) === (currentUser.id || currentUser._id) ? "not-allowed" : "pointer",
+                      color: (u.id || u._id) === (currentUser.id || currentUser._id) ? "#e6dfd8" : "#c64545",
+                      padding: "6px", borderRadius: "6px", display: "inline-flex", alignItems: "center",
+                    }}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* ── DELETE CONFIRMATION MODAL ── */}

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useSocket, getDistance } from "../context/SocketContext";
+import { useSocket } from "../context/SocketContext";
 import { Search, Phone, Star, MapPin, Award, CheckCircle, ShieldAlert, Check, X, Copy, Filter, Navigation, Edit3, ArrowRight, Briefcase, Users, ClipboardList } from "lucide-react";
 
 export default function Dashboard() {
@@ -18,7 +18,7 @@ export default function Dashboard() {
 }
 
 /* ─────────────────────────────────────────────────────────
-   CUSTOMER DASHBOARD — Quick Stats, Recent Bookings, Quick Links
+   CUSTOMER DASHBOARD
 ───────────────────────────────────────────────────────── */
 function CustomerSearchDashboard({ user, users }) {
   const { bookings } = useSocket();
@@ -32,11 +32,11 @@ function CustomerSearchDashboard({ user, users }) {
   const verifiedWorkers = users.filter(u => u.role === 'Worker' && u.workerProfile?.isVerified);
 
   return (
-    <div style={{ padding: "40px 24px", background: "#faf9f5", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
+    <div className="dashboard-page-padding" style={{ background: "#faf9f5", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
       <div style={{ maxWidth: "900px", margin: "0 auto" }}>
 
         {/* Welcome Header */}
-        <div style={{ marginBottom: "36px" }}>
+        <div className="dashboard-header" style={{ marginBottom: "36px" }}>
           <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "36px", fontWeight: 400, color: "#141413", letterSpacing: "-0.02em" }}>
             Welcome back, {user.name?.split(" ")[0] || "Customer"}
           </h1>
@@ -46,22 +46,22 @@ function CustomerSearchDashboard({ user, users }) {
         </div>
 
         {/* Stats Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "16px", marginBottom: "32px" }}>
-          <div style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "14px", padding: "20px 24px" }}>
+        <div className="dashboard-stats-grid" style={{ marginBottom: "32px" }}>
+          <div className="dashboard-stat-card" style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "14px", padding: "20px 24px" }}>
             <div style={{ fontSize: "12px", fontWeight: 600, color: "#8e8b82", textTransform: "uppercase", letterSpacing: "0.04em" }}>Active Requests</div>
-            <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", fontSize: "32px", fontWeight: 700, color: "#cc785c", marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>{activeBookings.length}</div>
+            <div className="dashboard-stat-number" style={{ fontFamily: "'Inter', -apple-system, sans-serif", fontSize: "32px", fontWeight: 700, color: "#cc785c", marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>{activeBookings.length}</div>
           </div>
-          <div style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "14px", padding: "20px 24px" }}>
+          <div className="dashboard-stat-card" style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "14px", padding: "20px 24px" }}>
             <div style={{ fontSize: "12px", fontWeight: 600, color: "#8e8b82", textTransform: "uppercase", letterSpacing: "0.04em" }}>Completed Jobs</div>
-            <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", fontSize: "32px", fontWeight: 700, color: "#5db872", marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>{completedBookings.length}</div>
+            <div className="dashboard-stat-number" style={{ fontFamily: "'Inter', -apple-system, sans-serif", fontSize: "32px", fontWeight: 700, color: "#5db872", marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>{completedBookings.length}</div>
           </div>
-          <div style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "14px", padding: "20px 24px" }}>
+          <div className="dashboard-stat-card" style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "14px", padding: "20px 24px" }}>
             <div style={{ fontSize: "12px", fontWeight: 600, color: "#8e8b82", textTransform: "uppercase", letterSpacing: "0.04em" }}>Available Workers</div>
-            <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", fontSize: "32px", fontWeight: 700, color: "#141413", marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>{verifiedWorkers.length}</div>
+            <div className="dashboard-stat-number" style={{ fontFamily: "'Inter', -apple-system, sans-serif", fontSize: "32px", fontWeight: 700, color: "#141413", marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>{verifiedWorkers.length}</div>
           </div>
         </div>
 
-        {/* Quick Action — Find Workers */}
+        {/* Quick Action Banner */}
         <a
           href="/book-service"
           style={{
@@ -77,7 +77,7 @@ function CustomerSearchDashboard({ user, users }) {
             <div style={{ fontSize: "20px", fontWeight: 600, marginBottom: "4px" }}>🔍 Find Skilled Workers</div>
             <div style={{ fontSize: "14px", opacity: 0.85 }}>Browse verified workers, view profiles, and contact them directly</div>
           </div>
-          <ArrowRight size={24} />
+          <ArrowRight size={24} style={{ flexShrink: 0 }} />
         </a>
 
         {/* Recent Activity */}
@@ -96,19 +96,16 @@ function CustomerSearchDashboard({ user, users }) {
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {myBookings.slice(0, 8).map(booking => {
                 const statusColors = {
-                  Requested: { bg: "rgba(0,102,204,0.10)", color: "#0066cc" },
-                  Accepted: { bg: "rgba(52,199,89,0.12)", color: "#248a3d" },
-                  "In Progress": { bg: "rgba(255,149,0,0.12)", color: "#c07000" },
-                  Completed: { bg: "rgba(52,199,89,0.12)", color: "#248a3d" },
-                  Cancelled: { bg: "rgba(255,59,48,0.10)", color: "#c0392b" },
+                  Requested:    { bg: "rgba(0,102,204,0.10)",   color: "#0066cc" },
+                  Accepted:     { bg: "rgba(52,199,89,0.12)",   color: "#248a3d" },
+                  "In Progress":{ bg: "rgba(255,149,0,0.12)",   color: "#c07000" },
+                  Completed:    { bg: "rgba(52,199,89,0.12)",   color: "#248a3d" },
+                  Cancelled:    { bg: "rgba(255,59,48,0.10)",   color: "#c0392b" },
                 };
                 const sc = statusColors[booking.status] || statusColors.Requested;
 
                 return (
-                  <div key={booking._id || booking.id} style={{
-                    display: "flex", justifyContent: "space-between", alignItems: "center",
-                    padding: "14px 18px", background: "#faf9f5", border: "1px solid #e6dfd8", borderRadius: "10px",
-                  }}>
+                  <div key={booking._id || booking.id} className="booking-row">
                     <div>
                       <div style={{ fontSize: "14px", fontWeight: 600, color: "#141413", textTransform: "capitalize" }}>
                         {booking.serviceCategory} — {booking.description?.slice(0, 50) || "Service request"}
@@ -119,10 +116,10 @@ function CustomerSearchDashboard({ user, users }) {
                         {new Date(booking.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                       </div>
                     </div>
-                    <span style={{
+                    <span className="booking-row-badge" style={{
                       display: "inline-flex", padding: "4px 12px", borderRadius: "9999px",
                       fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.02em",
-                      background: sc.bg, color: sc.color
+                      background: sc.bg, color: sc.color, whiteSpace: "nowrap",
                     }}>
                       {booking.status}
                     </span>
@@ -144,11 +141,12 @@ function WorkerView({ user }) {
   const profile = user.workerProfile || {};
 
   return (
-    <div style={{ padding: "40px 24px", background: "#faf9f5", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
+    <div className="dashboard-page-padding" style={{ background: "#faf9f5", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
       <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-        <div style={{ marginBottom: "32px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        {/* Header — stacks nicely since it uses flex with wrap */}
+        <div style={{ marginBottom: "32px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px" }}>
           <div>
-            <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "36px", fontWeight: 400, color: "#141413" }}>
+            <h1 className="dashboard-header" style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "36px", fontWeight: 400, color: "#141413" }}>
               Worker Profile Console
             </h1>
             <p style={{ fontSize: "15px", color: "#6c6a64", marginTop: "6px" }}>
@@ -161,8 +159,9 @@ function WorkerView({ user }) {
             background: profile.isVerified ? "#eaf6ee" : "#fff5e6",
             color: profile.isVerified ? "#248a3d" : "#c07000",
             border: profile.isVerified ? "1px solid #c2e9cb" : "1px solid #fce3b8",
+            whiteSpace: "nowrap",
           }}>
-            {profile.isVerified ? "✔ Approved & Active" : "⏳ Pending Administrator Approval"}
+            {profile.isVerified ? "✔ Approved & Active" : "⏳ Pending Approval"}
           </span>
         </div>
 
@@ -191,7 +190,8 @@ function WorkerView({ user }) {
         <div style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "16px", padding: "32px", boxShadow: "0 2px 12px rgba(20,20,19,0.03)" }}>
           <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "22px", color: "#141413", marginBottom: "20px" }}>Your Registered Details</h3>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "20px" }}>
+          {/* Details grid — collapses on mobile via dashboard-stats-grid (reuse same 2-col on mobile) */}
+          <div className="dashboard-stats-grid" style={{ marginBottom: "20px" }}>
             <div>
               <div style={{ fontSize: "12px", fontWeight: 600, color: "#8e8b82", textTransform: "uppercase" }}>Full Name</div>
               <div style={{ fontSize: "16px", fontWeight: 600, color: "#141413", marginTop: "4px" }}>{user.name}</div>
@@ -236,10 +236,10 @@ function AdminView({ users, verifyWorker }) {
   const pending = workers.filter((w) => !w.workerProfile?.isVerified);
 
   return (
-    <div style={{ padding: "40px 24px", background: "#faf9f5", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
+    <div className="dashboard-page-padding" style={{ background: "#faf9f5", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
       <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
         <div style={{ marginBottom: "32px" }}>
-          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "36px", fontWeight: 400, color: "#141413" }}>
+          <h1 className="dashboard-header" style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "36px", fontWeight: 400, color: "#141413" }}>
             Administrator Panel
           </h1>
           <p style={{ fontSize: "15px", color: "#6c6a64", marginTop: "6px" }}>
@@ -247,19 +247,19 @@ function AdminView({ users, verifyWorker }) {
           </p>
         </div>
 
-        {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px", marginBottom: "32px" }}>
-          <div style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "14px", padding: "20px 24px" }}>
+        {/* Stats — 3 col desktop, 2 col sm, 1 col xs */}
+        <div className="admin-stats-grid" style={{ marginBottom: "32px" }}>
+          <div className="dashboard-stat-card" style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "14px", padding: "20px 24px" }}>
             <div style={{ fontSize: "12px", fontWeight: 600, color: "#8e8b82", textTransform: "uppercase" }}>Total Members</div>
-            <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", fontSize: "32px", fontWeight: 700, color: "#141413", marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>{users.length}</div>
+            <div className="dashboard-stat-number" style={{ fontFamily: "'Inter', -apple-system, sans-serif", fontSize: "32px", fontWeight: 700, color: "#141413", marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>{users.length}</div>
           </div>
-          <div style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "14px", padding: "20px 24px" }}>
+          <div className="dashboard-stat-card" style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "14px", padding: "20px 24px" }}>
             <div style={{ fontSize: "12px", fontWeight: 600, color: "#8e8b82", textTransform: "uppercase" }}>Approved Workers</div>
-            <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", fontSize: "32px", fontWeight: 700, color: "#5db872", marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>{verified}</div>
+            <div className="dashboard-stat-number" style={{ fontFamily: "'Inter', -apple-system, sans-serif", fontSize: "32px", fontWeight: 700, color: "#5db872", marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>{verified}</div>
           </div>
-          <div style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "14px", padding: "20px 24px" }}>
+          <div className="dashboard-stat-card" style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "14px", padding: "20px 24px" }}>
             <div style={{ fontSize: "12px", fontWeight: 600, color: "#8e8b82", textTransform: "uppercase" }}>Pending Approval</div>
-            <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", fontSize: "32px", fontWeight: 700, color: "#cc785c", marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>{pending.length}</div>
+            <div className="dashboard-stat-number" style={{ fontFamily: "'Inter', -apple-system, sans-serif", fontSize: "32px", fontWeight: 700, color: "#cc785c", marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>{pending.length}</div>
           </div>
         </div>
 
@@ -284,53 +284,56 @@ function AdminView({ users, verifyWorker }) {
                 return (
                   <div key={w.id || w._id} style={{
                     padding: "24px", background: "#faf9f5", border: "1px solid #e6dfd8", borderRadius: "14px",
-                    display: "flex", justifyContent: "space-between", gap: "20px", alignItems: "flex-start",
                   }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                        <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "20px", fontWeight: 600, color: "#141413", margin: 0 }}>
-                          {w.name}
-                        </h3>
-                        <span style={{ padding: "3px 10px", borderRadius: "9999px", background: "#efe9de", color: "#cc785c", fontSize: "12px", fontWeight: 600, textTransform: "capitalize" }}>
-                          {prof.skills?.join(", ") || prof.skill || "Worker"}
-                        </span>
-                      </div>
-
-                      <div style={{ fontSize: "14px", color: "#6c6a64", marginBottom: "6px" }}>
-                        📞 <strong>Phone:</strong> {w.phone || "N/A"} · 📍 <strong>Village:</strong> {prof.address || "Shamshabad"} · 🏆 <strong>Experience:</strong> {prof.experience || 0} yrs
-                      </div>
-
-                      {prof.bio && <div style={{ fontSize: "14px", color: "#3d3d3a", fontStyle: "italic", marginBottom: "12px" }}>"{prof.bio}"</div>}
-
-                      {photo && (
-                        <div>
-                          <div style={{ fontSize: "11px", fontWeight: 600, color: "#8e8b82", textTransform: "uppercase", marginBottom: "6px" }}>Submitted Proof Photo</div>
-                          <img src={photo} alt="Proof of work" style={{ width: "160px", height: "100px", objectFit: "cover", borderRadius: "8px", border: "1px solid #e6dfd8" }} />
+                    {/* admin-worker-card: flex row on desktop, flex column on mobile */}
+                    <div className="admin-worker-card">
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px", flexWrap: "wrap" }}>
+                          <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "20px", fontWeight: 600, color: "#141413", margin: 0 }}>
+                            {w.name}
+                          </h3>
+                          <span style={{ padding: "3px 10px", borderRadius: "9999px", background: "#efe9de", color: "#cc785c", fontSize: "12px", fontWeight: 600, textTransform: "capitalize" }}>
+                            {prof.skills?.join(", ") || prof.skill || "Worker"}
+                          </span>
                         </div>
-                      )}
-                    </div>
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: "10px", flexShrink: 0 }}>
-                      <button
-                        onClick={() => verifyWorker(w.id || w._id, "Approved")}
-                        style={{
-                          padding: "10px 20px", background: "#5db872", color: "#ffffff", border: "none",
-                          borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer",
-                          display: "flex", alignItems: "center", gap: "6px",
-                        }}
-                      >
-                        <Check size={16} /> Approve Worker
-                      </button>
-                      <button
-                        onClick={() => verifyWorker(w.id || w._id, "Rejected")}
-                        style={{
-                          padding: "10px 20px", background: "#ffffff", color: "#c64545", border: "1px solid #c64545",
-                          borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer",
-                          display: "flex", alignItems: "center", gap: "6px",
-                        }}
-                      >
-                        <X size={16} /> Reject
-                      </button>
+                        <div style={{ fontSize: "14px", color: "#6c6a64", marginBottom: "6px" }}>
+                          📞 <strong>Phone:</strong> {w.phone || "N/A"} · 📍 <strong>Village:</strong> {prof.address || "Shamshabad"} · 🏆 <strong>Experience:</strong> {prof.experience || 0} yrs
+                        </div>
+
+                        {prof.bio && <div style={{ fontSize: "14px", color: "#3d3d3a", fontStyle: "italic", marginBottom: "12px" }}>"{prof.bio}"</div>}
+
+                        {photo && (
+                          <div>
+                            <div style={{ fontSize: "11px", fontWeight: 600, color: "#8e8b82", textTransform: "uppercase", marginBottom: "6px" }}>Submitted Proof Photo</div>
+                            <img src={photo} alt="Proof of work" style={{ width: "160px", height: "100px", objectFit: "cover", borderRadius: "8px", border: "1px solid #e6dfd8" }} />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Approve/Reject buttons — stacks to row on mobile */}
+                      <div className="admin-worker-actions">
+                        <button
+                          onClick={() => verifyWorker(w.id || w._id, "Approved")}
+                          style={{
+                            padding: "10px 20px", background: "#5db872", color: "#ffffff", border: "none",
+                            borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer",
+                            display: "flex", alignItems: "center", gap: "6px", minHeight: "44px",
+                          }}
+                        >
+                          <Check size={16} /> Approve Worker
+                        </button>
+                        <button
+                          onClick={() => verifyWorker(w.id || w._id, "Rejected")}
+                          style={{
+                            padding: "10px 20px", background: "#ffffff", color: "#c64545", border: "1px solid #c64545",
+                            borderRadius: "8px", fontSize: "14px", fontWeight: 600, cursor: "pointer",
+                            display: "flex", alignItems: "center", gap: "6px", minHeight: "44px",
+                          }}
+                        >
+                          <X size={16} /> Reject
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );

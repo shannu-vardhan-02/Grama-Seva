@@ -125,9 +125,9 @@ export default function Settings() {
   };
 
   return (
-    <div style={{ padding: "40px 24px", background: "#faf9f5", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
+    <div className="settings-page-padding" style={{ background: "#faf9f5", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
       <div style={{ maxWidth: "680px", margin: "0 auto" }}>
-        <div style={{ marginBottom: "32px" }}>
+        <div className="settings-header" style={{ marginBottom: "32px" }}>
           <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "32px", fontWeight: 400, color: "#141413" }}>
             Account Settings
           </h1>
@@ -177,7 +177,7 @@ export default function Settings() {
             </h2>
 
             <form onSubmit={handleSave}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }} className="settings-form-grid">
+              <div className="settings-two-col" style={{ marginBottom: "16px" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#141413", marginBottom: "6px" }}>Full Name</label>
                   <input type="text" required value={name} onChange={(e) => setName(e.target.value)}
@@ -295,7 +295,7 @@ export default function Settings() {
                       </div>
                     ))}
 
-                    <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+                    <div className="settings-service-row" style={{ marginTop: "12px" }}>
                       <input type="text" placeholder="Service Name (e.g. Fan Fitting)" value={newServiceName} onChange={(e) => setNewServiceName(e.target.value)}
                         style={{ flex: 1, padding: "8px 12px", background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "6px", fontSize: "14px", outline: "none" }}
                       />

@@ -1,4 +1,25 @@
+# Dependencies
 node_modules
+**/node_modules
+
+# Build output
 dist
+**/dist
+
+# Environment files — NEVER commit real .env files
 .env
+**/.env
+
+# macOS
 .DS_Store
+
+# Editor directories
+.vscode
+.idea
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+Thumbs.db

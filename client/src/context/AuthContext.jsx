@@ -18,7 +18,6 @@ export const AuthProvider = ({ children }) => {
           setCurrentUser(res.data);
         } catch {
           localStorage.removeItem('gs_token');
-          localStorage.removeItem('gs_current_user');
         }
       }
       setLoading(false);
@@ -45,7 +44,6 @@ export const AuthProvider = ({ children }) => {
     const res = await api.post('/api/auth/login', { email, password });
     const { token, user } = res.data;
     localStorage.setItem('gs_token', token);
-    localStorage.setItem('gs_current_user', JSON.stringify(user));
     setCurrentUser(user);
     return user;
   };
@@ -55,7 +53,6 @@ export const AuthProvider = ({ children }) => {
     const res = await api.post('/api/auth/google', { credential });
     const { token, user } = res.data;
     localStorage.setItem('gs_token', token);
-    localStorage.setItem('gs_current_user', JSON.stringify(user));
     setCurrentUser(user);
     return user;
   };
@@ -69,14 +66,12 @@ export const AuthProvider = ({ children }) => {
     const res = await api.post('/api/auth/register', body);
     const { token, user } = res.data;
     localStorage.setItem('gs_token', token);
-    localStorage.setItem('gs_current_user', JSON.stringify(user));
     setCurrentUser(user);
     return user;
   };
 
   const logout = () => {
     localStorage.removeItem('gs_token');
-    localStorage.removeItem('gs_current_user');
     setCurrentUser(null);
     setUsers([]);
   };

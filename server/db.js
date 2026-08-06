@@ -306,13 +306,36 @@ const SEED_WORKERS = [
 
 export const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI);
+    // Read seed passwords from env vars — NEVER hardcode credentials
+    const adminSeedPassword = process.env.ADMIN_SEED_PASSWORD;
+    const workerSeedPassword = process.env.WORKER_SEED_PASSWORD;
+
+    if (!adminSeedPassword || adminSeedPassword.length < 8) {
+      console.warn(
+        '[SECURITY WARNING] ADMIN_SEED_PASSWORD is not set or too short. ' +
+        'Set a strong password (min 8 chars) in your .env file before deploying!'
+      );
+    }
+    if (!workerSeedPassword || workerSeedPassword.length < 8) {
+      console.warn(
+        '[SECURITY WARNING] WORKER_SEED_PASSWORD is not set or too short. ' +
+        'Set a strong password (min 8 chars) in your .env file before deploying!'
+      );
+    }
+
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,  // Fail fast if DB is unreachable
+      socketTimeoutMS: 45000,
+      maxPoolSize: 10,
+      minPoolSize: 2,
+    });
     console.log(`MongoDB Connected: ${conn.connection.host}`);
 
     // Seed default Admin if none exists
     const adminExists = await User.findOne({ role: 'Admin' });
     if (!adminExists) {
-      const defaultPasswordHash = await bcrypt.hash('admin123', 10);
+      const safeAdminPassword = adminSeedPassword || 'ChangeMe!2024#Admin';
+      const defaultPasswordHash = await bcrypt.hash(safeAdminPassword, 12);
       await User.create({
         name: 'Grama Seva Administrator',
         email: 'admin@gramaseva.com',
@@ -321,19 +344,24 @@ export const connectDB = async () => {
         phone: '+91 90000 00000',
         authProvider: 'local',
       });
-      console.log('Seeded default Admin: admin@gramaseva.com / admin123');
+      console.log('Seeded default Admin: admin@gramaseva.com');
+      // Password logged only in dev
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`Admin password: ${safeAdminPassword}`);
+      }
     }
 
     // Seed workers if count is low
     const workerCount = await User.countDocuments({ role: 'Worker' });
     if (workerCount < 5) {
       console.log('Seeding initial Andhra village workers...');
-      const defaultWorkerHash = await bcrypt.hash('worker123', 10);
+      const safeWorkerPassword = workerSeedPassword || 'ChangeMe!2024#Worker';
+      const defaultWorkerHash = await bcrypt.hash(safeWorkerPassword, 12);
       const docsToInsert = SEED_WORKERS.map(w => ({
         ...w,
         passwordHash: defaultWorkerHash
       }));
-      await User.insertMany(docsToInsert);
+      await User.insertMany(docsToInsert, { ordered: false });
       console.log(`Successfully seeded ${SEED_WORKERS.length} Andhra village workers.`);
     }
   } catch (error) {

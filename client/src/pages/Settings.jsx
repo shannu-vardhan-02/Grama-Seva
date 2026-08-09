@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
-import { Power, Upload, Plus, Trash2, MapPin, Crosshair } from "lucide-react";
+import { Power, Plus, Trash2, MapPin, Crosshair } from "lucide-react";
+import ImageUpload from "../components/ImageUpload";
 
 export default function Settings() {
   const { currentUser, updateWorkerProfile } = useAuth();
@@ -22,13 +23,13 @@ export default function Settings() {
   const [gallery, setGallery] = useState(currentUser?.workerProfile?.gallery || [
     "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=400"
   ]);
-  const [newGalleryUrl, setNewGalleryUrl] = useState("");
+
   const [locationCoords, setLocationCoords] = useState(
     currentUser?.workerProfile?.location?.coordinates || [0, 0]
   );
   const [geoLoading, setGeoLoading] = useState(false);
 
-  const [powFiles, setPowFiles] = useState([]);
+  const [powUrls, setPowUrls] = useState([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -43,13 +44,6 @@ export default function Settings() {
     } catch { showToast("Failed to update status.", "error"); }
   };
 
-  const handleFileChange = (e) => {
-    Array.from(e.target.files).forEach((f) => {
-      const r = new FileReader();
-      r.onloadend = () => setPowFiles((p) => [...p, r.result]);
-      r.readAsDataURL(f);
-    });
-  };
 
   const handleAddService = () => {
     if (!newServiceName.trim() || !newServicePrice) return;
@@ -62,11 +56,6 @@ export default function Settings() {
     setServices(services.filter((_, i) => i !== idx));
   };
 
-  const handleAddGalleryUrl = () => {
-    if (!newGalleryUrl.trim()) return;
-    setGallery([...gallery, newGalleryUrl.trim()]);
-    setNewGalleryUrl("");
-  };
 
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
@@ -105,8 +94,8 @@ export default function Settings() {
             coordinates: locationCoords
           }
         };
-        if (powFiles.length > 0) {
-          const newProofs = powFiles.map((url) => ({ url, submissionDate: new Date().toISOString(), status: "Pending" }));
+        if (powUrls.length > 0) {
+          const newProofs = powUrls.map((url) => ({ url, submissionDate: new Date().toISOString(), status: "Pending" }));
           payload.workerProfile.proofOfWork = [...(profile.proofOfWork || []), ...newProofs];
         }
       } else if (currentUser.role === "Customer") {
@@ -120,7 +109,7 @@ export default function Settings() {
       }
       await updateWorkerProfile(payload);
       showToast("Settings saved successfully!", "success");
-      setPowFiles([]);
+      setPowUrls([]);
     } catch (err) { showToast(err.message || "Save failed.", "error"); }
   };
 
@@ -310,32 +299,31 @@ export default function Settings() {
 
                   {/* WORK GALLERY MANAGEMENT */}
                   <div style={{ marginBottom: "24px", padding: "18px", background: "#faf9f5", border: "1px solid #e6dfd8", borderRadius: "12px" }}>
-                    <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#cc785c", textTransform: "uppercase", marginBottom: "10px" }}>
-                      🖼️ Work Gallery Pictures
-                    </label>
-
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px", marginBottom: "12px" }}>
-                      {gallery.map((imgUrl, idx) => (
-                        <div key={idx} style={{ position: "relative", aspectRatio: "1.2", borderRadius: "8px", overflow: "hidden", border: "1px solid #e6dfd8" }}>
-                          <img src={imgUrl} alt="Work photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                          <button
-                            type="button"
-                            onClick={() => setGallery(gallery.filter((_, i) => i !== idx))}
-                            style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(0,0,0,0.6)", color: "#fff", border: "none", borderRadius: "50%", width: "22px", height: "22px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
+                    <ImageUpload
+                      mode="multiple"
+                      endpoint="gallery"
+                      label="🖼️ Work Gallery Photos"
+                      value={gallery}
+                      onChange={setGallery}
+                      maxFiles={6}
+                    />
+                    <div style={{ fontSize: "12px", color: "#8e8b82", marginTop: "10px", fontStyle: "italic" }}>
+                      Add up to 6 photos showing your best work. These are visible to customers browsing your profile.
                     </div>
+                  </div>
 
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <input type="text" placeholder="Paste Image Web URL..." value={newGalleryUrl} onChange={(e) => setNewGalleryUrl(e.target.value)}
-                        style={{ flex: 1, padding: "8px 12px", background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "6px", fontSize: "14px", outline: "none" }}
-                      />
-                      <button type="button" onClick={handleAddGalleryUrl} style={{ padding: "8px 14px", background: "#efe9de", color: "#141413", border: "1px solid #e6dfd8", borderRadius: "6px", fontSize: "13px", fontWeight: 500, cursor: "pointer" }}>
-                        Add Picture
-                      </button>
+                  {/* PROOF OF WORK UPLOAD */}
+                  <div style={{ marginBottom: "24px", padding: "18px", background: "#faf9f5", border: "1px solid #e6dfd8", borderRadius: "12px" }}>
+                    <ImageUpload
+                      mode="multiple"
+                      endpoint="gallery"
+                      label="📋 Add New Proof-of-Work Photo"
+                      value={powUrls}
+                      onChange={setPowUrls}
+                      maxFiles={3}
+                    />
+                    <div style={{ fontSize: "12px", color: "#8e8b82", marginTop: "10px", fontStyle: "italic" }}>
+                      Upload additional proof photos to be reviewed by the administrator.
                     </div>
                   </div>
                 </>

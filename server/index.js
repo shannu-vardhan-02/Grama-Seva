@@ -11,6 +11,7 @@ import userRoutes from "./routes/users.js";
 import bookingRoutes from "./routes/bookings.js";
 import reviewRoutes from "./routes/reviews.js";
 import notificationRoutes from "./routes/notifications.js";
+import uploadRoutes from "./routes/upload.js";
 
 dotenv.config();
 
@@ -40,7 +41,8 @@ app.use(
     credentials: true,
   }),
 );
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
+app.use("/uploads", express.static("uploads"));
 
 connectDB();
 
@@ -83,6 +85,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/upload", uploadRoutes);
 
 app.get("/", (req, res) => {
   res.json({

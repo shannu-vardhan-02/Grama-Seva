@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Eye, EyeOff, Upload } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { GoogleLogin } from '@react-oauth/google';
+import ImageUpload from "../components/ImageUpload";
 
 const S = {
   page: {
@@ -174,19 +175,12 @@ export default function Auth() {
   const [experience, setExperience] = useState("");
   const [address, setAddress] = useState("");
   const [bio, setBio] = useState("");
-  const [proofFiles, setProofFiles] = useState([]);
+  const [proofUrls, setProofUrls] = useState([]);
 
   useEffect(() => {
     if (searchParams.get("role") === "Worker") { setIsLogin(false); setRole("Worker"); }
   }, [searchParams]);
 
-  const handleFile = (e) => {
-    Array.from(e.target.files).forEach((f) => {
-      const r = new FileReader();
-      r.onloadend = () => setProofFiles((p) => [...p, r.result]);
-      r.readAsDataURL(f);
-    });
-  };
 
   const redirect = () => setTimeout(() => navigate("/dashboard"), 900);
 
@@ -206,7 +200,7 @@ export default function Auth() {
           Object.assign(wp, {
             skill: skills[0] || "electrician",
             skills, experience: Number(experience), address, bio,
-            proofOfWorkUrls: proofFiles.length > 0 ? proofFiles : ["https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=400"],
+            proofOfWorkUrls: proofUrls.length > 0 ? proofUrls : [],
             coordinates: [78.3489 + (Math.random() - 0.5) * 0.04, 17.2181 + (Math.random() - 0.5) * 0.04],
           });
         }
@@ -403,19 +397,16 @@ export default function Auth() {
                     </div>
 
                     <div>
-                      <label style={S.label}>Proof-of-Work Photo</label>
-                      <div style={{
-                        border: "1px dashed #e6dfd8",
-                        borderRadius: "8px", padding: "16px",
-                        textAlign: "center", position: "relative", cursor: "pointer",
-                        background: "#ffffff",
-                      }}>
-                        <input type="file" accept="image/*" onChange={handleFile}
-                          style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }} />
-                        <Upload size={18} color="#8e8b82" style={{ margin: "0 auto 4px" }} />
-                        <div style={{ fontSize: "12px", color: "#8e8b82" }}>
-                          {proofFiles.length > 0 ? `${proofFiles.length} file(s) selected` : "Click to upload proof photo"}
-                        </div>
+                      <ImageUpload
+                        mode="multiple"
+                        endpoint="proof"
+                        label="Proof-of-Work Photo"
+                        value={proofUrls}
+                        onChange={setProofUrls}
+                        maxFiles={3}
+                      />
+                      <div style={{ fontSize: "11px", color: "#8e8b82", marginTop: "6px", fontStyle: "italic" }}>
+                        Upload 1–3 photos showing your previous work. Reviewed by administrator.
                       </div>
                     </div>
                   </div>

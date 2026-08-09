@@ -226,6 +226,24 @@ export const SocketProvider = ({ children }) => {
     }
   };
 
+  const deleteReview = async (reviewId) => {
+    try {
+      await api.delete(`/api/reviews/${reviewId}`);
+      setReviews(prev => prev.filter(r => (r._id || r.id) !== reviewId));
+    } catch (err) {
+      throw new Error(err.response?.data?.message || 'Failed to delete review');
+    }
+  };
+
+  const deleteWorkerProfileReview = async (workerId, reviewIndex) => {
+    try {
+      const res = await api.delete(`/api/users/${workerId}/reviews/${reviewIndex}`);
+      return res.data;
+    } catch (err) {
+      throw new Error(err.response?.data?.message || 'Failed to delete review');
+    }
+  };
+
   const markNotificationsAsRead = async () => {
     try {
       await api.patch('/api/notifications/read');
@@ -238,7 +256,7 @@ export const SocketProvider = ({ children }) => {
   };
 
   return (
-    <SocketContext.Provider value={{ bookings, reviews, notifications, activeDispatch, getIncomingDispatches, createBooking, acceptBooking, startBooking, completeBooking, cancelBooking, submitReview, submitWorkerReview, markNotificationsAsRead }}>
+    <SocketContext.Provider value={{ bookings, reviews, notifications, activeDispatch, getIncomingDispatches, createBooking, acceptBooking, startBooking, completeBooking, cancelBooking, submitReview, submitWorkerReview, deleteReview, deleteWorkerProfileReview, markNotificationsAsRead }}>
       {children}
     </SocketContext.Provider>
   );

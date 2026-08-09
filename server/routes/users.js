@@ -256,4 +256,32 @@ router.patch(
   }
 );
 
+// DELETE /api/users/:workerId/reviews/:reviewIndex — Remove review from worker profile
+router.delete("/:workerId/reviews/:reviewIndex", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.workerId);
+    if (!user || !user.workerProfile) {
+      return res.status(404).json({ message: "Worker not found" });
+    }
+
+    const idx = parseInt(req.params.reviewIndex, 10);
+    if (isNaN(idx) || idx < 0 || !user.workerProfile.reviews || idx >= user.workerProfile.reviews.length) {
+      return res.status(400).json({ message: "Invalid review index" });
+    }
+
+    user.workerProfile.reviews.splice(idx, 1);
+
+    // Recalculate rating
+    const reviews = user.workerProfile.reviews;
+    const total = reviews.reduce((sum, r) => sum + Number(r.rating || 0), 0);
+    user.workerProfile.averageRating = reviews.length > 0 ? total / reviews.length : 0;
+    user.workerProfile.reviewCount = reviews.length;
+
+    await user.save();
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 export default router;

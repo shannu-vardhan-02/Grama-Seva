@@ -2,7 +2,8 @@ import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useSocket, getDistance } from "../context/SocketContext";
 import { useToast } from "../context/ToastContext";
-import { Search, Phone, Star, MapPin, Award, CheckCircle, X, Copy, Check, Filter, Navigation, DollarSign, Image, MessageSquare, Edit3, Crosshair } from "lucide-react";
+import { Search, Phone, Star, MapPin, Award, CheckCircle, X, Copy, Check, Filter, Navigation, DollarSign, Image, MessageSquare, Edit3, Crosshair, Trash2 } from "lucide-react";
+import ImageLightbox from "../components/ImageLightbox";
 
 // Rich Andhra / Telugu Seed Workers with Services, Gallery & Reviews
 const MOCK_TELUGU_WORKERS = [
@@ -172,7 +173,7 @@ const SKILL_CATEGORIES = [
 
 export default function BookService() {
   const { currentUser, users, fetchUsers } = useAuth();
-  const { submitWorkerReview } = useSocket();
+  const { submitWorkerReview, deleteWorkerProfileReview, deleteReview } = useSocket();
   const { showToast } = useToast();
 
   const [selectedSkill, setSelectedSkill] = useState("all");
@@ -190,6 +191,10 @@ export default function BookService() {
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
+  // Lightbox State
+  const [lightboxImages, setLightboxImages] = useState(null);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   // Request geolocation on mount for accurate radius sorting
   useEffect(() => {
@@ -549,11 +554,17 @@ export default function BookService() {
 
       {/* ── WORKER PROFILE POP-UP MODAL (Services, Gallery, Reviews Tabs) ── */}
       {activeModalWorker && (
-        <div className="worker-modal-backdrop" style={{
-          position: "fixed", inset: 0, background: "rgba(24,23,21,0.65)", backdropFilter: "blur(6px)",
-          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px"
-        }}>
-          <div className="worker-modal-container">
+        <div
+          className="worker-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setActiveModalWorker(null);
+          }}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(24,23,21,0.65)", backdropFilter: "blur(6px)",
+            display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px"
+          }}
+        >
+          <div className="worker-modal-container" onClick={(e) => e.stopPropagation()}>
             {/* Close Button */}
             <button
               onClick={() => setActiveModalWorker(null)}
@@ -571,7 +582,14 @@ export default function BookService() {
                 className="worker-modal-header-img"
                 src={activeModalWorker.workerProfile?.proofOfWork?.[0]?.url || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400"}
                 alt={activeModalWorker.name}
-                style={{ width: "88px", height: "88px", borderRadius: "16px", objectFit: "cover", border: "2px solid #cc785c", flexShrink: 0 }}
+                onClick={() => {
+                  const proofPhotos = activeModalWorker.workerProfile?.proofOfWork?.map(p => p.url) || [activeModalWorker.workerProfile?.proofOfWork?.[0]?.url];
+                  if (proofPhotos.filter(Boolean).length > 0) {
+                    setLightboxImages(proofPhotos.filter(Boolean));
+                    setLightboxIndex(0);
+                  }
+                }}
+                style={{ width: "88px", height: "88px", borderRadius: "16px", objectFit: "cover", border: "2px solid #cc785c", flexShrink: 0, cursor: "pointer" }}
               />
               <div>
                 <h2 className="worker-modal-name" style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "24px", fontWeight: 600, color: "#141413", margin: 0 }}>
@@ -695,15 +713,24 @@ export default function BookService() {
             {activeTab === "gallery" && (
               <div>
                 <div style={{ fontSize: "13px", fontWeight: 600, color: "#8e8b82", textTransform: "uppercase", marginBottom: "12px" }}>
-                  Work Photos & Pictures
+                  Work Photos & Pictures (Click to maximize)
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
                   {(activeModalWorker.workerProfile?.gallery || [
                     "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=400",
                     "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=400",
                     "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=400"
-                  ]).map((imgUrl, idx) => (
-                    <div key={idx} style={{ borderRadius: "10px", overflow: "hidden", aspectRatio: "1", border: "1px solid #e6dfd8" }}>
+                  ]).map((imgUrl, idx, arr) => (
+                    <div
+                      key={idx}
+                      onClick={() => {
+                        setLightboxImages(arr);
+                        setLightboxIndex(idx);
+                      }}
+                      style={{ borderRadius: "10px", overflow: "hidden", aspectRatio: "1", border: "1px solid #e6dfd8", cursor: "pointer", transition: "transform 0.15s" }}
+                      onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.03)"}
+                      onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+                    >
                       <img src={imgUrl} alt="Work example" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     </div>
                   ))}
@@ -730,19 +757,54 @@ export default function BookService() {
                 {(activeModalWorker.workerProfile?.reviews || [
                   { customerName: "Suresh Kumar", rating: 5, comment: "very good techian", date: "May 09, 2026" },
                   { customerName: "Venkatesh P", rating: 5, comment: "nice Explanation reasonable Prices keep in touch", date: "Apr 07, 2026" }
-                ]).map((rev, idx) => (
-                  <div key={idx} style={{ padding: "16px", background: "#faf9f5", border: "1px solid #e6dfd8", borderRadius: "12px", marginBottom: "12px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                      <span style={{ fontSize: "14px", fontWeight: 600, color: "#141413" }}>{rev.customerName}</span>
-                      <div style={{ display: "flex", alignItems: "center", gap: "4px", background: "#fff5e6", padding: "2px 8px", borderRadius: "9999px", border: "1px solid #fce3b8" }}>
-                        <Star size={12} fill="#e8a55a" color="#e8a55a" />
-                        <span style={{ fontSize: "13px", fontWeight: 600, color: "#141413", fontVariantNumeric: "tabular-nums" }}>{rev.rating.toFixed(1)}</span>
+                ]).map((rev, idx) => {
+                  const isAuthorOrAdmin = rev.customerName === currentUser?.name || currentUser?.role === "Admin";
+                  return (
+                    <div key={idx} style={{ padding: "16px", background: "#faf9f5", border: "1px solid #e6dfd8", borderRadius: "12px", marginBottom: "12px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ fontSize: "14px", fontWeight: 600, color: "#141413" }}>{rev.customerName}</span>
+                          {isAuthorOrAdmin && (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (window.confirm("Are you sure you want to remove this review?")) {
+                                  try {
+                                    if (rev._id || rev.id) {
+                                      await deleteReview(rev._id || rev.id);
+                                    } else {
+                                      await deleteWorkerProfileReview(activeModalWorker._id || activeModalWorker.id, idx);
+                                    }
+                                    showToast("Review removed successfully.", "success");
+                                    // Update local active modal worker reviews list
+                                    const updatedReviews = activeModalWorker.workerProfile.reviews.filter((_, i) => i !== idx);
+                                    setActiveModalWorker(prev => ({
+                                      ...prev,
+                                      workerProfile: { ...prev.workerProfile, reviews: updatedReviews }
+                                    }));
+                                    fetchUsers();
+                                  } catch (err) {
+                                    showToast(err.message || "Could not delete review.", "error");
+                                  }
+                                }
+                              }}
+                              title="Delete Review"
+                              style={{ background: "none", border: "none", color: "#c64545", cursor: "pointer", display: "flex", alignItems: "center", padding: "2px" }}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px", background: "#fff5e6", padding: "2px 8px", borderRadius: "9999px", border: "1px solid #fce3b8" }}>
+                          <Star size={12} fill="#e8a55a" color="#e8a55a" />
+                          <span style={{ fontSize: "13px", fontWeight: 600, color: "#141413", fontVariantNumeric: "tabular-nums" }}>{rev.rating.toFixed(1)}</span>
+                        </div>
                       </div>
+                      <p style={{ fontSize: "14px", color: "#3d3d3a", margin: "0 0 6px 0", lineHeight: 1.4 }}>"{rev.comment}"</p>
+                      <div style={{ fontSize: "11px", color: "#8e8b82" }}>{rev.date}</div>
                     </div>
-                    <p style={{ fontSize: "14px", color: "#3d3d3a", margin: "0 0 6px 0", lineHeight: 1.4 }}>"{rev.comment}"</p>
-                    <div style={{ fontSize: "11px", color: "#8e8b82" }}>{rev.date}</div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -812,6 +874,15 @@ export default function BookService() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* ── IMAGE LIGHTBOX OVERLAY ── */}
+      {lightboxImages && (
+        <ImageLightbox
+          images={lightboxImages}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxImages(null)}
+        />
       )}
     </div>
   );

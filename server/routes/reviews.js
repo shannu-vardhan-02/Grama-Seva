@@ -79,4 +79,35 @@ router.get('/', async (req, res) => {
   }
 });
 
+// DELETE /api/reviews/:id — Customer deletes their review (or Admin)
+router.delete('/:id', async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+    if (!review) {
+      return res.status(404).json({ message: 'Review not found' });
+    }
+
+    if (review.customer.toString() !== req.user._id.toString() && req.user.role !== 'Admin') {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    const workerId = review.worker;
+    await Review.findByIdAndDelete(req.params.id);
+
+    // Recalculate worker's average rating
+    const allReviews = await Review.find({ worker: workerId });
+    const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0);
+    const averageRating = allReviews.length > 0 ? totalRating / allReviews.length : 0;
+
+    await User.findByIdAndUpdate(workerId, {
+      'workerProfile.averageRating': averageRating,
+      'workerProfile.reviewCount': allReviews.length,
+    });
+
+    res.json({ message: 'Review deleted', id: req.params.id });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 export default router;

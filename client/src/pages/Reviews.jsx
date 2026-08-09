@@ -1,11 +1,13 @@
 import React from "react";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
-import { Star, MessageSquare } from "lucide-react";
+import { Star, MessageSquare, Trash2 } from "lucide-react";
+import { useToast } from "../context/ToastContext";
 
 export default function Reviews() {
-  const { currentUser, users } = useAuth();
-  const { reviews: bookingReviews } = useSocket();
+  const { currentUser, users, fetchUsers } = useAuth();
+  const { reviews: bookingReviews, deleteReview, deleteWorkerProfileReview } = useSocket();
+  const { showToast } = useToast();
 
   if (!currentUser) return null;
 
@@ -192,9 +194,40 @@ export default function Reviews() {
                       <div style={{ fontSize: "12px", color: "#8e8b82", marginTop: "2px" }}>{r.customerName} → {r.workerName}</div>
                     )}
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "4px", background: "#fff5e6", padding: "3px 10px", borderRadius: "9999px", border: "1px solid #fce3b8" }}>
-                    <Star size={12} fill="#e8a55a" color="#e8a55a" />
-                    <span style={{ fontSize: "13px", fontWeight: 600, color: "#141413", fontVariantNumeric: "tabular-nums" }}>{r.rating.toFixed(1)}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    {(currentUser.role === "Admin" || (currentUser.role === "Customer" && r.customerName === currentUser.name)) && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (window.confirm("Remove this review?")) {
+                            try {
+                              if (r.source === "booking") {
+                                await deleteReview(r.id);
+                              } else {
+                                const parts = r.id.split("-");
+                                const workerId = parts[1];
+                                const idx = parseInt(parts[2], 10);
+                                if (workerId && !isNaN(idx)) {
+                                  await deleteWorkerProfileReview(workerId, idx);
+                                }
+                              }
+                              showToast("Review deleted.", "success");
+                              fetchUsers();
+                            } catch (err) {
+                              showToast(err.message || "Failed to delete review.", "error");
+                            }
+                          }
+                        }}
+                        title="Remove Review"
+                        style={{ background: "none", border: "none", color: "#c64545", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px" }}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    )}
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px", background: "#fff5e6", padding: "3px 10px", borderRadius: "9999px", border: "1px solid #fce3b8" }}>
+                      <Star size={12} fill="#e8a55a" color="#e8a55a" />
+                      <span style={{ fontSize: "13px", fontWeight: 600, color: "#141413", fontVariantNumeric: "tabular-nums" }}>{r.rating.toFixed(1)}</span>
+                    </div>
                   </div>
                 </div>
                 {r.comment && (

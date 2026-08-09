@@ -5,7 +5,6 @@ import { useToast } from "../context/ToastContext";
 import { Search, Phone, Star, MapPin, Award, CheckCircle, X, Copy, Check, Filter, Navigation, DollarSign, Image, MessageSquare, Edit3, Crosshair, Trash2 } from "lucide-react";
 import ImageLightbox from "../components/ImageLightbox";
 
-// Rich Andhra / Telugu Seed Workers with Services, Gallery & Reviews
 const MOCK_TELUGU_WORKERS = [
   {
     id: "tw-1",
@@ -20,24 +19,23 @@ const MOCK_TELUGU_WORKERS = [
       location: { type: "Point", coordinates: [78.3489, 17.2181] },
       bio: "24/7 Service available. Best working skills, no delay. Works on-time with hand-over customer satisfaction.",
       isVerified: true,
-      averageRating: 5.0,
-      reviewCount: 4,
-      proofOfWork: [{ url: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400" }],
+      averageRating: 4.9,
+      reviewCount: 3,
+      proofOfWork: [{ url: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=600" }],
       services: [
         { name: "Fan Repair & Fitting", price: 100 },
         { name: "Switchboard Installation", price: 250 },
-        { name: "Inverter Wiring & Connection", price: 450 },
-        { name: "Motor Starter Replacement", price: 300 }
+        { name: "Inverter Wiring & Connection", price: 450 }
       ],
       gallery: [
-        "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=400",
-        "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=400",
-        "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=400"
+        "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=600",
+        "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=600",
+        "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=600"
       ],
       reviews: [
-        { customerName: "Suresh Kumar", rating: 5, comment: "Very good technician", date: "May 09, 2026" },
-        { customerName: "Venkatesh P", rating: 5, comment: "Nice explanation, reasonable prices. Keep in touch!", date: "Apr 07, 2026" },
-        { customerName: "Naresh Reddy", rating: 5, comment: "Arrived on time in village within 15 minutes. Great work.", date: "Feb 14, 2026" }
+        { customerName: "Suresh Kumar", rating: 5, comment: "Very fast and clean ceiling fan wiring work.", date: "May 09, 2026" },
+        { customerName: "Venkatesh P", rating: 5, comment: "Nice explanation of inverter battery connection, reasonable charges.", date: "Apr 07, 2026" },
+        { customerName: "Naresh Reddy", rating: 5, comment: "Arrived at our village farm within 15 minutes for motor starter repair.", date: "Feb 14, 2026" }
       ]
     }
   },
@@ -55,52 +53,26 @@ const MOCK_TELUGU_WORKERS = [
       bio: "I am an Electrician. All electrical services can be done, maintenance/repairs with guaranteed village service.",
       isVerified: true,
       averageRating: 4.8,
-      reviewCount: 18,
-      proofOfWork: [{ url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400" }],
+      reviewCount: 3,
+      proofOfWork: [{ url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600" }],
       services: [
         { name: "3-Phase Submersible Starter Fix", price: 350 },
         { name: "Complete Room Wiring", price: 1200 },
         { name: "LED Ceiling Light Fitting", price: 150 }
       ],
       gallery: [
-        "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=400",
-        "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=400"
+        "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=600",
+        "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=600",
+        "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=600"
       ],
       reviews: [
-        { customerName: "Koti Rao", rating: 5, comment: "Prompt response and clean wiring work.", date: "Jun 12, 2026" }
+        { customerName: "Koti Rao", rating: 5, comment: "Prompt response and clean wiring work.", date: "Jun 12, 2026" },
+        { customerName: "Raju V", rating: 5, comment: "Fixed 3-phase motor starter switch in no time.", date: "May 01, 2026" }
       ]
     }
   },
   {
     id: "tw-3",
-    name: "Ghouse Electrician & Appliances",
-    phone: "+91 99892 34567",
-    role: "Worker",
-    workerProfile: {
-      skill: "electrician",
-      skills: ["electrician"],
-      experience: 7,
-      address: "Panchayat Junction",
-      location: { type: "Point", coordinates: [78.3429, 17.2301] },
-      bio: "Electrician house wiring, main line board shift, and short circuit emergency solving.",
-      isVerified: true,
-      averageRating: 4.7,
-      reviewCount: 12,
-      proofOfWork: [{ url: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=400" }],
-      services: [
-        { name: "Short Circuit Line Inspection", price: 200 },
-        { name: "Main Board MCB Replacement", price: 250 }
-      ],
-      gallery: [
-        "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=400"
-      ],
-      reviews: [
-        { customerName: "Subbaiah", rating: 4, comment: "Good service in our village.", date: "May 20, 2026" }
-      ]
-    }
-  },
-  {
-    id: "tw-4",
     name: "Satyanarayana Mason Building Works",
     phone: "+91 94403 45678",
     role: "Worker",
@@ -113,23 +85,26 @@ const MOCK_TELUGU_WORKERS = [
       bio: "Specialist in concrete slab work, brick masonry, plastering, tile laying, and wall compound construction.",
       isVerified: true,
       averageRating: 4.9,
-      reviewCount: 22,
-      proofOfWork: [{ url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400" }],
+      reviewCount: 3,
+      proofOfWork: [{ url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=600" }],
       services: [
         { name: "Tile Laying per sq ft", price: 25 },
         { name: "Wall Plastering per Day", price: 700 },
         { name: "Compound Wall Construction", price: 1500 }
       ],
       gallery: [
-        "https://images.unsplash.com/photo-1541888946425-d0fbb186a5b7?auto=format&fit=crop&q=80&w=400"
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600",
+        "https://images.unsplash.com/photo-1541888946425-d0fbb186a5b7?auto=format&fit=crop&q=80&w=600",
+        "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600"
       ],
       reviews: [
-        { customerName: "Prasad Raju", rating: 5, comment: "Excellent masonry work done for my new house.", date: "Jan 18, 2026" }
+        { customerName: "Prasad Raju", rating: 5, comment: "Excellent masonry and cement plastering work for my home extension.", date: "May 18, 2026" },
+        { customerName: "Chandra Mohan", rating: 5, comment: "Constructed compound wall pillars solid with neat finishing.", date: "Apr 22, 2026" }
       ]
     }
   },
   {
-    id: "tw-5",
+    id: "tw-4",
     name: "Appa Rao Plumbing & Borewell",
     phone: "+91 98664 56789",
     role: "Worker",
@@ -142,18 +117,21 @@ const MOCK_TELUGU_WORKERS = [
       bio: "Borewell motor fitting, underground PVC pipe leakage fixing, tank installation, and bathroom fittings.",
       isVerified: true,
       averageRating: 4.8,
-      reviewCount: 15,
-      proofOfWork: [{ url: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=400" }],
+      reviewCount: 3,
+      proofOfWork: [{ url: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=600" }],
       services: [
         { name: "Tap & Pipe Leakage Fix", price: 120 },
         { name: "Water Tank Line Cleaning", price: 400 },
         { name: "Overhead Tank Installation", price: 800 }
       ],
       gallery: [
-        "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=400"
+        "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=600",
+        "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=600",
+        "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&q=80&w=600"
       ],
       reviews: [
-        { customerName: "Venkateswarlu", rating: 5, comment: "Fixed pipe leak immediately.", date: "Apr 02, 2026" }
+        { customerName: "Srinivasa Reddy", rating: 5, comment: "Fixed underground PVC pipe leakage cleanly in 30 minutes.", date: "May 02, 2026" },
+        { customerName: "Kishore V", rating: 5, comment: "Installed 1000L overhead water tank with booster pipes.", date: "Apr 11, 2026" }
       ]
     }
   }

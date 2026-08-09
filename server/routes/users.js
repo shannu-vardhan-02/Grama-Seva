@@ -269,6 +269,14 @@ router.delete("/:workerId/reviews/:reviewIndex", async (req, res) => {
       return res.status(400).json({ message: "Invalid review index" });
     }
 
+    const targetReview = user.workerProfile.reviews[idx];
+    const isAuthor = targetReview && (targetReview.customerName === req.user.name);
+    const isAdmin = req.user.role === "Admin";
+
+    if (!isAuthor && !isAdmin) {
+      return res.status(403).json({ message: "Forbidden: Only review author or Admin can delete reviews" });
+    }
+
     user.workerProfile.reviews.splice(idx, 1);
 
     // Recalculate rating

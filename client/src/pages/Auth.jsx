@@ -4,75 +4,101 @@ import { useAuth } from "../context/AuthContext";
 import { Eye, EyeOff } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
 import ImageUpload from "../components/ImageUpload";
+import BloomingFlower from "../components/BloomingFlower";
+import { ThinkingOrb } from "thinking-orbs";
 
+/* ─── Dark colour palette ─────────────────────────────────── */
+const C = {
+  pageBg:    "#0e0d0c",
+  leftBg:    "#111009",
+  cardBg:    "#181512",
+  inputBg:   "#1e1b16",
+  border:    "#2a2620",
+  borderFoc: "#cc785c",
+  textPri:   "#f0ede7",
+  textMut:   "#6e6a62",
+  textSub:   "#a09a90",
+  accent:    "#cc785c",
+  accentDim: "#7a3f28",
+  errorBg:   "#2a1414",
+  errorBdr:  "rgba(200,60,50,0.25)",
+  errorTxt:  "#e07070",
+  okBg:      "#0e1f14",
+  okBdr:     "rgba(50,180,90,0.2)",
+  okTxt:     "#5cb87a",
+};
+
+/* ─── Styles ──────────────────────────────────────────────── */
 const S = {
   page: {
     display: "flex",
     minHeight: "100vh",
     fontFamily: "'Inter', -apple-system, sans-serif",
-    background: "#faf9f5",
+    background: C.pageBg,
   },
   leftPanel: {
-    background: "#181715",
-    color: "#faf9f5",
+    background: C.leftBg,
+    color: C.textPri,
     width: "420px",
     flexShrink: 0,
     display: "flex",
     flexDirection: "column",
     padding: "56px 44px",
-    justifyContent: "between",
-    borderRight: "1px solid #252320",
+    borderRight: `1px solid ${C.border}`,
+    position: "relative",
+    overflow: "hidden",
   },
   rightPanel: {
     flex: 1,
-    background: "#faf9f5",
+    background: C.pageBg,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     padding: "40px 24px",
   },
   formCard: {
-    background: "#ffffff",
-    border: "1px solid #e6dfd8",
-    borderRadius: "16px",
+    background: C.cardBg,
+    border: `1px solid ${C.border}`,
+    borderRadius: "18px",
     padding: "40px",
     width: "100%",
-    maxWidth: "440px",
-    boxShadow: "0 4px 24px rgba(20,20,19,0.04)",
+    maxWidth: "450px",
+    boxShadow: "0 0 0 1px rgba(204,120,92,0.04), 0 8px 40px rgba(0,0,0,0.55)",
   },
   label: {
     display: "block",
-    fontSize: "12px",
+    fontSize: "11px",
     fontWeight: 600,
-    color: "#141413",
-    letterSpacing: "-0.007em",
-    marginBottom: "6px",
+    color: C.textSub,
+    letterSpacing: "0.06em",
+    textTransform: "uppercase",
+    marginBottom: "7px",
   },
   input: {
     width: "100%",
     padding: "11px 15px",
-    background: "#faf9f5",
-    color: "#141413",
-    border: "1px solid #e6dfd8",
-    borderRadius: "8px",
-    fontSize: "15px",
+    background: C.inputBg,
+    color: C.textPri,
+    border: `1px solid ${C.border}`,
+    borderRadius: "9px",
+    fontSize: "14px",
     fontFamily: "'Inter', sans-serif",
     outline: "none",
     transition: "border-color 0.15s, box-shadow 0.15s",
     boxSizing: "border-box",
   },
   inputFocus: {
-    borderColor: "#cc785c",
-    boxShadow: "0 0 0 3px rgba(204,120,92,0.15)",
+    borderColor: C.borderFoc,
+    boxShadow: `0 0 0 3px rgba(204,120,92,0.12)`,
   },
   select: {
     width: "100%",
     padding: "11px 15px",
-    background: "#faf9f5",
-    color: "#141413",
-    border: "1px solid #e6dfd8",
-    borderRadius: "8px",
-    fontSize: "15px",
+    background: C.inputBg,
+    color: C.textPri,
+    border: `1px solid ${C.border}`,
+    borderRadius: "9px",
+    fontSize: "14px",
     fontFamily: "'Inter', sans-serif",
     outline: "none",
     cursor: "pointer",
@@ -81,44 +107,29 @@ const S = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    gap: "8px",
     width: "100%",
-    padding: "12px 22px",
-    background: "#cc785c",
+    padding: "13px 22px",
+    background: C.accent,
     color: "#ffffff",
     border: "none",
-    borderRadius: "8px",
-    fontSize: "15px",
-    fontWeight: 500,
-    letterSpacing: "-0.01em",
+    borderRadius: "9px",
+    fontSize: "14px",
+    fontWeight: 600,
+    letterSpacing: "0.01em",
     cursor: "pointer",
-    transition: "background 0.15s, transform 0.1s",
+    transition: "opacity 0.15s, transform 0.1s",
     fontFamily: "'Inter', sans-serif",
-  },
-  btnSecondary: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    padding: "12px 22px",
-    background: "transparent",
-    color: "#cc785c",
-    border: "1px solid #cc785c",
-    borderRadius: "8px",
-    fontSize: "15px",
-    fontWeight: 500,
-    cursor: "pointer",
-    transition: "all 0.15s",
-    fontFamily: "'Inter', sans-serif",
-    marginTop: "10px",
+    minHeight: "46px",
   },
   roleBtn: (active) => ({
     flex: 1,
-    padding: "12px 16px",
-    background: active ? "#efe9de" : "#faf9f5",
-    color: active ? "#cc785c" : "#141413",
-    border: active ? "1.5px solid #cc785c" : "1px solid #e6dfd8",
-    borderRadius: "8px",
-    fontSize: "14px",
+    padding: "11px 16px",
+    background: active ? "rgba(204,120,92,0.12)" : C.inputBg,
+    color: active ? C.accent : C.textSub,
+    border: active ? `1.5px solid ${C.accent}` : `1px solid ${C.border}`,
+    borderRadius: "9px",
+    fontSize: "13px",
     fontWeight: active ? 600 : 400,
     cursor: "pointer",
     transition: "all 0.15s",
@@ -126,15 +137,8 @@ const S = {
   }),
 };
 
-function FormInput({
-  label,
-  type = "text",
-  value,
-  onChange,
-  placeholder,
-  required,
-  suffix,
-}) {
+/* ─── FormInput ───────────────────────────────────────────── */
+function FormInput({ label, type = "text", value, onChange, placeholder, required, suffix }) {
   const [focused, setFocused] = useState(false);
   return (
     <div style={{ marginBottom: "16px" }}>
@@ -155,14 +159,7 @@ function FormInput({
           }}
         />
         {suffix && (
-          <div
-            style={{
-              position: "absolute",
-              right: "14px",
-              top: "50%",
-              transform: "translateY(-50%)",
-            }}
-          >
+          <div style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)" }}>
             {suffix}
           </div>
         )}
@@ -171,25 +168,27 @@ function FormInput({
   );
 }
 
+/* ─── Auth page ───────────────────────────────────────────── */
 export default function Auth() {
   const { login, register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const [isLogin, setIsLogin] = useState(true);
-  const [showPwd, setShowPwd] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [isLogin, setIsLogin]     = useState(true);
+  const [showPwd, setShowPwd]     = useState(false);
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState("");
+  const [success, setSuccess]     = useState("");
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [phone, setPhone] = useState("");
-  const [role, setRole] = useState("Customer");
-  const [skills, setSkills] = useState(["electrician"]);
+  const [name, setName]           = useState("");
+  const [email, setEmail]         = useState("");
+  const [password, setPassword]   = useState("");
+  const [phone, setPhone]         = useState("");
+  const [role, setRole]           = useState("Customer");
+  const [skills, setSkills]       = useState(["electrician"]);
   const [experience, setExperience] = useState("");
-  const [address, setAddress] = useState("");
-  const [bio, setBio] = useState("");
+  const [address, setAddress]     = useState("");
+  const [bio, setBio]             = useState("");
   const [proofUrls, setProofUrls] = useState([]);
 
   useEffect(() => {
@@ -199,16 +198,16 @@ export default function Auth() {
     }
   }, [searchParams]);
 
-
   const redirect = () => setTimeout(() => navigate("/dashboard"), 900);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
+    setLoading(true);
     try {
       if (isLogin) {
-        const user = await login(email, password);
+        await login(email, password);
         setSuccess("Signed in — redirecting…");
         redirect();
       } else {
@@ -231,18 +230,11 @@ export default function Auth() {
             ],
           });
         }
-        await register({
-          name,
-          email,
-          password,
-          role,
-          phone,
-          workerProfile: wp,
-        });
+        await register({ name, email, password, role, phone, workerProfile: wp });
         setSuccess(
           role === "Worker"
             ? "Registered! Pending administrator approval before profile activation."
-            : "Account created successfully.",
+            : "Account created successfully."
         );
         redirect();
       }
@@ -251,8 +243,10 @@ export default function Auth() {
         err.response?.data?.message ||
           err.response?.data?.error ||
           err.message ||
-          "Authentication failed.",
+          "Authentication failed."
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -264,171 +258,142 @@ export default function Auth() {
       setError(
         err.response?.data?.message ||
           err.response?.data?.error ||
-          "Google sign-in failed.",
+          "Google sign-in failed."
       );
     }
   };
 
   return (
     <div style={S.page} className="flex-col md:flex-row">
-      {/* LEFT — brand panel */}
-      <div style={S.leftPanel} className="w-full md:w-[420px] p-6 md:p-14">
-        <div
-          style={{
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          }}
-        >
+
+      {/* ── LEFT — brand panel ───────────────────────────── */}
+      <div style={S.leftPanel} className="hidden md:flex w-full md:w-[420px] p-6 md:p-14">
+        <div style={{ height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+
+          {/* Top: brand + copy */}
           <div>
-            {/* Brand Header */}
+            {/* Logo */}
             <div style={{ marginBottom: "40px" }}>
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  background: "#cc785c",
-                  borderRadius: "10px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: "16px",
-                }}
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  fill="none"
-                  stroke="#fff"
-                  strokeWidth="2.2"
-                  viewBox="0 0 24 24"
-                >
+              <div style={{
+                width: "42px", height: "42px",
+                background: C.accent,
+                borderRadius: "11px",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                marginBottom: "18px",
+                boxShadow: `0 0 20px rgba(204,120,92,0.3)`,
+              }}>
+                <svg width="20" height="20" fill="none" stroke="#fff" strokeWidth="2.2" viewBox="0 0 24 24">
                   <path d="M3 21V7l9-4 9 4v14" />
                   <path d="M9 21v-6h6v6" />
                 </svg>
               </div>
-              <div
-                style={{
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                  fontSize: "26px",
-                  fontWeight: 400,
-                  color: "#faf9f5",
-                  letterSpacing: "-0.01em",
-                }}
-              >
+              <div style={{
+                fontFamily: "'Playfair Display', Georgia, serif",
+                fontSize: "26px",
+                fontWeight: 400,
+                color: C.textPri,
+                letterSpacing: "-0.01em",
+              }}>
                 Grama Seva
               </div>
-              <div
-                style={{ fontSize: "14px", color: "#a09d96", marginTop: "4px" }}
-              >
+              <div style={{ fontSize: "13px", color: C.textMut, marginTop: "4px" }}>
                 Rural Service Portal
               </div>
             </div>
 
-            <h2
-              style={{
-                fontFamily: "'Playfair Display', Georgia, serif",
-                fontSize: "32px",
-                fontWeight: 400,
-                color: "#faf9f5",
-                lineHeight: 1.15,
-                letterSpacing: "-0.02em",
-                marginBottom: "16px",
-              }}
-            >
-              Connecting rural talent
-              <br />
+            <h2 style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize: "31px",
+              fontWeight: 400,
+              color: C.textPri,
+              lineHeight: 1.2,
+              letterSpacing: "-0.02em",
+              marginBottom: "14px",
+            }}>
+              Connecting rural talent<br />
               with people who need them.
             </h2>
-            <p
-              style={{
-                fontSize: "15px",
-                color: "#a09d96",
-                lineHeight: 1.6,
-                maxWidth: "340px",
-              }}
-            >
+            <p style={{ fontSize: "14px", color: C.textMut, lineHeight: 1.65, maxWidth: "320px" }}>
               Empowering local skilled workers across Andhra villages with
               direct community connections and administrator verification.
             </p>
           </div>
 
-          <div
-            style={{
-              fontSize: "13px",
-              color: "#6c6a64",
-              borderTop: "1px solid #252320",
-              paddingTop: "20px",
-              marginTop: "24px",
-            }}
-          >
+          {/* Middle: Blooming Flower */}
+          <div style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "8px",
+            padding: "16px 0",
+          }}>
+            <BloomingFlower size={220} color={C.accent} />
+            <span style={{ fontSize: "11px", color: C.textMut, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              hover to bloom
+            </span>
+          </div>
+
+          {/* Bottom: copyright */}
+          <div style={{
+            fontSize: "12px",
+            color: C.textMut,
+            borderTop: `1px solid ${C.border}`,
+            paddingTop: "18px",
+          }}>
             © 2026 Grama Seva Rural Network.
           </div>
         </div>
       </div>
 
-      {/* RIGHT — form */}
+      {/* ── RIGHT — form ─────────────────────────────────── */}
       <div style={S.rightPanel}>
         <div style={S.formCard}>
-          <h2
-            style={{
-              fontFamily: "'Playfair Display', Georgia, serif",
-              fontSize: "28px",
-              fontWeight: 400,
-              color: "#141413",
-              letterSpacing: "-0.017em",
-              lineHeight: 1.1,
-              marginBottom: "6px",
-              display: "flex",
-              gap: "8px",
-            }}
-          >
+
+          {/* Header */}
+          <h2 style={{
+            fontFamily: "'Playfair Display', Georgia, serif",
+            fontSize: "27px",
+            fontWeight: 400,
+            color: C.textPri,
+            letterSpacing: "-0.017em",
+            lineHeight: 1.1,
+            marginBottom: "6px",
+          }}>
             {isLogin ? "Sign In" : "Create Account"}
           </h2>
-          <p
-            style={{
-              fontSize: "14px",
-              color: "#6c6a64",
-              marginBottom: "24px",
-            }}
-          >
-            {isLogin
-              ? "Welcome back to Grama Seva."
-              : "Join the rural services network."}
+          <p style={{ fontSize: "13px", color: C.textMut, marginBottom: "24px" }}>
+            {isLogin ? "Welcome back to Grama Seva." : "Join the rural services network."}
           </p>
 
+          {/* Error / Success banners */}
           {error && (
-            <div
-              style={{
-                padding: "12px 14px",
-                background: "#fff2f2",
-                border: "1px solid rgba(255,59,48,0.2)",
-                borderRadius: "8px",
-                fontSize: "14px",
-                color: "#c0392b",
-                marginBottom: "16px",
-              }}
-            >
+            <div style={{
+              padding: "11px 14px",
+              background: C.errorBg,
+              border: `1px solid ${C.errorBdr}`,
+              borderRadius: "9px",
+              fontSize: "13px",
+              color: C.errorTxt,
+              marginBottom: "16px",
+            }}>
               {error}
             </div>
           )}
           {success && (
-            <div
-              style={{
-                padding: "12px 14px",
-                background: "#f0fff4",
-                border: "1px solid rgba(52,199,89,0.2)",
-                borderRadius: "8px",
-                fontSize: "14px",
-                color: "#248a3d",
-                marginBottom: "16px",
-              }}
-            >
+            <div style={{
+              padding: "11px 14px",
+              background: C.okBg,
+              border: `1px solid ${C.okBdr}`,
+              borderRadius: "9px",
+              fontSize: "13px",
+              color: C.okTxt,
+              marginBottom: "16px",
+            }}>
               {success}
             </div>
           )}
 
+          {/* ── Form ── */}
           <form onSubmit={handleSubmit}>
             {!isLogin && (
               <>
@@ -459,6 +424,7 @@ export default function Auth() {
               required
             />
 
+            {/* Password */}
             <div style={{ marginBottom: "16px" }}>
               <label style={S.label}>Password</label>
               <div style={{ position: "relative" }}>
@@ -470,12 +436,11 @@ export default function Auth() {
                   required
                   style={{ ...S.input, paddingRight: "44px" }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = "#cc785c";
-                    e.target.style.boxShadow =
-                      "0 0 0 3px rgba(204,120,92,0.15)";
+                    e.target.style.borderColor = C.borderFoc;
+                    e.target.style.boxShadow = "0 0 0 3px rgba(204,120,92,0.12)";
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = "#e6dfd8";
+                    e.target.style.borderColor = C.border;
                     e.target.style.boxShadow = "none";
                   }}
                 />
@@ -483,18 +448,13 @@ export default function Auth() {
                   type="button"
                   onClick={() => setShowPwd(!showPwd)}
                   style={{
-                    position: "absolute",
-                    right: "14px",
-                    top: "50%",
+                    position: "absolute", right: "14px", top: "50%",
                     transform: "translateY(-50%)",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    color: "#8e8b82",
-                    display: "flex",
+                    background: "none", border: "none", cursor: "pointer",
+                    color: C.textMut, display: "flex",
                   }}
                 >
-                  {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
             </div>
@@ -502,9 +462,7 @@ export default function Auth() {
             {/* Role selector */}
             {!isLogin && (
               <div style={{ marginBottom: "20px" }}>
-                <label style={{ ...S.label, marginBottom: "10px" }}>
-                  Account Type
-                </label>
+                <label style={{ ...S.label, marginBottom: "10px" }}>Account Type</label>
                 <div style={{ display: "flex", gap: "10px" }}>
                   {["Customer", "Worker"].map((r) => (
                     <button
@@ -519,69 +477,47 @@ export default function Auth() {
                 </div>
 
                 {role === "Worker" && (
-                  <div
-                    style={{
-                      marginTop: "16px",
-                      padding: "16px",
-                      background: "#faf9f5",
-                      border: "1px solid #e6dfd8",
-                      borderRadius: "11px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        color: "#cc785c",
-                        marginBottom: "14px",
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      Worker Profile & Skill Details
+                  <div style={{
+                    marginTop: "16px",
+                    padding: "16px",
+                    background: C.inputBg,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: "12px",
+                  }}>
+                    <div style={{
+                      fontSize: "11px", fontWeight: 600,
+                      color: C.accent, marginBottom: "14px",
+                      textTransform: "uppercase", letterSpacing: "0.07em",
+                    }}>
+                      Worker Profile &amp; Skill Details
                     </div>
 
+                    {/* Skills grid */}
                     <div style={{ marginBottom: "14px" }}>
-                      <label style={S.label}>
-                        Select Skills (Select All That Apply)
-                      </label>
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "1fr 1fr",
-                          gap: "8px",
-                        }}
-                      >
+                      <label style={S.label}>Select Skills (Select All That Apply)</label>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                         {[
                           { id: "electrician", label: "Electrician" },
-                          { id: "mason", label: "Mason" },
-                          { id: "plumber", label: "Plumber" },
-                          { id: "carpenter", label: "Carpenter" },
-                          { id: "mechanic", label: "Mechanic" },
-                          { id: "painter", label: "Painter" },
-                          { id: "cleaning", label: "House Cleaning" },
-                          { id: "other", label: "General Labour" },
+                          { id: "mason",       label: "Mason" },
+                          { id: "plumber",     label: "Plumber" },
+                          { id: "carpenter",   label: "Carpenter" },
+                          { id: "mechanic",    label: "Mechanic" },
+                          { id: "painter",     label: "Painter" },
+                          { id: "cleaning",    label: "House Cleaning" },
+                          { id: "other",       label: "General Labour" },
                         ].map((s) => (
-                          <label
-                            key={s.id}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "6px",
-                              fontSize: "13px",
-                              color: "#141413",
-                              cursor: "pointer",
-                            }}
-                          >
+                          <label key={s.id} style={{
+                            display: "flex", alignItems: "center", gap: "7px",
+                            fontSize: "13px", color: C.textSub, cursor: "pointer",
+                          }}>
                             <input
                               type="checkbox"
                               checked={skills.includes(s.id)}
                               onChange={(e) => {
-                                if (e.target.checked)
-                                  setSkills([...skills, s.id]);
-                                else
-                                  setSkills(skills.filter((sk) => sk !== s.id));
+                                if (e.target.checked) setSkills([...skills, s.id]);
+                                else setSkills(skills.filter((sk) => sk !== s.id));
                               }}
-                              style={{ accentColor: "#cc785c" }}
+                              style={{ accentColor: C.accent }}
                             />
                             {s.label}
                           </label>
@@ -589,14 +525,8 @@ export default function Auth() {
                       </div>
                     </div>
 
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr 1fr",
-                        gap: "10px",
-                        marginBottom: "12px",
-                      }}
-                    >
+                    {/* Experience & Location */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
                       <div>
                         <label style={S.label}>Experience (Years)</label>
                         <input
@@ -621,19 +551,14 @@ export default function Auth() {
                       </div>
                     </div>
 
-                    <div
-                      style={{
-                        fontSize: "11px",
-                        color: "#8e8b82",
-                        fontStyle: "italic",
-                        marginBottom: "14px",
-                      }}
-                    >
-                      💡 Tip: Using your home address as your service area
-                      location gives customers the most accurate distance
-                      calculation.
+                    <div style={{
+                      fontSize: "11px", color: C.textMut,
+                      fontStyle: "italic", marginBottom: "14px",
+                    }}>
+                      💡 Using your home address gives customers the most accurate distance.
                     </div>
 
+                    {/* Bio */}
                     <div style={{ marginBottom: "12px" }}>
                       <label style={S.label}>Bio / Work Description</label>
                       <textarea
@@ -644,13 +569,14 @@ export default function Auth() {
                         style={{
                           ...S.input,
                           height: "auto",
-                          borderRadius: "8px",
+                          borderRadius: "9px",
                           resize: "vertical",
                           padding: "10px 14px",
                         }}
                       />
                     </div>
 
+                    {/* Proof upload */}
                     <div>
                       <ImageUpload
                         mode="multiple"
@@ -660,7 +586,7 @@ export default function Auth() {
                         onChange={setProofUrls}
                         maxFiles={3}
                       />
-                      <div style={{ fontSize: "11px", color: "#8e8b82", marginTop: "6px", fontStyle: "italic" }}>
+                      <div style={{ fontSize: "11px", color: C.textMut, marginTop: "6px", fontStyle: "italic" }}>
                         Upload 1–3 photos showing your previous work. Reviewed by administrator.
                       </div>
                     </div>
@@ -669,33 +595,32 @@ export default function Auth() {
               </div>
             )}
 
+            {/* Submit */}
             <button
               type="submit"
-              style={S.btnPrimary}
-              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
+              disabled={loading}
+              style={{ ...S.btnPrimary, opacity: loading ? 1 : 1 }}
+              onMouseEnter={(e) => !loading && (e.currentTarget.style.opacity = "0.85")}
               onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-              onMouseDown={(e) =>
-                (e.currentTarget.style.transform = "scale(0.95)")
-              }
+              onMouseDown={(e) => !loading && (e.currentTarget.style.transform = "scale(0.97)")}
               onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
             >
-              {isLogin ? "Sign In" : "Create Account"}
+              {loading ? (
+                <ThinkingOrb state="connecting" size={40} />
+              ) : (
+                isLogin ? "Sign In" : "Create Account"
+              )}
             </button>
           </form>
 
-          <div
-            style={{
-              marginTop: "16px",
-              display: "flex",
-              justifyContent: "center",
-            }}
-          >
+          {/* Google sign-in */}
+          <div style={{ marginTop: "16px", display: "flex", justifyContent: "center" }}>
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={() => setError("Google sign-in failed.")}
-              width="360"
+              width="370"
               shape="pill"
-              theme="outline"
+              theme="filled_black"
               size="large"
               text="signin_with"
               logo_alignment="left"
@@ -703,16 +628,13 @@ export default function Auth() {
             />
           </div>
 
+          {/* Toggle login / register */}
           <div style={{ textAlign: "center", marginTop: "20px" }}>
             <button
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={() => { setIsLogin(!isLogin); setError(""); setSuccess(""); }}
               style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "14px",
-                color: "#0066cc",
-                letterSpacing: "-0.013em",
+                background: "none", border: "none", cursor: "pointer",
+                fontSize: "13px", color: C.accent, letterSpacing: "-0.01em",
               }}
             >
               {isLogin
@@ -722,6 +644,7 @@ export default function Auth() {
           </div>
         </div>
       </div>
+
     </div>
   );
 }

@@ -192,6 +192,66 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const removeWorkerProfileReview = async (workerId, reviewIndex) => {
+    const prevUsers = [...users];
+    const prevCurrentUser = currentUser ? { ...currentUser } : null;
+
+    // 1. Optimistically update users and currentUser in memory immediately (0ms)
+    setUsers(prev => prev.map(u => {
+      if ((u._id || u.id) === workerId && u.workerProfile?.reviews) {
+        const updatedReviews = u.workerProfile.reviews.filter((_, idx) => idx !== reviewIndex);
+        const totalRating = updatedReviews.reduce((sum, r) => sum + Number(r.rating || 0), 0);
+        const avg = updatedReviews.length ? totalRating / updatedReviews.length : 0;
+        return {
+          ...u,
+          workerProfile: {
+            ...u.workerProfile,
+            reviews: updatedReviews,
+            reviewCount: updatedReviews.length,
+            averageRating: avg,
+          },
+        };
+      }
+      return u;
+    }));
+
+    if (currentUser && (currentUser._id || currentUser.id) === workerId && currentUser.workerProfile?.reviews) {
+      const updatedReviews = currentUser.workerProfile.reviews.filter((_, idx) => idx !== reviewIndex);
+      const totalRating = updatedReviews.reduce((sum, r) => sum + Number(r.rating || 0), 0);
+      const avg = updatedReviews.length ? totalRating / updatedReviews.length : 0;
+      setCurrentUser(prev => ({
+        ...prev,
+        workerProfile: {
+          ...prev.workerProfile,
+          reviews: updatedReviews,
+          reviewCount: updatedReviews.length,
+          averageRating: avg,
+        },
+      }));
+    }
+
+    // 2. If it's a client mock worker, in-memory deletion is done
+    if (String(workerId).startsWith("tw-")) {
+      return;
+    }
+
+    try {
+      // 3. Send API delete request to server
+      const res = await api.delete(`/api/users/${workerId}/reviews/${reviewIndex}`);
+      setUsers(prev => prev.map(u => (u._id || u.id) === workerId ? res.data : u));
+      if (currentUser && (currentUser._id || currentUser.id) === workerId) {
+        setCurrentUser(res.data);
+      }
+      return res.data;
+    } catch (err) {
+      // 4. Rollback on failure
+      setUsers(prevUsers);
+      if (prevCurrentUser) setCurrentUser(prevCurrentUser);
+      console.error('Failed to delete worker profile review, rolled back:', err);
+      throw new Error(err.response?.data?.message || 'Failed to delete review');
+    }
+  };
+
   // Show loading while checking auth
   if (loading) {
     return (
@@ -206,7 +266,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ currentUser, users, login, loginWithGoogle, register, logout, updateWorkerProfile, deleteUser, addUser, verifyWorker, fetchUsers }}>
+    <AuthContext.Provider value={{ currentUser, users, login, loginWithGoogle, register, logout, updateWorkerProfile, deleteUser, addUser, verifyWorker, fetchUsers, removeWorkerProfileReview }}>
       {children}
     </AuthContext.Provider>
   );

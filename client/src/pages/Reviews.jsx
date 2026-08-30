@@ -1,13 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import { Star, MessageSquare, Trash2 } from "lucide-react";
 import { useToast } from "../context/ToastContext";
 
 export default function Reviews() {
-  const { currentUser, users, fetchUsers } = useAuth();
-  const { reviews: bookingReviews, deleteReview, deleteWorkerProfileReview } = useSocket();
+  const { currentUser, users, fetchUsers, removeWorkerProfileReview } = useAuth();
+  const { reviews: bookingReviews, deleteReview } = useSocket();
   const { showToast } = useToast();
+  const [deletedReviewIds, setDeletedReviewIds] = useState([]);
 
   if (!currentUser) return null;
 
@@ -115,6 +116,9 @@ export default function Reviews() {
     });
   }
 
+  // Filter out any locally deleted reviews immediately (0ms latency)
+  displayReviews = displayReviews.filter(r => !deletedReviewIds.includes(r.id));
+
   const avgRating = displayReviews.length
     ? (displayReviews.reduce((a, r) => a + r.rating, 0) / displayReviews.length).toFixed(1)
     : null;
@@ -138,13 +142,14 @@ export default function Reviews() {
           </h1>
           <p style={{ fontSize: "15px", color: "#6c6a64", marginTop: "6px" }}>
             {currentUser.role === "Customer" ? "Reviews you submitted for workers and completed services." :
-             currentUser.role === "Worker"   ? "Ratings and reviews left by your clients." : "All reviews across the platform."}
+             currentUser.role === "Worker" ? "Direct feedback from customers who hired your services." :
+             "All reviews across the entire Grama Seva rural service portal."}
           </p>
         </div>
 
-        {/* Summary */}
+        {/* Stats header */}
         {displayReviews.length > 0 && (
-          <div className="reviews-summary-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", maxWidth: "440px", gap: "16px", marginBottom: "28px" }}>
+          <div style={{ display: "flex", gap: "16px", marginBottom: "28px" }}>
             <div style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "16px", padding: "20px 24px" }}>
               <div style={{ fontSize: "12px", fontWeight: 600, color: "#8e8b82", letterSpacing: "0.04em", textTransform: "uppercase" }}>
                 Total Reviews
@@ -200,7 +205,11 @@ export default function Reviews() {
                         type="button"
                         onClick={() => {
                           if (window.confirm("Remove this review?")) {
+                            // 1. Immediately remove from view (0ms)
+                            setDeletedReviewIds(prev => [...prev, r.id]);
                             showToast("Review deleted.", "success");
+
+                            // 2. Perform backend delete in background
                             const deletePromise = r.source === "booking"
                               ? deleteReview(r.id)
                               : (() => {
@@ -208,13 +217,15 @@ export default function Reviews() {
                                   const workerId = parts[1];
                                   const idx = parseInt(parts[2], 10);
                                   return (workerId && !isNaN(idx))
-                                    ? deleteWorkerProfileReview(workerId, idx)
+                                    ? removeWorkerProfileReview(workerId, idx)
                                     : Promise.resolve();
                                 })();
 
                             deletePromise
                               .then(() => { if (fetchUsers) fetchUsers(); })
                               .catch((err) => {
+                                // 3. Rollback if delete fails
+                                setDeletedReviewIds(prev => prev.filter(id => id !== r.id));
                                 showToast(err.message || "Failed to delete review.", "error");
                                 if (fetchUsers) fetchUsers();
                               });

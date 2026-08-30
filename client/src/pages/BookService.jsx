@@ -4,6 +4,8 @@ import { useSocket, getDistance } from "../context/SocketContext";
 import { useToast } from "../context/ToastContext";
 import { Search, Phone, Star, MapPin, Award, CheckCircle, X, Copy, Check, Filter, Navigation, DollarSign, Image, MessageSquare, Edit3, Crosshair, Trash2 } from "lucide-react";
 import ImageLightbox from "../components/ImageLightbox";
+import { WorkerCardSkeleton } from "../components/SkeletonLoader";
+import { useDebounce } from "../hooks/useDebounce";
 
 const MOCK_TELUGU_WORKERS = [
   {
@@ -217,21 +219,25 @@ export default function BookService() {
     );
   }, [showToast]);
 
+  const debouncedSearchQuery = useDebounce(searchQuery, 250);
+
   const realWorkers = users.filter((u) => u.role === "Worker" && u.workerProfile?.isVerified);
   const allWorkers = realWorkers.length > 0 ? realWorkers : MOCK_TELUGU_WORKERS;
 
-  // Filter workers
+  // Filter workers with debounced search query for 60fps typing performance
   const filteredBase = useMemo(() => {
     return allWorkers.filter((w) => {
       const prof = w.workerProfile || {};
       const skillMatch = selectedSkill === "all" || prof.skill === selectedSkill || prof.skills?.includes(selectedSkill);
-      const searchLower = searchQuery.toLowerCase();
+      const searchLower = (debouncedSearchQuery || "").toLowerCase().trim();
+      if (!searchLower) return skillMatch;
+
       const nameMatch = w.name?.toLowerCase().includes(searchLower);
       const addressMatch = prof.address?.toLowerCase().includes(searchLower);
       const bioMatch = prof.bio?.toLowerCase().includes(searchLower);
       return skillMatch && (nameMatch || addressMatch || bioMatch);
     });
-  }, [allWorkers, selectedSkill, searchQuery]);
+  }, [allWorkers, selectedSkill, debouncedSearchQuery]);
 
   // Calculate distance for workers
   const workersWithDist = useMemo(() => {

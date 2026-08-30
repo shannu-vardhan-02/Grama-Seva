@@ -168,43 +168,72 @@ export const SocketProvider = ({ children }) => {
   };
 
   const acceptBooking = async (bookingId, workerId) => {
-    // workerId is ignored — the API determines worker from auth token
+    const prevBookings = [...bookings];
+    // 1. Optimistic status change
+    setBookings(prev => prev.map(b => (b._id || b.id) === bookingId ? { ...b, status: 'Accepted', worker: currentUser?._id, workerName: currentUser?.name } : b));
+
     try {
+      // 2. Background API update
       const res = await api.patch(`/api/bookings/${bookingId}/accept`);
       setBookings(prev => prev.map(b => (b._id || b.id) === bookingId ? res.data : b));
       await fetchNotifications();
+      return res.data;
     } catch (err) {
-      console.error('Failed to accept booking', err);
+      // 3. Rollback on failure
+      setBookings(prevBookings);
+      console.error('Failed to accept booking, rolled back:', err);
+      throw new Error(err.response?.data?.message || 'Failed to accept booking');
     }
   };
 
   const startBooking = async (bookingId) => {
+    const prevBookings = [...bookings];
+    // 1. Optimistic status change
+    setBookings(prev => prev.map(b => (b._id || b.id) === bookingId ? { ...b, status: 'In Progress' } : b));
+
     try {
       const res = await api.patch(`/api/bookings/${bookingId}/start`);
       setBookings(prev => prev.map(b => (b._id || b.id) === bookingId ? res.data : b));
       await fetchNotifications();
+      return res.data;
     } catch (err) {
-      console.error('Failed to start booking', err);
+      setBookings(prevBookings);
+      console.error('Failed to start booking, rolled back:', err);
+      throw new Error(err.response?.data?.message || 'Failed to start booking');
     }
   };
 
   const completeBooking = async (bookingId) => {
+    const prevBookings = [...bookings];
+    // 1. Optimistic status change
+    setBookings(prev => prev.map(b => (b._id || b.id) === bookingId ? { ...b, status: 'Completed' } : b));
+
     try {
       const res = await api.patch(`/api/bookings/${bookingId}/complete`);
       setBookings(prev => prev.map(b => (b._id || b.id) === bookingId ? res.data : b));
       await fetchNotifications();
+      return res.data;
     } catch (err) {
-      console.error('Failed to complete booking', err);
+      setBookings(prevBookings);
+      console.error('Failed to complete booking, rolled back:', err);
+      throw new Error(err.response?.data?.message || 'Failed to complete booking');
     }
   };
 
   const cancelBooking = async (bookingId) => {
+    const prevBookings = [...bookings];
+    // 1. Optimistic status change
+    setBookings(prev => prev.map(b => (b._id || b.id) === bookingId ? { ...b, status: 'Cancelled' } : b));
+
     try {
       const res = await api.patch(`/api/bookings/${bookingId}/cancel`);
       setBookings(prev => prev.map(b => (b._id || b.id) === bookingId ? res.data : b));
       await fetchNotifications();
+      return res.data;
     } catch (err) {
-      console.error('Failed to cancel booking', err);
+      setBookings(prevBookings);
+      console.error('Failed to cancel booking, rolled back:', err);
+      throw new Error(err.response?.data?.message || 'Failed to cancel booking');
     }
   };
 
@@ -213,6 +242,7 @@ export const SocketProvider = ({ children }) => {
       const res = await api.post('/api/reviews', { bookingId, rating, comment });
       setReviews(prev => [res.data, ...prev]);
       await fetchNotifications();
+      return res.data;
     } catch (err) {
       throw new Error(err.response?.data?.message || err.response?.data?.error || 'Failed to submit review');
     }
@@ -228,10 +258,16 @@ export const SocketProvider = ({ children }) => {
   };
 
   const deleteReview = async (reviewId) => {
+    const prevReviews = [...reviews];
+    // 1. Optimistically remove review
+    setReviews(prev => prev.filter(r => (r._id || r.id) !== reviewId));
+
     try {
       await api.delete(`/api/reviews/${reviewId}`);
-      setReviews(prev => prev.filter(r => (r._id || r.id) !== reviewId));
     } catch (err) {
+      // 2. Rollback
+      setReviews(prevReviews);
+      console.error('Failed to delete review, rolled back:', err);
       throw new Error(err.response?.data?.message || 'Failed to delete review');
     }
   };

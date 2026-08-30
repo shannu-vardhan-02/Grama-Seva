@@ -66,6 +66,30 @@ export default function AppLayout({ children }) {
 
   const [showNotif, setShowNotif] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isOnline, setIsOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
+  const [showReconnectedBanner, setShowReconnectedBanner] = useState(false);
+
+  // Network connection resilience listeners
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      setShowReconnectedBanner(true);
+      const timer = setTimeout(() => setShowReconnectedBanner(false), 3500);
+      return () => clearTimeout(timer);
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setShowReconnectedBanner(false);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -380,6 +404,47 @@ export default function AppLayout({ children }) {
             </button>
           </div>
         </header>
+
+        {/* ── Network Resilience Banner ── */}
+        {!isOnline && (
+          <div
+            className="offline-banner"
+            style={{
+              background: "#c07000",
+              color: "#ffffff",
+              padding: "8px 16px",
+              fontSize: "13px",
+              fontWeight: 500,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              boxShadow: "0 2px 8px rgba(192,112,0,0.25)",
+            }}
+          >
+            <span>⚡ You are currently offline. Showing cached village directory.</span>
+          </div>
+        )}
+
+        {showReconnectedBanner && (
+          <div
+            className="offline-banner"
+            style={{
+              background: "#248a3d",
+              color: "#ffffff",
+              padding: "8px 16px",
+              fontSize: "13px",
+              fontWeight: 500,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              boxShadow: "0 2px 8px rgba(36,138,61,0.25)",
+            }}
+          >
+            <span>✓ Connection restored. Data synchronized in real-time.</span>
+          </div>
+        )}
 
         {/* ── Main content ── */}
         <main className="app-main-content" style={{ flex: 1, overflowY: "auto" }}>

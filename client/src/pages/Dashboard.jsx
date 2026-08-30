@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import { Search, Phone, Star, MapPin, Award, CheckCircle, ShieldAlert, Check, X, Copy, Filter, Navigation, Edit3, ArrowRight, Briefcase, Users, ClipboardList } from "lucide-react";
+import { StatCardSkeleton, BookingRowSkeleton } from "../components/SkeletonLoader";
 
 export default function Dashboard() {
   const { currentUser, users, verifyWorker } = useAuth();

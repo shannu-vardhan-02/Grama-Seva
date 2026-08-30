@@ -1267,6 +1267,40 @@ body.drawer-open {
   overflow: hidden !important;
 }
 
+/* ─────────────────────────────────────────────────────────
+   SKELETON SHIMMER ANIMATION & OFFLINE BANNER
+───────────────────────────────────────────────────────── */
+@keyframes shimmerWave {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+}
+
+.offline-banner {
+  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+
 
 
 

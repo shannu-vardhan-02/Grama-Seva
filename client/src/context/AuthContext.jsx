@@ -87,13 +87,33 @@ export const AuthProvider = ({ children }) => {
 
   const updateWorkerProfile = async (profileData) => {
     if (!currentUser) return;
+    const prevUser = { ...currentUser };
+    const prevUsers = [...users];
+    const targetId = currentUser._id || currentUser.id;
+
+    // 1. Optimistically update local state immediately (0ms UI latency)
+    const optimisticUser = {
+      ...currentUser,
+      ...profileData,
+      workerProfile: {
+        ...(currentUser.workerProfile || {}),
+        ...(profileData.workerProfile || {}),
+      },
+    };
+    setCurrentUser(optimisticUser);
+    setUsers(prev => prev.map(u => (u._id || u.id) === targetId ? optimisticUser : u));
+
     try {
-      const res = await api.patch(`/api/users/${currentUser._id || currentUser.id}/profile`, profileData);
+      // 2. Perform backend update in the background
+      const res = await api.patch(`/api/users/${targetId}/profile`, profileData);
       setCurrentUser(res.data);
-      // Update in users array too
-      setUsers(prev => prev.map(u => (u._id || u.id) === (currentUser._id || currentUser.id) ? res.data : u));
+      setUsers(prev => prev.map(u => (u._id || u.id) === targetId ? res.data : u));
+      return res.data;
     } catch (err) {
-      console.error('Failed to update profile', err);
+      // 3. Rollback on failure
+      setCurrentUser(prevUser);
+      setUsers(prevUsers);
+      console.error('Failed to update profile, rolled back:', err);
       throw new Error(err.response?.data?.message || err.response?.data?.error || 'Update failed');
     }
   };
@@ -102,8 +122,20 @@ export const AuthProvider = ({ children }) => {
     if (currentUser && (currentUser._id || currentUser.id) === userId) {
       throw new Error('Cannot delete your own logged-in admin account');
     }
-    await api.delete(`/api/users/${userId}`);
+    const prevUsers = [...users];
+
+    // 1. Optimistic removal
     setUsers(prev => prev.filter(u => (u._id || u.id) !== userId));
+
+    try {
+      // 2. Server delete
+      await api.delete(`/api/users/${userId}`);
+    } catch (err) {
+      // 3. Rollback on error
+      setUsers(prevUsers);
+      console.error('Failed to delete user, rolled back:', err);
+      throw new Error(err.response?.data?.message || 'Delete failed');
+    }
   };
 
   const addUser = async (userData) => {
@@ -114,14 +146,49 @@ export const AuthProvider = ({ children }) => {
     }
     const res = await api.post('/api/users', body);
     setUsers(prev => [...prev, res.data]);
+    return res.data;
   };
 
   const verifyWorker = async (workerUserId, status) => {
-    const res = await api.patch(`/api/users/${workerUserId}/verify`, { status });
-    setUsers(prev => prev.map(u => (u._id || u.id) === workerUserId ? res.data : u));
-    // Also update currentUser if it's the same user (unlikely for admin verifying, but safe)
+    const prevUsers = [...users];
+    const prevCurrentUser = currentUser ? { ...currentUser } : null;
+
+    // 1. Optimistic verification state update
+    const isApproved = status === "Approved";
+    setUsers(prev => prev.map(u => {
+      if ((u._id || u.id) === workerUserId) {
+        return {
+          ...u,
+          workerProfile: {
+            ...(u.workerProfile || {}),
+            isVerified: isApproved,
+          },
+        };
+      }
+      return u;
+    }));
+
     if (currentUser && (currentUser._id || currentUser.id) === workerUserId) {
-      setCurrentUser(res.data);
+      setCurrentUser(prev => ({
+        ...prev,
+        workerProfile: { ...(prev.workerProfile || {}), isVerified: isApproved },
+      }));
+    }
+
+    try {
+      // 2. Send API request
+      const res = await api.patch(`/api/users/${workerUserId}/verify`, { status });
+      setUsers(prev => prev.map(u => (u._id || u.id) === workerUserId ? res.data : u));
+      if (currentUser && (currentUser._id || currentUser.id) === workerUserId) {
+        setCurrentUser(res.data);
+      }
+      return res.data;
+    } catch (err) {
+      // 3. Rollback if network/server fails
+      setUsers(prevUsers);
+      if (prevCurrentUser) setCurrentUser(prevCurrentUser);
+      console.error('Failed to verify worker, rolled back:', err);
+      throw new Error(err.response?.data?.message || 'Verification update failed');
     }
   };
 

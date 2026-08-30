@@ -17,9 +17,9 @@ import BookingsLog from "./pages/BookingsLog";
 import Settings from "./pages/Settings";
 
 const ROLE_ACCESS = {
-  Customer: ["/dashboard", "/book-service", "/active-job", "/reviews", "/settings"],
-  Worker: ["/dashboard", "/active-job", "/reviews", "/settings"],
-  Admin: ["/dashboard", "/book-service", "/active-job", "/reviews", "/vetting-queue", "/users", "/bookings", "/settings"],
+  Customer: ["/book-service", "/active-job", "/reviews", "/settings"],
+  Worker: ["/book-service", "/active-job", "/reviews", "/settings"],
+  Admin: ["/book-service", "/active-job", "/reviews", "/vetting-queue", "/users", "/bookings", "/settings"],
 };
 
 // Route protector verifying role permissions
@@ -33,7 +33,7 @@ function ProtectedRoute({ children, path }) {
   const allowedPaths = ROLE_ACCESS[currentUser.role] || [];
   if (!allowedPaths.includes(path)) {
     // Redirect role to default allowed path
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/book-service" replace />;
   }
 
   return <AppLayout>{children}</AppLayout>;
@@ -46,15 +46,10 @@ function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/auth" element={<Auth />} />
 
-      {/* Unified Dashboards and Routes */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute path="/dashboard">
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
+      {/* Redirect /dashboard to primary Search Workers home */}
+      <Route path="/dashboard" element={<Navigate to="/book-service" replace />} />
+
+      {/* Primary Search Workers Home Page */}
       <Route
         path="/book-service"
         element={

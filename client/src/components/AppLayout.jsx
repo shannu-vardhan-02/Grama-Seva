@@ -22,8 +22,7 @@ import {
 } from "lucide-react";
 
 const NAV = [
-  { to: "/dashboard",    label: "Dashboard",      icon: LayoutDashboard },
-  { to: "/book-service", label: "Search Workers", icon: Wrench },
+  { to: "/book-service", label: "Search Workers", icon: Search },
   { to: "/reviews",      label: "Reviews",        icon: MessageSquare },
   { to: "/vetting-queue",label: "Vetting Queue",  icon: ShieldAlert },
   { to: "/users",        label: "Manage Users",   icon: Users },
@@ -31,27 +30,27 @@ const NAV = [
 ];
 
 const ROLE_ACCESS = {
-  Customer: ["/dashboard", "/book-service", "/reviews", "/settings"],
-  Worker:   ["/dashboard", "/reviews", "/settings"],
-  Admin:    ["/dashboard", "/vetting-queue", "/users", "/settings"],
+  Customer: ["/book-service", "/reviews", "/settings"],
+  Worker:   ["/book-service", "/reviews", "/settings"],
+  Admin:    ["/book-service", "/vetting-queue", "/users", "/settings"],
 };
 
 // Bottom nav tabs per role (mobile only)
 const BOTTOM_NAV = {
   Customer: [
     { to: "/",            label: "Home",     icon: Home },
-    { to: "/book-service",label: "Search",   icon: Search },
-    { to: "/dashboard",   label: "Dashboard",icon: LayoutDashboard },
+    { to: "/book-service",label: "Workers",  icon: Search },
+    { to: "/reviews",     label: "Reviews",  icon: MessageSquare },
     { to: "/settings",    label: "Profile",  icon: User },
   ],
   Worker: [
     { to: "/",            label: "Home",     icon: Home },
-    { to: "/dashboard",   label: "Dashboard",icon: LayoutDashboard },
+    { to: "/book-service",label: "Directory",icon: Search },
     { to: "/reviews",     label: "Reviews",  icon: MessageSquare },
     { to: "/settings",    label: "Profile",  icon: User },
   ],
   Admin: [
-    { to: "/dashboard",      label: "Panel",    icon: LayoutDashboard },
+    { to: "/book-service",   label: "Workers",  icon: Search },
     { to: "/vetting-queue",  label: "Vetting",  icon: ShieldAlert },
     { to: "/users",          label: "Users",    icon: Users },
     { to: "/settings",       label: "Settings", icon: Settings },

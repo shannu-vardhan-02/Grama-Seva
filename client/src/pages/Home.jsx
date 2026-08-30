@@ -41,16 +41,16 @@ export default function Home() {
         {/* Desktop nav links */}
         <div className="home-nav-links">
           <Link to="/book-service" style={{ fontSize: "14px", color: "#a09d96", textDecoration: "none" }}>Search Workers</Link>
-          <Link to={currentUser ? "/dashboard" : "/auth"} style={{ fontSize: "14px", color: "#a09d96", textDecoration: "none" }}>Portal</Link>
+          <Link to={currentUser ? "/book-service" : "/auth"} style={{ fontSize: "14px", color: "#a09d96", textDecoration: "none" }}>Portal</Link>
         </div>
 
         {/* Desktop auth button */}
         <div className="home-nav-auth">
           {currentUser ? (
-            <Link to="/dashboard" style={{
+            <Link to="/book-service" style={{
               padding: "8px 18px", background: "#cc785c", color: "#ffffff",
               borderRadius: "8px", fontSize: "14px", fontWeight: 500, textDecoration: "none",
-            }}>Dashboard</Link>
+            }}>Search Workers</Link>
           ) : (
             <Link to="/auth" style={{
               padding: "8px 18px", background: "#cc785c", color: "#ffffff",
@@ -99,7 +99,7 @@ export default function Home() {
             🔍 Search Workers
           </Link>
           <Link
-            to={currentUser ? "/dashboard" : "/auth"}
+            to={currentUser ? "/book-service" : "/auth"}
             onClick={closeDrawer}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: "13px 14px", borderRadius: "10px", color: "#a09d96", textDecoration: "none", fontSize: "15px", fontWeight: 400 }}
           >
@@ -109,11 +109,11 @@ export default function Home() {
           <div style={{ marginTop: "auto", paddingTop: "24px" }}>
             {currentUser ? (
               <Link
-                to="/dashboard"
+                to="/book-service"
                 onClick={closeDrawer}
                 style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "13px 20px", background: "#cc785c", color: "#ffffff", borderRadius: "10px", fontSize: "15px", fontWeight: 600, textDecoration: "none" }}
               >
-                Go to Dashboard
+                Find Workers
               </Link>
             ) : (
               <>

@@ -225,8 +225,8 @@ export default function Auth() {
     try {
       if (isLogin) {
         await login(email, password);
-        // Navigate immediately — no setTimeout delay that causes blank dashboard
-        navigate("/dashboard", { replace: true });
+        // Navigate immediately to primary Search Workers home
+        navigate("/book-service", { replace: true });
       } else {
         if (!name || !email || !password || !phone)
           throw new Error("Please fill in all required fields.");
@@ -248,8 +248,8 @@ export default function Auth() {
           });
         }
         await register({ name, email, password, role, phone, workerProfile: wp });
-        // Navigate immediately — no setTimeout delay
-        navigate("/dashboard", { replace: true });
+        // Navigate immediately to primary Search Workers home
+        navigate("/book-service", { replace: true });
       }
     } catch (err) {
       setError(
@@ -267,7 +267,7 @@ export default function Auth() {
     setGoogleLoading(true);
     try {
       await loginWithGoogle(credentialResponse.credential);
-      navigate("/dashboard", { replace: true });
+      navigate("/book-service", { replace: true });
     } catch (err) {
       setError(
         err.response?.data?.message ||

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { Users, UserPlus, Trash2, X } from "lucide-react";
+import ConfirmModal from "../components/ConfirmModal";
 
 const T = {
   page:  { padding: "40px", background: "#f5f5f7", minHeight: "100vh", fontFamily: "SF Pro Text, system-ui, -apple-system, Inter, sans-serif" },
@@ -206,36 +207,20 @@ export default function ManageUsers() {
       </div>
 
       {/* ── DELETE CONFIRMATION MODAL ── */}
-      {userToDelete && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(24,23,21,0.65)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300, padding: "20px" }}>
-          <div style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "16px", padding: "32px", width: "100%", maxWidth: "420px", boxShadow: "0 20px 40px rgba(0,0,0,0.15)" }}>
-            <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "22px", fontWeight: 600, color: "#141413", marginBottom: "12px" }}>
-              Confirm Deletion
-            </div>
-            <p style={{ fontSize: "15px", color: "#6c6a64", lineHeight: 1.5, marginBottom: "24px" }}>
-              Are you sure you want to delete <strong>{userToDelete.name}</strong> ({userToDelete.role}) from Grama Seva? This action cannot be undone.
-            </p>
-            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-              <button
-                onClick={() => setUserToDelete(null)}
-                style={{
-                  padding: "10px 18px", background: "#efe9de", color: "#141413", border: "1px solid #e6dfd8", borderRadius: "8px", fontSize: "14px", fontWeight: 500, cursor: "pointer"
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={executeDelete}
-                style={{
-                  padding: "10px 18px", background: "#c64545", color: "#ffffff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 500, cursor: "pointer"
-                }}
-              >
-                Yes, Delete User
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={!!userToDelete}
+        title="Confirm User Deletion"
+        message={
+          userToDelete
+            ? `Are you sure you want to delete "${userToDelete.name}" (${userToDelete.role}) from Grama Seva? This action cannot be undone.`
+            : ""
+        }
+        confirmText="Yes, Delete User"
+        cancelText="Cancel"
+        variant="danger"
+        onCancel={() => setUserToDelete(null)}
+        onConfirm={executeDelete}
+      />
 
       {/* Add User Modal */}
       {showModal && (

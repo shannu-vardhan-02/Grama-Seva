@@ -3,12 +3,14 @@ import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import { Star, MessageSquare, Trash2 } from "lucide-react";
 import { useToast } from "../context/ToastContext";
+import ConfirmModal from "../components/ConfirmModal";
 
 export default function Reviews() {
   const { currentUser, users, fetchUsers, removeWorkerProfileReview } = useAuth();
   const { reviews: bookingReviews, deleteReview } = useSocket();
   const { showToast } = useToast();
   const [deletedReviewIds, setDeletedReviewIds] = useState([]);
+  const [reviewToDelete, setReviewToDelete] = useState(null);
 
   if (!currentUser) return null;
 
@@ -203,34 +205,7 @@ export default function Reviews() {
                     {(currentUser.role === "Admin" || (currentUser.role === "Customer" && r.customerName === currentUser.name)) && (
                       <button
                         type="button"
-                        onClick={() => {
-                          if (window.confirm("Remove this review?")) {
-                            // 1. Immediately remove from view (0ms)
-                            setDeletedReviewIds(prev => [...prev, r.id]);
-                            showToast("Review deleted.", "success");
-
-                            // 2. Perform backend delete in background
-                            const deletePromise = r.source === "booking"
-                              ? deleteReview(r.id)
-                              : (() => {
-                                  const parts = r.id.split("-");
-                                  const workerId = parts[1];
-                                  const idx = parseInt(parts[2], 10);
-                                  return (workerId && !isNaN(idx))
-                                    ? removeWorkerProfileReview(workerId, idx)
-                                    : Promise.resolve();
-                                })();
-
-                            deletePromise
-                              .then(() => { if (fetchUsers) fetchUsers(); })
-                              .catch((err) => {
-                                // 3. Rollback if delete fails
-                                setDeletedReviewIds(prev => prev.filter(id => id !== r.id));
-                                showToast(err.message || "Failed to delete review.", "error");
-                                if (fetchUsers) fetchUsers();
-                              });
-                          }
-                        }}
+                        onClick={() => setReviewToDelete(r)}
                         title="Remove Review"
                         style={{ background: "none", border: "none", color: "#c64545", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px" }}
                       >
@@ -255,6 +230,50 @@ export default function Reviews() {
             ))}
           </div>
         )}
+
+        {/* ── Custom Delete Confirmation Modal ── */}
+        <ConfirmModal
+          isOpen={!!reviewToDelete}
+          title="Remove Customer Review"
+          message={`Are you sure you want to delete this review for ${reviewToDelete?.workerName || "the worker"}? This action cannot be undone.`}
+          confirmText="Yes, Delete Review"
+          cancelText="Cancel"
+          variant="danger"
+          onCancel={() => setReviewToDelete(null)}
+          onConfirm={() => {
+            if (!reviewToDelete) return;
+            const r = reviewToDelete;
+            setReviewToDelete(null);
+
+            // 1. Immediately remove from view (0ms)
+            setDeletedReviewIds((prev) => [...prev, r.id]);
+            showToast("Review deleted.", "success");
+
+            // 2. Perform backend delete in background
+            const deletePromise =
+              r.source === "booking"
+                ? deleteReview(r.id)
+                : (() => {
+                    const parts = r.id.split("-");
+                    const workerId = parts[1];
+                    const idx = parseInt(parts[2], 10);
+                    return workerId && !isNaN(idx)
+                      ? removeWorkerProfileReview(workerId, idx)
+                      : Promise.resolve();
+                  })();
+
+            deletePromise
+              .then(() => {
+                if (fetchUsers) fetchUsers();
+              })
+              .catch((err) => {
+                // 3. Rollback if delete fails
+                setDeletedReviewIds((prev) => prev.filter((id) => id !== r.id));
+                showToast(err.message || "Failed to delete review.", "error");
+                if (fetchUsers) fetchUsers();
+              });
+          }}
+        />
       </div>
     </div>
   );

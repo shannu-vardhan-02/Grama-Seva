@@ -6,6 +6,7 @@ import { Search, Phone, Star, MapPin, Award, CheckCircle, X, Copy, Check, Filter
 import ImageLightbox from "../components/ImageLightbox";
 import { WorkerCardSkeleton } from "../components/SkeletonLoader";
 import { useDebounce } from "../hooks/useDebounce";
+import ConfirmModal from "../components/ConfirmModal";
 
 const MOCK_TELUGU_WORKERS = [
   {
@@ -171,6 +172,7 @@ export default function BookService() {
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewToDelete, setReviewToDelete] = useState(null);
 
   // Lightbox State
   const [lightboxImages, setLightboxImages] = useState(null);
@@ -766,33 +768,7 @@ export default function BookService() {
                           {isAuthorOrAdmin && (
                             <button
                               type="button"
-                              onClick={() => {
-                                if (window.confirm("Are you sure you want to remove this review?")) {
-                                  const previousModalWorker = { ...activeModalWorker };
-                                  const targetReviews = activeModalWorker.workerProfile?.reviews || [];
-                                  const updatedReviews = targetReviews.filter((_, i) => i !== idx);
-
-                                  // 1. Optimistically remove from UI in 0ms
-                                  setActiveModalWorker(prev => ({
-                                    ...prev,
-                                    workerProfile: { ...prev.workerProfile, reviews: updatedReviews }
-                                  }));
-                                  showToast("Review removed successfully.", "success");
-
-                                  // 2. Perform backend delete in background
-                                  const deletePromise = (rev._id || rev.id)
-                                    ? deleteReview(rev._id || rev.id)
-                                    : deleteWorkerProfileReview(activeModalWorker._id || activeModalWorker.id, idx);
-
-                                  deletePromise
-                                    .then(() => { if (fetchUsers) fetchUsers(); })
-                                    .catch(err => {
-                                      // 3. Rollback on failure
-                                      setActiveModalWorker(previousModalWorker);
-                                      showToast(err.message || "Could not delete review.", "error");
-                                    });
-                                }
-                              }}
+                              onClick={() => setReviewToDelete({ rev, idx })}
                               title="Delete Review"
                               style={{ background: "none", border: "none", color: "#c64545", cursor: "pointer", display: "flex", alignItems: "center", padding: "2px" }}
                             >
@@ -826,8 +802,6 @@ export default function BookService() {
             <p style={{ fontSize: "14px", color: "#6c6a64", marginBottom: "20px" }}>
               Share your experience with <strong>{activeModalWorker?.name}</strong> to help the village community.
             </p>
-
-
 
             <form onSubmit={handleAddReviewSubmit}>
               {/* Star Rating Picker */}
@@ -889,6 +863,49 @@ export default function BookService() {
           onClose={() => setLightboxImages(null)}
         />
       )}
+
+      {/* ── DELETE REVIEW CONFIRMATION MODAL ── */}
+      <ConfirmModal
+        isOpen={!!reviewToDelete}
+        title="Remove Review"
+        message="Are you sure you want to delete this customer review? This will recalculate the worker's average rating."
+        confirmText="Yes, Delete Review"
+        cancelText="Cancel"
+        variant="danger"
+        onCancel={() => setReviewToDelete(null)}
+        onConfirm={() => {
+          if (!reviewToDelete) return;
+          const { rev, idx } = reviewToDelete;
+          setReviewToDelete(null);
+
+          const previousModalWorker = { ...activeModalWorker };
+          const targetReviews = activeModalWorker.workerProfile?.reviews || [];
+          const updatedReviews = targetReviews.filter((_, i) => i !== idx);
+
+          // 1. Optimistically remove from UI in 0ms
+          setActiveModalWorker((prev) => ({
+            ...prev,
+            workerProfile: { ...prev.workerProfile, reviews: updatedReviews },
+          }));
+          showToast("Review removed successfully.", "success");
+
+          // 2. Perform backend delete in background
+          const deletePromise =
+            rev._id || rev.id
+              ? deleteReview(rev._id || rev.id)
+              : deleteWorkerProfileReview(activeModalWorker._id || activeModalWorker.id, idx);
+
+          deletePromise
+            .then(() => {
+              if (fetchUsers) fetchUsers();
+            })
+            .catch((err) => {
+              // 3. Rollback on failure
+              setActiveModalWorker(previousModalWorker);
+              showToast(err.message || "Could not delete review.", "error");
+            });
+        }}
+      />
     </div>
   );
 }

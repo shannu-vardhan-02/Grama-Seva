@@ -270,41 +270,56 @@ export default function BookService() {
     setReviewComment("");
   };
 
-  const handleAddReviewSubmit = async (e) => {
+  const handleAddReviewSubmit = (e) => {
     e.preventDefault();
     if (!reviewComment.trim() || reviewRating === 0) return;
-    setReviewSubmitting(true);
-    try {
-      const workerId = activeModalWorker._id || activeModalWorker.id;
-      if (workerId && !String(workerId).startsWith("tw-")) {
-        await submitWorkerReview(workerId, reviewRating, reviewComment);
-        // Refetch users so the new review appears in users array & across all pages
-        if (fetchUsers) await fetchUsers();
-      }
-      // Optimistically add review to local worker modal
-      const newRev = {
-        customerName: currentUser?.name || "Verified Customer",
-        rating: reviewRating,
-        comment: reviewComment,
-        date: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
-      };
-      const updatedRevList = [newRev, ...(activeModalWorker.workerProfile?.reviews || [])];
-      setActiveModalWorker({
-        ...activeModalWorker,
-        workerProfile: {
-          ...activeModalWorker.workerProfile,
-          reviews: updatedRevList,
-          reviewCount: updatedRevList.length
-        }
-      });
-      showToast("Review submitted successfully!", "success");
-      setShowReviewModal(false);
-      setReviewComment("");
-      setReviewRating(0);
-    } catch (err) {
-      showToast(err.message || "Failed to submit review", "error");
-    } finally {
-      setReviewSubmitting(false);
+
+    const workerId = activeModalWorker._id || activeModalWorker.id;
+    const previousModalWorker = { ...activeModalWorker };
+    const savedComment = reviewComment;
+    const savedRating = reviewRating;
+
+    // 1. Construct optimistic review object
+    const newRev = {
+      customerName: currentUser?.name || "Verified Customer",
+      rating: savedRating,
+      comment: savedComment,
+      date: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
+    };
+
+    const existingReviews = activeModalWorker.workerProfile?.reviews || [];
+    const updatedRevList = [newRev, ...existingReviews];
+    const totalRating = updatedRevList.reduce((sum, r) => sum + Number(r.rating || 0), 0);
+    const newAvg = totalRating / updatedRevList.length;
+
+    // 2. Optimistically update local active worker modal in 0ms
+    setActiveModalWorker({
+      ...activeModalWorker,
+      workerProfile: {
+        ...activeModalWorker.workerProfile,
+        reviews: updatedRevList,
+        reviewCount: updatedRevList.length,
+        averageRating: newAvg,
+      },
+    });
+
+    // 3. Immediately close modal and reset inputs — zero perceived latency!
+    setShowReviewModal(false);
+    setReviewComment("");
+    setReviewRating(0);
+    showToast("Review submitted successfully!", "success");
+
+    // 4. Perform network request in background
+    if (workerId && !String(workerId).startsWith("tw-")) {
+      submitWorkerReview(workerId, savedRating, savedComment)
+        .then(() => {
+          if (fetchUsers) fetchUsers();
+        })
+        .catch((err) => {
+          // 5. Rollback on failure
+          setActiveModalWorker(previousModalWorker);
+          showToast(err.message || "Failed to submit review", "error");
+        });
     }
   };
 
@@ -751,25 +766,31 @@ export default function BookService() {
                           {isAuthorOrAdmin && (
                             <button
                               type="button"
-                              onClick={async () => {
+                              onClick={() => {
                                 if (window.confirm("Are you sure you want to remove this review?")) {
-                                  try {
-                                    if (rev._id || rev.id) {
-                                      await deleteReview(rev._id || rev.id);
-                                    } else {
-                                      await deleteWorkerProfileReview(activeModalWorker._id || activeModalWorker.id, idx);
-                                    }
-                                    showToast("Review removed successfully.", "success");
-                                    // Update local active modal worker reviews list
-                                    const updatedReviews = activeModalWorker.workerProfile.reviews.filter((_, i) => i !== idx);
-                                    setActiveModalWorker(prev => ({
-                                      ...prev,
-                                      workerProfile: { ...prev.workerProfile, reviews: updatedReviews }
-                                    }));
-                                    fetchUsers();
-                                  } catch (err) {
-                                    showToast(err.message || "Could not delete review.", "error");
-                                  }
+                                  const previousModalWorker = { ...activeModalWorker };
+                                  const targetReviews = activeModalWorker.workerProfile?.reviews || [];
+                                  const updatedReviews = targetReviews.filter((_, i) => i !== idx);
+
+                                  // 1. Optimistically remove from UI in 0ms
+                                  setActiveModalWorker(prev => ({
+                                    ...prev,
+                                    workerProfile: { ...prev.workerProfile, reviews: updatedReviews }
+                                  }));
+                                  showToast("Review removed successfully.", "success");
+
+                                  // 2. Perform backend delete in background
+                                  const deletePromise = (rev._id || rev.id)
+                                    ? deleteReview(rev._id || rev.id)
+                                    : deleteWorkerProfileReview(activeModalWorker._id || activeModalWorker.id, idx);
+
+                                  deletePromise
+                                    .then(() => { if (fetchUsers) fetchUsers(); })
+                                    .catch(err => {
+                                      // 3. Rollback on failure
+                                      setActiveModalWorker(previousModalWorker);
+                                      showToast(err.message || "Could not delete review.", "error");
+                                    });
                                 }
                               }}
                               title="Delete Review"

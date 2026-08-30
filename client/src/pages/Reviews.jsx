@@ -198,24 +198,26 @@ export default function Reviews() {
                     {(currentUser.role === "Admin" || (currentUser.role === "Customer" && r.customerName === currentUser.name)) && (
                       <button
                         type="button"
-                        onClick={async () => {
+                        onClick={() => {
                           if (window.confirm("Remove this review?")) {
-                            try {
-                              if (r.source === "booking") {
-                                await deleteReview(r.id);
-                              } else {
-                                const parts = r.id.split("-");
-                                const workerId = parts[1];
-                                const idx = parseInt(parts[2], 10);
-                                if (workerId && !isNaN(idx)) {
-                                  await deleteWorkerProfileReview(workerId, idx);
-                                }
-                              }
-                              showToast("Review deleted.", "success");
-                              fetchUsers();
-                            } catch (err) {
-                              showToast(err.message || "Failed to delete review.", "error");
-                            }
+                            showToast("Review deleted.", "success");
+                            const deletePromise = r.source === "booking"
+                              ? deleteReview(r.id)
+                              : (() => {
+                                  const parts = r.id.split("-");
+                                  const workerId = parts[1];
+                                  const idx = parseInt(parts[2], 10);
+                                  return (workerId && !isNaN(idx))
+                                    ? deleteWorkerProfileReview(workerId, idx)
+                                    : Promise.resolve();
+                                })();
+
+                            deletePromise
+                              .then(() => { if (fetchUsers) fetchUsers(); })
+                              .catch((err) => {
+                                showToast(err.message || "Failed to delete review.", "error");
+                                if (fetchUsers) fetchUsers();
+                              });
                           }
                         }}
                         title="Remove Review"

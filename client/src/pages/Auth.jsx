@@ -878,6 +878,41 @@ export default function Auth() {
             pointerEvents: "none",
           }}
         >
+          {/* Top Brand Card on Right Panel */}
+          <div style={{
+            position: "absolute",
+            top: "40px",
+            left: "52px",
+            display: "flex",
+            alignItems: "center",
+            gap: "14px",
+            background: "rgba(15,14,13,0.65)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            padding: "10px 18px 10px 12px",
+            borderRadius: "16px",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}>
+            <img
+              src="/grama-seva-logo.jpg"
+              alt="Grama Seva"
+              style={{
+                width: "44px",
+                height: "44px",
+                borderRadius: "10px",
+                objectFit: "cover",
+              }}
+            />
+            <div>
+              <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "16px", fontWeight: 600, color: "#faf9f5" }}>
+                Grama Seva
+              </div>
+              <div style={{ fontSize: "11px", color: "#a09d96" }}>
+                Verified Village Network
+              </div>
+            </div>
+          </div>
+
           {/* Stats row */}
           <div style={{
             display: "flex",

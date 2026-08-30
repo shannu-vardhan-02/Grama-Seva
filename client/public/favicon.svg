@@ -1,29 +1,41 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background App Tile (Cream / Light Sand) -->
-  <rect width="512" height="512" rx="112" fill="#FAF9F5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Background Canvas: Warm Sand / Cream #F4EFEA -->
+  <rect width="512" height="512" rx="96" fill="#F4EFEA"/>
   
-  <!-- Sunrise Rays (Coral / Terracotta #CC785C) -->
-  <path d="M256 122V86" stroke="#CC785C" stroke-width="22" stroke-linecap="round"/>
-  <path d="M336 142L362 116" stroke="#CC785C" stroke-width="22" stroke-linecap="round"/>
-  <path d="M176 142L150 116" stroke="#CC785C" stroke-width="22" stroke-linecap="round"/>
-  <path d="M394 196L428 184" stroke="#CC785C" stroke-width="22" stroke-linecap="round"/>
-  <path d="M118 196L84 184" stroke="#CC785C" stroke-width="22" stroke-linecap="round"/>
-  
-  <!-- Sunrise Semi-Circle Arc -->
-  <path d="M168 206C168 157.399 207.399 118 256 118C304.601 118 344 157.399 344 206" stroke="#CC785C" stroke-width="22" stroke-linecap="round"/>
-  
-  <!-- Village Shelter Roof Canopy (Grama) -->
-  <path d="M152 248L256 178L360 248" stroke="#CC785C" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- Shelter Pillar Posts -->
-  <path d="M180 236V308" stroke="#CC785C" stroke-width="22" stroke-linecap="round"/>
-  <path d="M332 236V308" stroke="#CC785C" stroke-width="22" stroke-linecap="round"/>
+  <g transform="translate(0, 10)">
+    <!-- 5 Radiant Sun Rays (#D77150) -->
+    <rect x="244" y="58" width="24" height="64" rx="4" fill="#D77150" />
+    <rect x="244" y="58" width="24" height="64" rx="4" fill="#D77150" transform="rotate(35 256 190)" />
+    <rect x="244" y="58" width="24" height="64" rx="4" fill="#D77150" transform="rotate(-35 256 190)" />
+    <rect x="244" y="58" width="24" height="64" rx="4" fill="#D77150" transform="rotate(70 256 190)" />
+    <rect x="244" y="58" width="24" height="64" rx="4" fill="#D77150" transform="rotate(-70 256 190)" />
 
-  <!-- Connected Handshake / Heart Emblem (Seva - Charcoal #181715) -->
-  <g transform="translate(256, 268) scale(1.15) translate(-256, -268)">
-    <!-- Right Arm / Upper Hand -->
-    <path d="M298 232C318 232 334 248 334 268C334 290 306 318 256 348C206 318 178 290 178 268C178 248 194 232 214 232C232 232 246 244 256 256C266 244 280 232 298 232Z" stroke="#181715" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
-    <!-- Interlocking Handshake Fingers -->
-    <path d="M236 280L256 300L276 280" stroke="#181715" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M224 294L256 326L288 294" stroke="#181715" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Sunrise Semi-Circle Arc (#D77150) -->
+    <path d="M 148 190 A 108 108 0 0 1 364 190" fill="none" stroke="#D77150" stroke-width="26" stroke-linecap="round" />
+
+    <!-- Village Roof Peak and Overhangs (#D77150) -->
+    <path d="M 104 266 L 256 166 L 408 266" fill="none" stroke="#D77150" stroke-width="28" stroke-linecap="square" stroke-linejoin="miter" />
+
+    <!-- Horizontal Cross Beam (#D77150) -->
+    <path d="M 124 230 L 388 230" stroke="#D77150" stroke-width="24" stroke-linecap="square" />
+
+    <!-- Left & Right Vertical Pillar Posts (#D77150) -->
+    <rect x="136" y="230" width="24" height="136" fill="#D77150" />
+    <rect x="352" y="230" width="24" height="136" fill="#D77150" />
+
+    <!-- Interlocking Heart Handshake (#2B2A27) -->
+    <!-- Left Hand & Wrist Loop -->
+    <path d="M 256 216 
+             C 214 176, 164 216, 172 270 
+             C 178 310, 218 356, 256 388
+             C 294 356, 334 310, 340 270
+             C 348 216, 298 176, 256 216 Z" 
+          fill="none" stroke="#2B2A27" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- Clasped Handshake Fingers Interior -->
+    <path d="M 226 250 L 286 310" stroke="#2B2A27" stroke-width="24" stroke-linecap="round" />
+    <path d="M 204 286 L 256 338" stroke="#2B2A27" stroke-width="22" stroke-linecap="round" />
+    <path d="M 220 324 L 256 360" stroke="#2B2A27" stroke-width="20" stroke-linecap="round" />
+    <path d="M 240 354 L 256 370" stroke="#2B2A27" stroke-width="18" stroke-linecap="round" />
   </g>
 </svg>

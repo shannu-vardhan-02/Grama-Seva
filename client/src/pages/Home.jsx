@@ -127,6 +127,28 @@ export default function Home() {
         borderBottom: "1px solid #e6dfd8",
       }}>
         <div style={{ maxWidth: "780px", margin: "0 auto", textAlign: "center" }}>
+          {/* ── Prominent Brand Emblem ── */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
+            <div style={{
+              width: "88px",
+              height: "88px",
+              borderRadius: "22px",
+              overflow: "hidden",
+              background: "#F4EFEA",
+              border: "2px solid rgba(204,120,92,0.35)",
+              boxShadow: "0 12px 32px rgba(204,120,92,0.18), 0 2px 8px rgba(0,0,0,0.06)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+              <img
+                src="/grama-seva-logo.jpg"
+                alt="Grama Seva Brand Emblem"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
+          </div>
+
           <div style={{
             display: "inline-flex", alignItems: "center", gap: "8px",
             padding: "6px 14px", borderRadius: "9999px",

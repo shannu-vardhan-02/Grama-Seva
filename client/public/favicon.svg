@@ -1,14 +1,29 @@
-<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="gsCoralGrad" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stopColor="#e5896e" />
-      <stop offset="100%" stopColor="#cc785c" />
-    </linearGradient>
-  </defs>
-  <rect width="48" height="48" rx="12" fill="url(#gsCoralGrad)" />
-  <path d="M14 18L11 15M24 13V9M34 18L37 15" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-opacity="0.85" />
-  <path d="M15 22C15 17.0294 19.0294 13 24 13C28.9706 13 33 17.0294 33 22" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-opacity="0.8" />
-  <path d="M9 25L24 14L39 25" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M19 28.5C16.5 26 16.5 22.5 19 20C21.5 17.5 24 20 24 20C24 20 26.5 17.5 29 20C31.5 22.5 31.5 26 29 28.5L24 33.5L19 28.5Z" fill="#181715" fill-opacity="0.9" />
-  <path d="M21 24.5L24 27.5L27 24.5M24 27.5V31" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background App Tile (Cream / Light Sand) -->
+  <rect width="512" height="512" rx="112" fill="#FAF9F5"/>
+  
+  <!-- Sunrise Rays (Coral / Terracotta #CC785C) -->
+  <path d="M256 122V86" stroke="#CC785C" stroke-width="22" stroke-linecap="round"/>
+  <path d="M336 142L362 116" stroke="#CC785C" stroke-width="22" stroke-linecap="round"/>
+  <path d="M176 142L150 116" stroke="#CC785C" stroke-width="22" stroke-linecap="round"/>
+  <path d="M394 196L428 184" stroke="#CC785C" stroke-width="22" stroke-linecap="round"/>
+  <path d="M118 196L84 184" stroke="#CC785C" stroke-width="22" stroke-linecap="round"/>
+  
+  <!-- Sunrise Semi-Circle Arc -->
+  <path d="M168 206C168 157.399 207.399 118 256 118C304.601 118 344 157.399 344 206" stroke="#CC785C" stroke-width="22" stroke-linecap="round"/>
+  
+  <!-- Village Shelter Roof Canopy (Grama) -->
+  <path d="M152 248L256 178L360 248" stroke="#CC785C" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Shelter Pillar Posts -->
+  <path d="M180 236V308" stroke="#CC785C" stroke-width="22" stroke-linecap="round"/>
+  <path d="M332 236V308" stroke="#CC785C" stroke-width="22" stroke-linecap="round"/>
+
+  <!-- Connected Handshake / Heart Emblem (Seva - Charcoal #181715) -->
+  <g transform="translate(256, 268) scale(1.15) translate(-256, -268)">
+    <!-- Right Arm / Upper Hand -->
+    <path d="M298 232C318 232 334 248 334 268C334 290 306 318 256 348C206 318 178 290 178 268C178 248 194 232 214 232C232 232 246 244 256 256C266 244 280 232 298 232Z" stroke="#181715" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Interlocking Handshake Fingers -->
+    <path d="M236 280L256 300L276 280" stroke="#181715" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M224 294L256 326L288 294" stroke="#181715" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
 </svg>

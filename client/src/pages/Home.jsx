@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ArrowRight, X, Menu, Landmark } from "lucide-react";
+import GramaSevaLogo from "../components/GramaSevaLogo";
 
 export default function Home() {
   const { currentUser } = useAuth();
@@ -22,21 +23,9 @@ export default function Home() {
         borderBottom: "1px solid #252320",
       }}>
         {/* Logo */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{
-            width: "28px", height: "28px", background: "#cc785c", borderRadius: "6px",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <svg width="15" height="15" fill="none" stroke="#fff" strokeWidth="2.2" viewBox="0 0 24 24">
-              <path d="M3 21V7l9-4 9 4v14"/>
-              <path d="M9 21v-6h6v6"/>
-            </svg>
-          </div>
-          <span style={{
-            fontFamily: "'Playfair Display', Georgia, serif",
-            fontSize: "20px", fontWeight: 400, color: "#faf9f5", letterSpacing: "-0.01em",
-          }}>Grama Seva</span>
-        </div>
+        <Link to="/" style={{ textDecoration: "none" }}>
+          <GramaSevaLogo size={28} showText={true} textVariant="light" />
+        </Link>
 
         {/* Desktop nav links */}
         <div className="home-nav-links">
@@ -75,12 +64,7 @@ export default function Home() {
         <div className="home-mobile-drawer-panel">
           {/* Drawer header */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <div style={{ width: "24px", height: "24px", background: "#cc785c", borderRadius: "5px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Landmark size={13} color="#fff" />
-              </div>
-              <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "17px", color: "#faf9f5" }}>Grama Seva</span>
-            </div>
+            <GramaSevaLogo size={26} showText={true} textVariant="light" />
             <button
               onClick={closeDrawer}
               style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: "8px", padding: "8px", cursor: "pointer", color: "#a09d96", display: "flex" }}

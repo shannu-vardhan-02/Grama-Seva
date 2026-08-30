@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
 import ImageUpload from "../components/ImageUpload";
+import GramaSevaLogo from "../components/GramaSevaLogo";
 
 
 /* ─── Lightweight spinner — replaces the broken thinking-orbs library ── */
@@ -413,33 +414,9 @@ export default function Auth() {
               paddingTop: "40px",
               display: "flex",
               alignItems: "center",
-              gap: "10px",
               flexShrink: 0,
             }}>
-              <div style={{
-                width: "34px",
-                height: "34px",
-                background: C.accent,
-                borderRadius: "9px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 0 20px rgba(204,120,92,0.35)",
-                flexShrink: 0,
-              }}>
-                <svg width="16" height="16" fill="none" stroke="#fff" strokeWidth="2.2" viewBox="0 0 24 24">
-                  <path d="M3 21V7l9-4 9 4v14" />
-                  <path d="M9 21v-6h6v6" />
-                </svg>
-              </div>
-              <div>
-                <div style={{ fontSize: "15px", fontWeight: 700, color: C.textPri, letterSpacing: "-0.02em" }}>
-                  Grama Seva
-                </div>
-                <div style={{ fontSize: "10.5px", color: C.textMut, marginTop: "1px" }}>
-                  Rural Service Portal
-                </div>
-              </div>
+              <GramaSevaLogo size={36} showText={true} textVariant="light" />
             </div>
 
             {/* ── Main content — grows to fill, centers vertically ── */}

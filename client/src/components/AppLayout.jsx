@@ -21,6 +21,8 @@ import {
   User,
 } from "lucide-react";
 
+import GramaSevaLogo from "./GramaSevaLogo";
+
 const NAV = [
   { to: "/book-service", label: "Search Workers", icon: Search },
   { to: "/reviews",      label: "Reviews",        icon: MessageSquare },
@@ -185,21 +187,7 @@ export default function AppLayout({ children }) {
 
         {/* Brand */}
         <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid #252320" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{
-              width: "32px", height: "32px", borderRadius: "8px", background: "#cc785c",
-              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-            }}>
-              <Landmark size={16} color="#fff" />
-            </div>
-            <div>
-              <div style={{
-                fontFamily: "'Playfair Display', Georgia, serif", fontSize: "18px", fontWeight: 400,
-                color: "#faf9f5", letterSpacing: "-0.01em",
-              }}>Grama Seva</div>
-              <div style={{ fontSize: "11px", color: "#a09d96", marginTop: "1px" }}>Rural Service Portal</div>
-            </div>
-          </div>
+          <GramaSevaLogo size={34} showText={true} textVariant="light" />
         </div>
 
         {/* Role pill */}

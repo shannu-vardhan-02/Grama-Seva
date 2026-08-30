@@ -59,7 +59,7 @@ export const SocketProvider = ({ children }) => {
   // Connect Socket.io and fetch data when user logs in
   useEffect(() => {
     if (!currentUser) {
-      // Disconnect socket on logout
+      // Only clear data on genuine logout — disconnect socket
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
@@ -111,8 +111,6 @@ export const SocketProvider = ({ children }) => {
     });
 
     socket.on('users:updated', () => {
-      // Trigger a refetch of users in AuthContext — we can't do that directly,
-      // but the AuthContext refetches when currentUser changes. For now, just refetch bookings.
       fetchBookings();
     });
 
@@ -123,6 +121,9 @@ export const SocketProvider = ({ children }) => {
     socketRef.current = socket;
 
     return () => {
+      // Cleanup only disconnects the socket — does NOT wipe data.
+      // Data is wiped only when currentUser becomes null (logout), not on
+      // React StrictMode's effect cleanup/remount cycle.
       socket.disconnect();
     };
   }, [currentUser]); // Only reconnect when user changes

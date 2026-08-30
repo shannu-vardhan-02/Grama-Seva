@@ -25,26 +25,31 @@ export const AuthProvider = ({ children }) => {
     init();
   }, []);
 
-  // Fetch users whenever currentUser changes (and is not null)
+  // ── fetchUsers: stable function — does NOT depend on currentUser in closure.
+  // The token in localStorage is always up-to-date so the API call is authorised.
+  // This avoids the two-render-cycle delay caused by useCallback([currentUser]).
   const fetchUsers = useCallback(async () => {
-    if (!currentUser) return;
+    if (!localStorage.getItem('gs_token')) return;
     try {
       const res = await api.get('/api/users');
       setUsers(res.data);
     } catch (err) {
       console.error('Failed to fetch users', err);
     }
-  }, [currentUser]);
+  }, []); // stable — no deps needed
 
+  // Still run on mount / token-restore so refresh works correctly
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    if (currentUser) fetchUsers();
+  }, [currentUser, fetchUsers]);
 
   const login = async (email, password) => {
     const res = await api.post('/api/auth/login', { email, password });
     const { token, user } = res.data;
     localStorage.setItem('gs_token', token);
     setCurrentUser(user);
+    // ── Eagerly fetch users immediately — don't wait for the effect cycle ──
+    fetchUsers();
     return user;
   };
 
@@ -54,6 +59,8 @@ export const AuthProvider = ({ children }) => {
     const { token, user } = res.data;
     localStorage.setItem('gs_token', token);
     setCurrentUser(user);
+    // ── Eagerly fetch users immediately — don't wait for the effect cycle ──
+    fetchUsers();
     return user;
   };
 
@@ -67,6 +74,8 @@ export const AuthProvider = ({ children }) => {
     const { token, user } = res.data;
     localStorage.setItem('gs_token', token);
     setCurrentUser(user);
+    // ── Eagerly fetch users immediately — don't wait for the effect cycle ──
+    fetchUsers();
     return user;
   };
 
@@ -111,7 +120,7 @@ export const AuthProvider = ({ children }) => {
     const res = await api.patch(`/api/users/${workerUserId}/verify`, { status });
     setUsers(prev => prev.map(u => (u._id || u.id) === workerUserId ? res.data : u));
     // Also update currentUser if it's the same user (unlikely for admin verifying, but safe)
-    if ((currentUser._id || currentUser.id) === workerUserId) {
+    if (currentUser && (currentUser._id || currentUser.id) === workerUserId) {
       setCurrentUser(res.data);
     }
   };

@@ -1,41 +1,31 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { useToast } from "../context/ToastContext";
-import { Users, UserPlus, Trash2, X } from "lucide-react";
+import { Users, UserPlus, Trash2, X, Search } from "lucide-react";
 import ConfirmModal from "../components/ConfirmModal";
-
-const T = {
-  page:  { padding: "40px", background: "#f5f5f7", minHeight: "100vh", fontFamily: "SF Pro Text, system-ui, -apple-system, Inter, sans-serif" },
-  card:  { background: "#ffffff", border: "1px solid #e0e0e0", borderRadius: "18px", overflow: "hidden" },
-  h1:    { fontFamily: "SF Pro Display, system-ui, -apple-system, Inter, sans-serif", fontSize: "28px", fontWeight: 600, color: "#1d1d1f", letterSpacing: "-0.017em" },
-  muted: { fontSize: "14px", color: "#7a7a7a", letterSpacing: "-0.013em" },
-  label: { display: "block", fontSize: "12px", fontWeight: 600, color: "#1d1d1f", letterSpacing: "-0.007em", marginBottom: "6px" },
-  input: { width: "100%", padding: "10px 14px", background: "#f5f5f7", color: "#1d1d1f", border: "1px solid #e0e0e0", borderRadius: "8px", fontSize: "15px", fontFamily: "SF Pro Text, system-ui, -apple-system, Inter, sans-serif", outline: "none", boxSizing: "border-box" },
-  select:{ width: "100%", padding: "10px 14px", background: "#f5f5f7", color: "#1d1d1f", border: "1px solid #e0e0e0", borderRadius: "8px", fontSize: "15px", fontFamily: "SF Pro Text, system-ui, -apple-system, Inter, sans-serif", outline: "none", cursor: "pointer" },
-  chip:  (c) => ({ display: "inline-flex", padding: "3px 10px", borderRadius: "9999px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.02em", textTransform: "uppercase",
-    background: c==="admin"?"rgba(175,82,222,0.10)":c==="worker"?"rgba(255,149,0,0.12)":c==="green"?"rgba(52,199,89,0.12)":"rgba(0,102,204,0.10)",
-    color:      c==="admin"?"#8e44ad":c==="worker"?"#c07000":c==="green"?"#248a3d":"#0066cc" }),
-};
 
 export default function ManageUsers() {
   const { currentUser, users, deleteUser, addUser } = useAuth();
+  const { isDark } = useTheme();
   const { showToast } = useToast();
   const [showModal, setShowModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
-  const [name,       setName]       = useState("");
-  const [email,      setEmail]      = useState("");
-  const [password,   setPassword]   = useState("");
-  const [phone,      setPhone]      = useState("");
-  const [role,       setRole]       = useState("Worker");
-  const [skills,     setSkills]     = useState(["electrician"]);
+  const [search, setSearch] = useState("");
+  
+  // Form states
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [role, setRole] = useState("Worker");
+  const [skills, setSkills] = useState(["electrician"]);
   const [experience, setExperience] = useState(2);
-  const [address,    setAddress]    = useState("");
+  const [address, setAddress] = useState("");
   const [autoVerify, setAutoVerify] = useState(true);
-  const [error,      setError]      = useState("");
-  const [success,    setSuccess]    = useState("");
 
   if (!currentUser || currentUser.role !== "Admin") {
-    return <div style={{ padding: "40px", background: "#faf9f5", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ color: "#6c6a64" }}>Admin access required.</div></div>;
+    return <div style={{ padding: "40px", background: "#ffffff", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ color: "#616161" }}>Admin access required.</div></div>;
   }
 
   const handleAddSubmit = async (e) => {
@@ -74,243 +64,131 @@ export default function ManageUsers() {
     }
   };
 
-  const thStyle = { padding: "12px 20px", fontSize: "12px", fontWeight: 600, color: "#7a7a7a", letterSpacing: "0.04em", textTransform: "uppercase", textAlign: "left", borderBottom: "1px solid #f0f0f0", background: "#f5f5f7" };
-  const tdStyle = { padding: "14px 20px", fontSize: "14px", color: "#1d1d1f", letterSpacing: "-0.013em", borderBottom: "1px solid #f0f0f0" };
+  const filteredUsers = users.filter(u => u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase()));
+
+  const getRoleChipStyle = (r) => {
+    let bg = isDark ? "rgba(96,165,250,0.15)" : "#f1f5ff";
+    let color = isDark ? "#60a5fa" : "#1863dc";
+    if (r === "Worker") {
+      bg = isDark ? "rgba(255,140,115,0.15)" : "#ffad9b";
+      color = isDark ? "#ff8c73" : "#ff7759";
+    } else if (r === "Admin") {
+      bg = isDark ? "rgba(52,211,153,0.15)" : "#edfce9";
+      color = isDark ? "#34d399" : "#003c33";
+    }
+    return { background: bg, color, padding: "4px 8px", borderRadius: "16px", fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", textTransform: "uppercase" };
+  };
 
   return (
-    <div className="manage-users-page" style={{ background: "#f5f5f7", minHeight: "100vh", fontFamily: "SF Pro Text, system-ui, -apple-system, Inter, sans-serif" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "28px" }}>
+    <div style={{ background: "var(--ch-canvas)", color: "var(--ch-ink)", padding: "32px 40px", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px" }}>
         <div>
-          <div style={T.h1}>Member Registry</div>
-          <div style={{ ...T.muted, marginTop: "6px" }}>Directory of all customers, workers, and administrators.</div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", textTransform: "uppercase", color: "var(--ch-muted)", letterSpacing: "0.2px", marginBottom: "8px" }}>
+            Administration
+          </div>
+          <h1 style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif", fontSize: "28px", fontWeight: 400, color: "var(--ch-primary)", letterSpacing: "-0.02em", margin: 0 }}>
+            Manage Users
+          </h1>
         </div>
-        <button onClick={() => setShowModal(true)} style={{
-          display: "inline-flex", alignItems: "center", gap: "7px",
-          padding: "11px 20px", background: "#0066cc", color: "#ffffff",
-          border: "none", borderRadius: "9999px", fontSize: "14px", fontWeight: 400,
-          cursor: "pointer", letterSpacing: "-0.013em",
-          fontFamily: "SF Pro Text, system-ui, -apple-system, Inter, sans-serif",
-          transition: "opacity 0.15s, transform 0.1s",
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.opacity = "0.85"}
-        onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
-        onMouseDown={(e)  => e.currentTarget.style.transform = "scale(0.95)"}
-        onMouseUp={(e)    => e.currentTarget.style.transform = "scale(1)"}
+        <button
+          onClick={() => setShowModal(true)}
+          style={{
+            padding: "10px 20px", background: isDark ? "#232534" : "#17171c", color: "#ffffff",
+            border: isDark ? "1px solid #383b4e" : "none", borderRadius: "32px", fontSize: "14px",
+            display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", transition: "opacity 0.15s"
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.opacity = "0.85"}
+          onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
         >
-          <UserPlus size={15} /> Add User
+          <UserPlus size={16} /> Add User
         </button>
       </div>
 
+      <div style={{ marginBottom: "24px", position: "relative", maxWidth: "400px" }}>
+        <Search size={16} color="var(--ch-muted)" style={{ position: "absolute", left: "12px", top: "12px" }} />
+        <input
+          type="text" placeholder="Search users..." value={search} onChange={(e) => setSearch(e.target.value)}
+          style={{ width: "100%", padding: "10px 14px 10px 36px", background: "var(--ch-input-bg)", color: "var(--ch-ink)", border: "1px solid var(--ch-hairline)", borderRadius: "8px", fontSize: "14px", outline: "none", boxSizing: "border-box" }}
+          onFocus={(e)=>e.target.style.borderColor="var(--ch-action-blue)"} onBlur={(e)=>e.target.style.borderColor="var(--ch-hairline)"}
+        />
+      </div>
 
-
-      <div style={T.card}>
-        {/* Desktop Table */}
-        <table className="users-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>
-              <th style={thStyle}>Name</th>
-              <th style={thStyle}>Email</th>
-              <th style={thStyle}>Role</th>
-              <th style={thStyle}>Skill / Detail</th>
-              <th style={thStyle}>Status</th>
-              <th style={{ ...thStyle, textAlign: "center" }}>Action</th>
+              <th style={{ padding: "12px 16px", textAlign: "left", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "var(--ch-muted)", textTransform: "uppercase", borderBottom: "1px solid var(--ch-hairline)" }}>Name</th>
+              <th style={{ padding: "12px 16px", textAlign: "left", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "var(--ch-muted)", textTransform: "uppercase", borderBottom: "1px solid var(--ch-hairline)" }}>Email</th>
+              <th style={{ padding: "12px 16px", textAlign: "left", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "var(--ch-muted)", textTransform: "uppercase", borderBottom: "1px solid var(--ch-hairline)" }}>Role</th>
+              <th style={{ padding: "12px 16px", textAlign: "left", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "var(--ch-muted)", textTransform: "uppercase", borderBottom: "1px solid var(--ch-hairline)" }}>Status</th>
+              <th style={{ padding: "12px 16px", textAlign: "right", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "var(--ch-muted)", textTransform: "uppercase", borderBottom: "1px solid var(--ch-hairline)" }}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {users.map((u) => (
-              <tr key={u.id} style={{ transition: "background 0.1s" }}
-                onMouseEnter={(e) => e.currentTarget.style.background = "#fafafa"}
-                onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
-              >
-                <td style={{ ...tdStyle, fontWeight: 600 }}>{u.name}</td>
-                <td style={{ ...tdStyle, color: "#7a7a7a" }}>{u.email}</td>
-                <td style={tdStyle}>
-                  <span style={T.chip(u.role === "Admin" ? "admin" : u.role === "Worker" ? "worker" : "blue")}>
-                    {u.role}
-                  </span>
+            {filteredUsers.map((u) => (
+              <tr key={u.id} style={{ borderBottom: "1px solid var(--ch-hairline)" }}>
+                <td style={{ padding: "16px", fontSize: "14px", color: "var(--ch-primary)", fontWeight: 500 }}>{u.name}</td>
+                <td style={{ padding: "16px", fontSize: "14px", color: "var(--ch-body-muted)" }}>{u.email}</td>
+                <td style={{ padding: "16px" }}>
+                  <span style={getRoleChipStyle(u.role)}>{u.role}</span>
                 </td>
-                <td style={{ ...tdStyle, color: "#7a7a7a", textTransform: "capitalize" }}>
-                  {u.role === "Worker" && u.workerProfile
-                    ? `${u.workerProfile.skill} · ${u.workerProfile.experience} yrs`
-                    : "—"}
-                </td>
-                <td style={tdStyle}>
+                <td style={{ padding: "16px" }}>
                   {u.role === "Worker" && u.workerProfile ? (
-                    <span style={T.chip(u.workerProfile.isVerified ? "green" : "worker")}>
-                      {u.workerProfile.isVerified ? "Verified" : "Pending"}
+                    <span style={{
+                      fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", textTransform: "uppercase",
+                      color: u.workerProfile.isVerified ? "var(--ch-deep-green)" : "#ff8c73",
+                      background: u.workerProfile.isVerified ? (isDark ? "rgba(52,211,153,0.12)" : "#edfce9") : (isDark ? "rgba(255,119,89,0.12)" : "transparent"),
+                      padding: u.workerProfile.isVerified ? "3px 8px" : "0", borderRadius: "12px"
+                    }}>
+                      {u.workerProfile.isVerified ? "Verified" : "Unverified"}
                     </span>
                   ) : (
-                    <span style={{ ...T.muted, fontSize: "13px" }}>Active</span>
+                    <span style={{ fontSize: "13px", color: "var(--ch-muted)" }}>Active</span>
                   )}
                 </td>
-                <td style={{ ...tdStyle, textAlign: "center" }}>
-                  <button
-                    onClick={() => confirmDelete(u.id || u._id)}
-                    disabled={(u.id || u._id) === (currentUser.id || currentUser._id)}
-                    title="Delete user"
-                    style={{
-                      background: "none", border: "none", cursor: (u.id || u._id) === (currentUser.id || currentUser._id) ? "not-allowed" : "pointer",
-                      color: (u.id || u._id) === (currentUser.id || currentUser._id) ? "#e6dfd8" : "#c64545",
-                      padding: "6px", borderRadius: "6px", display: "inline-flex", alignItems: "center",
-                    }}
-                  >
-                    <Trash2 size={15} />
+                <td style={{ padding: "16px", textAlign: "right" }}>
+                  <button onClick={() => confirmDelete(u.id || u._id)} disabled={(u.id || u._id) === (currentUser.id || currentUser._id)} style={{ background: "none", border: "none", color: "var(--ch-error)", cursor: "pointer", fontSize: "13px", textDecoration: "underline", opacity: (u.id || u._id) === (currentUser.id || currentUser._id) ? 0.3 : 1 }}>
+                    Remove
                   </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-
-        {/* Mobile Card List — CSS shows this only on mobile */}
-        <div className="users-card-list" style={{ padding: "16px", gap: "14px" }}>
-          {users.map((u) => (
-            <div key={u.id} className="user-mobile-card">
-              <div className="user-mobile-card-row">
-                <div>
-                  <div style={{ fontSize: "15px", fontWeight: 600, color: "#1d1d1f" }}>{u.name}</div>
-                  <div style={{ fontSize: "13px", color: "#7a7a7a", marginTop: "2px" }}>{u.email}</div>
-                </div>
-                <span style={T.chip(u.role === "Admin" ? "admin" : u.role === "Worker" ? "worker" : "blue")}>
-                  {u.role}
-                </span>
-              </div>
-              <div className="user-mobile-card-row" style={{ marginTop: "4px" }}>
-                <div style={{ fontSize: "13px", color: "#7a7a7a", textTransform: "capitalize" }}>
-                  {u.role === "Worker" && u.workerProfile
-                    ? `${u.workerProfile.skill} · ${u.workerProfile.experience} yrs`
-                    : u.role}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  {u.role === "Worker" && u.workerProfile && (
-                    <span style={T.chip(u.workerProfile.isVerified ? "green" : "worker")}>
-                      {u.workerProfile.isVerified ? "Verified" : "Pending"}
-                    </span>
-                  )}
-                  <button
-                    onClick={() => confirmDelete(u.id || u._id)}
-                    disabled={(u.id || u._id) === (currentUser.id || currentUser._id)}
-                    style={{
-                      background: "none", border: "none",
-                      cursor: (u.id || u._id) === (currentUser.id || currentUser._id) ? "not-allowed" : "pointer",
-                      color: (u.id || u._id) === (currentUser.id || currentUser._id) ? "#e6dfd8" : "#c64545",
-                      padding: "6px", borderRadius: "6px", display: "inline-flex", alignItems: "center",
-                    }}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
 
-      {/* ── DELETE CONFIRMATION MODAL ── */}
+      {showModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(10,10,14,0.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "20px" }}>
+          <div style={{ background: "var(--ch-canvas)", color: "var(--ch-ink)", padding: "32px", borderRadius: "8px", width: "400px", maxWidth: "100%", border: "1px solid var(--ch-hairline)", boxShadow: "0 16px 40px rgba(0,0,0,0.35)" }}>
+            <h2 style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif", fontSize: "20px", color: "var(--ch-primary)", marginTop: 0 }}>Add User</h2>
+            <form onSubmit={handleAddSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <input type="text" placeholder="Name" required value={name} onChange={e => setName(e.target.value)} style={{ padding: "10px", background: "var(--ch-input-bg)", color: "var(--ch-ink)", border: "1px solid var(--ch-hairline)", borderRadius: "8px", outline: "none" }} />
+              <input type="email" placeholder="Email" required value={email} onChange={e => setEmail(e.target.value)} style={{ padding: "10px", background: "var(--ch-input-bg)", color: "var(--ch-ink)", border: "1px solid var(--ch-hairline)", borderRadius: "8px", outline: "none" }} />
+              <input type="password" placeholder="Password" required value={password} onChange={e => setPassword(e.target.value)} style={{ padding: "10px", background: "var(--ch-input-bg)", color: "var(--ch-ink)", border: "1px solid var(--ch-hairline)", borderRadius: "8px", outline: "none" }} />
+              <select value={role} onChange={e => setRole(e.target.value)} style={{ padding: "10px", background: "var(--ch-input-bg)", color: "var(--ch-ink)", border: "1px solid var(--ch-hairline)", borderRadius: "8px", outline: "none" }}>
+                <option value="Customer">Customer</option>
+                <option value="Worker">Worker</option>
+                <option value="Admin">Admin</option>
+              </select>
+              <div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
+                <button type="button" onClick={() => setShowModal(false)} style={{ flex: 1, padding: "10px", border: "1px solid var(--ch-hairline)", background: "transparent", color: "var(--ch-body-muted)", borderRadius: "32px", cursor: "pointer" }}>Cancel</button>
+                <button type="submit" style={{ flex: 1, padding: "10px", border: isDark ? "1px solid #383b4e" : "none", background: isDark ? "#232534" : "#17171c", color: "#ffffff", borderRadius: "32px", cursor: "pointer" }}>Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <ConfirmModal
         isOpen={!!userToDelete}
         title="Confirm User Deletion"
-        message={
-          userToDelete
-            ? `Are you sure you want to delete "${userToDelete.name}" (${userToDelete.role}) from Grama Seva? This action cannot be undone.`
-            : ""
-        }
-        confirmText="Yes, Delete User"
+        message={userToDelete ? `Are you sure you want to delete "${userToDelete.name}"?` : ""}
+        confirmText="Delete"
         cancelText="Cancel"
         variant="danger"
         onCancel={() => setUserToDelete(null)}
         onConfirm={executeDelete}
       />
-
-      {/* Add User Modal */}
-      {showModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: "20px" }}>
-          <div style={{ background: "#ffffff", border: "1px solid #e0e0e0", borderRadius: "18px", padding: "32px", width: "100%", maxWidth: "440px", maxHeight: "90vh", overflowY: "auto" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-              <div style={{ fontSize: "20px", fontWeight: 600, color: "#1d1d1f", fontFamily: "SF Pro Display, system-ui, -apple-system, Inter, sans-serif" }}>
-                Create Account
-              </div>
-              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#7a7a7a", display: "flex" }}>
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleAddSubmit}>
-              {[
-                { label: "Full Name",     state: name,     set: setName,     type: "text",     ph: "Ramesh Kumar" },
-                { label: "Email",         state: email,    set: setEmail,    type: "email",    ph: "email@example.com" },
-                { label: "Password",      state: password, set: setPassword, type: "password", ph: "" },
-                { label: "Phone Number",  state: phone,    set: setPhone,    type: "tel",      ph: "10-digit" },
-              ].map((f) => (
-                <div key={f.label} style={{ marginBottom: "16px" }}>
-                  <label style={T.label}>{f.label}</label>
-                  <input type={f.type} required value={f.state} onChange={(e) => f.set(e.target.value)} placeholder={f.ph} style={T.input}
-                    onFocus={(e) => { e.target.style.borderColor = "#0071e3"; e.target.style.boxShadow = "0 0 0 3px rgba(0,113,227,0.15)"; }}
-                    onBlur={(e)  => { e.target.style.borderColor = "#e0e0e0"; e.target.style.boxShadow = "none"; }}
-                  />
-                </div>
-              ))}
-
-              <div style={{ marginBottom: "16px" }}>
-                <label style={T.label}>Role</label>
-                <select value={role} onChange={(e) => setRole(e.target.value)} style={T.select}>
-                  <option value="Customer">Customer</option>
-                  <option value="Worker">Worker</option>
-                  <option value="Admin">Administrator</option>
-                </select>
-              </div>
-
-              {role === "Worker" && (
-                <div style={{ padding: "16px", background: "#f5f5f7", border: "1px solid #e0e0e0", borderRadius: "11px", marginBottom: "16px" }}>
-                  <div style={{ fontSize: "12px", fontWeight: 600, color: "#0066cc", marginBottom: "12px" }}>Worker Profile</div>
-                  <div style={{ marginBottom: "12px" }}>
-                    <label style={T.label}>Skill Category</label>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                      {["electrician","mason","plumber","mechanic","carpenter","painter","cleaning","other"].map((s) => (
-                        <label key={s} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "13px", color: "#141413" }}>
-                          <input
-                            type="checkbox"
-                            checked={skills.includes(s)}
-                            onChange={(e) => {
-                              if (e.target.checked) setSkills([...skills, s]);
-                              else setSkills(skills.filter(sk => sk !== s));
-                            }}
-                          />
-                          {s.charAt(0).toUpperCase() + s.slice(1)}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
-                    <div>
-                      <label style={T.label}>Experience (Yrs)</label>
-                      <input type="number" required value={experience} onChange={(e) => setExperience(e.target.value)} style={T.input}
-                        onFocus={(e) => { e.target.style.borderColor = "#0071e3"; e.target.style.boxShadow = "0 0 0 3px rgba(0,113,227,0.15)"; }}
-                        onBlur={(e)  => { e.target.style.borderColor = "#e0e0e0"; e.target.style.boxShadow = "none"; }}
-                      />
-                    </div>
-                    <div>
-                      <label style={T.label}>Service Area</label>
-                      <input type="text" required value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Village" style={T.input}
-                        onFocus={(e) => { e.target.style.borderColor = "#0071e3"; e.target.style.boxShadow = "0 0 0 3px rgba(0,113,227,0.15)"; }}
-                        onBlur={(e)  => { e.target.style.borderColor = "#e0e0e0"; e.target.style.boxShadow = "none"; }}
-                      />
-                    </div>
-                  </div>
-                  <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                    <input type="checkbox" checked={autoVerify} onChange={(e) => setAutoVerify(e.target.checked)} style={{ accentColor: "#0066cc", width: "15px", height: "15px" }} />
-                    <span style={{ fontSize: "13px", color: "#1d1d1f" }}>Auto-verify (mark as vetted)</span>
-                  </label>
-                </div>
-              )}
-
-              <button type="submit" style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", padding: "11px 22px", background: "#0066cc", color: "#ffffff", border: "none", borderRadius: "9999px", fontSize: "17px", fontWeight: 400, cursor: "pointer", letterSpacing: "-0.022em", fontFamily: "SF Pro Text, system-ui, -apple-system, Inter, sans-serif" }}>
-                Create Account
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

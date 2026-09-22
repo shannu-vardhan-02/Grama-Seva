@@ -1,24 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { useSocket } from "../context/SocketContext";
 import { Check, X, ShieldAlert, CheckCircle } from "lucide-react";
 
-const T = {
-  page:  { padding: "40px", background: "#f5f5f7", minHeight: "100vh", fontFamily: "SF Pro Text, system-ui, -apple-system, Inter, sans-serif" },
-  card:  { background: "#ffffff", border: "1px solid #e0e0e0", borderRadius: "18px", padding: "28px" },
-  h1:    { fontFamily: "SF Pro Display, system-ui, -apple-system, Inter, sans-serif", fontSize: "28px", fontWeight: 600, color: "#1d1d1f", letterSpacing: "-0.017em" },
-  muted: { fontSize: "14px", color: "#7a7a7a", letterSpacing: "-0.013em" },
-  value: { fontSize: "15px", fontWeight: 600, color: "#1d1d1f", letterSpacing: "-0.013em" },
-  chip:  (c) => ({ display: "inline-flex", padding: "3px 10px", borderRadius: "9999px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.02em", textTransform: "uppercase",
-    background: c==="blue"?"rgba(0,102,204,0.10)":c==="green"?"rgba(52,199,89,0.12)":c==="orange"?"rgba(255,149,0,0.12)":"rgba(0,0,0,0.06)",
-    color:      c==="blue"?"#0066cc":c==="green"?"#248a3d":c==="orange"?"#c07000":"#7a7a7a" }),
-};
-
 export default function VettingQueue() {
   const { currentUser, users, verifyWorker } = useAuth();
+  const { isDark } = useTheme();
+  const [filter, setFilter] = useState("Pending");
 
   if (!currentUser || currentUser.role !== "Admin") {
-    return <div style={{ ...T.page, display: "flex", alignItems: "center", justifyContent: "center" }}><div style={T.muted}>Admin access required.</div></div>;
+    return <div style={{ padding: "40px", background: "var(--ch-canvas)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ color: "var(--ch-muted)" }}>Admin access required.</div></div>;
   }
 
   const workers = users.filter((u) => u.role === "Worker");
@@ -26,137 +18,116 @@ export default function VettingQueue() {
   const verified = workers.filter((w) => w.workerProfile?.isVerified);
   const rejected = workers.filter((w) => !w.workerProfile?.isVerified && w.workerProfile?.proofOfWork?.every((p) => p.status === "Rejected"));
 
+  let displayList = [];
+  if (filter === "Pending") displayList = pending;
+  else if (filter === "Approved") displayList = verified;
+  else displayList = [...pending, ...verified, ...rejected];
+
   return (
-    <div className="vetting-page-padding" style={{ background: "#f5f5f7", minHeight: "100vh", fontFamily: "SF Pro Text, system-ui, -apple-system, Inter, sans-serif" }}>
+    <div style={{ background: "var(--ch-canvas)", color: "var(--ch-ink)", padding: "32px 40px", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
       <div style={{ marginBottom: "32px" }}>
-        <div style={T.h1}>Vetting Queue</div>
-        <div style={{ ...T.muted, marginTop: "6px" }}>Review and approve worker profile submissions.</div>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", textTransform: "uppercase", color: "var(--ch-muted)", letterSpacing: "0.2px", marginBottom: "8px" }}>
+          Administration
+        </div>
+        <h1 style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif", fontSize: "28px", fontWeight: 400, color: "var(--ch-primary)", letterSpacing: "-0.02em", margin: 0 }}>
+          Vetting Queue
+        </h1>
       </div>
 
-      {/* Summary row */}
-      <div className="admin-stats-grid" style={{ marginBottom: "28px" }}>
-        {[
-          { label: "Pending Review", num: pending.length,  color: "#c07000" },
-          { label: "Verified",       num: verified.length, color: "#248a3d" },
-          { label: "Rejected",       num: rejected.length, color: "#c0392b" },
-        ].map((s) => (
-          <div key={s.label} style={{ background: "#ffffff", border: "1px solid #e0e0e0", borderRadius: "18px", padding: "20px 24px" }}>
-            <div style={{ fontSize: "12px", fontWeight: 600, color: "#7a7a7a", letterSpacing: "0.04em", textTransform: "uppercase" }}>{s.label}</div>
-            <div style={{ fontFamily: "SF Pro Display, system-ui, -apple-system, Inter, sans-serif", fontSize: "40px", fontWeight: 600, letterSpacing: "-0.022em", color: s.color, lineHeight: 1.1, marginTop: "4px" }}>{s.num}</div>
-          </div>
+      <div style={{ display: "flex", gap: "16px", marginBottom: "24px" }}>
+        {["All", "Pending", "Approved"].map(f => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            style={{
+              padding: "6px 16px",
+              borderRadius: "32px",
+              fontSize: "13px",
+              fontFamily: "'JetBrains Mono', monospace",
+              textTransform: "uppercase",
+              border: filter === f ? "1px solid var(--ch-primary)" : "1px solid var(--ch-hairline)",
+              background: filter === f ? "var(--ch-primary)" : "transparent",
+              color: filter === f ? "var(--ch-canvas)" : "var(--ch-muted)",
+              cursor: "pointer",
+              transition: "all 0.15s"
+            }}
+          >
+            {f}
+          </button>
         ))}
       </div>
 
-      {/* Pending applications */}
-      <div style={T.card}>
-        <div style={{ fontSize: "14px", fontWeight: 600, color: "#1d1d1f", marginBottom: "20px" }}>
-          Pending Applications ({pending.length})
-        </div>
-
-        {pending.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "48px 0" }}>
-            <CheckCircle size={48} color="#e0e0e0" style={{ margin: "0 auto 14px" }} />
-            <div style={{ fontSize: "17px", fontWeight: 600, color: "#1d1d1f" }}>Queue is clear</div>
-            <div style={{ ...T.muted, marginTop: "6px" }}>All worker applications have been reviewed.</div>
-          </div>
-        ) : pending.map((w, i) => {
-          const prof  = w.workerProfile;
-          const photo = prof.proofOfWork?.find((p) => p.status === "Pending")?.url;
-          return (
-            <div key={w.id} style={{
-              display: "flex", justifyContent: "space-between", alignItems: "flex-start",
-              padding: "20px 0",
-              borderTop: i > 0 ? "1px solid #f0f0f0" : "none",
-              gap: "20px",
-            }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                  {/* Avatar */}
-                  <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(0,102,204,0.10)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 600, color: "#0066cc", flexShrink: 0 }}>
-                    {w.name.charAt(0)}
-                  </div>
-                  <div>
-                    <div style={T.value}>{w.name}</div>
-                    <div style={{ ...T.muted, fontSize: "13px" }}>{w.email} · {w.phone}</div>
-                  </div>
-                  <span style={T.chip("blue")}>{prof.skill}</span>
+      <div style={{ borderTop: "1px solid var(--ch-hairline)" }}>
+        {displayList.length === 0 ? (
+          <div style={{ padding: "40px", textAlign: "center", color: "var(--ch-muted)" }}>No records found.</div>
+        ) : (
+          displayList.map((w) => {
+            const prof = w.workerProfile;
+            const photo = prof.proofOfWork?.find((p) => p.status === "Pending")?.url || prof.proofOfWork?.[0]?.url;
+            return (
+              <div key={w.id} style={{ display: "flex", alignItems: "center", padding: "16px 0", borderBottom: "1px solid var(--ch-hairline)", gap: "16px" }}>
+                <div style={{
+                  width: "40px", height: "40px", borderRadius: "50%",
+                  background: isDark ? "rgba(52,211,153,0.15)" : "#003c33",
+                  color: isDark ? "#34d399" : "#ffffff",
+                  border: isDark ? "1px solid rgba(52,211,153,0.3)" : "none",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "14px", fontWeight: "bold"
+                }}>
+                  {w.name.charAt(0)}
                 </div>
-
-                <div style={{ display: "flex", gap: "20px", marginBottom: "8px" }}>
-                  <div>
-                    <div style={{ fontSize: "11px", fontWeight: 600, color: "#7a7a7a", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: "2px" }}>Experience</div>
-                    <div style={{ fontSize: "13px", color: "#1d1d1f" }}>{prof.experience} years</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "11px", fontWeight: 600, color: "#7a7a7a", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: "2px" }}>Service Area</div>
-                    <div style={{ fontSize: "13px", color: "#1d1d1f" }}>{prof.address}</div>
-                  </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "15px", fontWeight: 500, color: "var(--ch-primary)" }}>{w.name}</div>
+                  <div style={{ fontSize: "13px", color: "var(--ch-body-muted)", marginTop: "4px" }}>{w.email} · {prof.address}</div>
                 </div>
-
-                {prof.bio && (
-                  <div style={{ fontSize: "13px", color: "#7a7a7a", fontStyle: "italic", marginBottom: "10px" }}>"{prof.bio}"</div>
-                )}
-
-                {photo && (
-                  <div style={{ width: "160px", borderRadius: "8px", overflow: "hidden", border: "1px solid #e0e0e0" }}>
-                    <img src={photo} alt="Proof of work" style={{ width: "100%", height: "90px", objectFit: "cover", display: "block" }} />
-                  </div>
-                )}
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "var(--ch-muted)", textTransform: "uppercase" }}>
+                  {prof.skill}
+                </div>
+                
+                <div style={{ display: "flex", gap: "8px" }}>
+                  {!prof.isVerified && (
+                    <>
+                      <button
+                        onClick={() => verifyWorker(w.id, "Approved")}
+                        style={{
+                          padding: "6px 16px",
+                          background: isDark ? "#064e3b" : "#003c33",
+                          color: isDark ? "#34d399" : "#ffffff",
+                          border: isDark ? "1px solid rgba(52,211,153,0.3)" : "none",
+                          borderRadius: "32px", fontSize: "13px", cursor: "pointer"
+                        }}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => verifyWorker(w.id, "Rejected")}
+                        style={{
+                          padding: "6px 16px", background: "transparent",
+                          color: "var(--ch-error)",
+                          border: isDark ? "1px solid rgba(248,113,113,0.3)" : "1px solid #ffad9b",
+                          borderRadius: "32px", fontSize: "13px", cursor: "pointer"
+                        }}
+                      >
+                        Reject
+                      </button>
+                    </>
+                  )}
+                  {prof.isVerified && (
+                    <span style={{
+                      fontFamily: "'JetBrains Mono', monospace", fontSize: "11px",
+                      color: "var(--ch-deep-green)",
+                      background: isDark ? "rgba(52,211,153,0.12)" : "#edfce9",
+                      padding: "4px 8px", borderRadius: "16px"
+                    }}>
+                      VERIFIED
+                    </span>
+                  )}
+                </div>
               </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", flexShrink: 0 }}>
-                <button onClick={() => verifyWorker(w.id, "Approved")} style={{
-                  display: "flex", alignItems: "center", gap: "6px",
-                  padding: "9px 18px", background: "#248a3d", color: "#ffffff",
-                  border: "none", borderRadius: "9999px", fontSize: "14px", fontWeight: 400,
-                  cursor: "pointer", fontFamily: "SF Pro Text, system-ui, -apple-system, Inter, sans-serif",
-                  transition: "opacity 0.15s, transform 0.1s",
-                }}
-                onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.95)"}
-                onMouseUp={(e)   => e.currentTarget.style.transform = "scale(1)"}
-                >
-                  <Check size={14} /> Approve
-                </button>
-                <button onClick={() => verifyWorker(w.id, "Rejected")} style={{
-                  display: "flex", alignItems: "center", gap: "6px",
-                  padding: "9px 18px", background: "transparent", color: "#ff3b30",
-                  border: "1px solid rgba(255,59,48,0.3)", borderRadius: "9999px",
-                  fontSize: "14px", fontWeight: 400, cursor: "pointer",
-                  fontFamily: "SF Pro Text, system-ui, -apple-system, Inter, sans-serif",
-                  transition: "opacity 0.15s, transform 0.1s",
-                }}
-                onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.95)"}
-                onMouseUp={(e)   => e.currentTarget.style.transform = "scale(1)"}
-                >
-                  <X size={14} /> Reject
-                </button>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
-
-      {/* Approved workers */}
-      {verified.length > 0 && (
-        <div style={{ ...T.card, marginTop: "20px" }}>
-          <div style={{ fontSize: "14px", fontWeight: 600, color: "#1d1d1f", marginBottom: "16px" }}>
-            Verified Workers ({verified.length})
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "12px" }}>
-            {verified.map((w) => (
-              <div key={w.id} style={{ padding: "14px", background: "#f5f5f7", borderRadius: "11px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "6px" }}>
-                  <div style={{ fontSize: "14px", fontWeight: 600, color: "#1d1d1f" }}>{w.name}</div>
-                  <span style={T.chip("green")}>Verified</span>
-                </div>
-                <div style={{ fontSize: "13px", color: "#7a7a7a", textTransform: "capitalize" }}>
-                  {w.workerProfile.skill} · {w.workerProfile.experience} yrs
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -166,6 +166,13 @@ export default function BookService() {
   const [activeModalWorker, setActiveModalWorker] = useState(null);
   const [activeTab, setActiveTab] = useState("services"); // "services" | "gallery" | "reviews"
   const [copiedNumber, setCopiedNumber] = useState(false);
+  const [cardStyle, setCardStyle] = useState(() => {
+    try {
+      return localStorage.getItem("gs_card_design") || "mist";
+    } catch {
+      return "mist";
+    }
+  });
 
   // Write Review State
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -326,584 +333,493 @@ export default function BookService() {
   };
 
   return (
-    <div className="bookservice-page-padding" style={{ background: "#faf9f5", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
+    <div className="bookservice-page-padding" style={{ background: "var(--ch-canvas)", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
       
-      {/* ── HEADER ── */}
-      <div className="bookservice-header" style={{ maxWidth: "1200px", margin: "0 auto 32px" }}>
-        <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "36px", fontWeight: 400, color: "#141413", letterSpacing: "-0.02em" }}>
-          Search Local Skilled Workers
-        </div>
-        <p style={{ fontSize: "15px", color: "#6c6a64", marginTop: "6px" }}>
-          Browse administrator-verified workers in your village area, inspect services & pricing, and contact them directly.
-        </p>
-      </div>
+      {/* ── SEARCH & FILTER BAR ── */}
+      <div style={{ 
+        borderBottom: "1px solid var(--ch-hairline)", 
+        padding: "20px 24px",
+        background: "var(--ch-canvas)",
+        position: "sticky",
+        top: 0,
+        zIndex: 10
+      }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "20px" }}>
+          
+          <div style={{ display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              flex: "1 1 300px",
+              position: "relative"
+            }}>
+              <Search size={18} color="var(--ch-muted)" style={{ position: "absolute", left: "14px" }} />
+              <input
+                type="text"
+                placeholder="Search by name, village, or skill..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ 
+                  width: "100%",
+                  background: "var(--ch-input-bg)",
+                  border: "1px solid var(--ch-hairline)", 
+                  borderRadius: "8px", 
+                  padding: "10px 14px 10px 40px", 
+                  fontSize: "14px", 
+                  color: "var(--ch-ink)",
+                  outline: "none",
+                  fontFamily: "'Inter', sans-serif"
+                }}
+                onFocus={(e) => e.target.style.borderColor = "var(--ch-action-blue)"}
+                onBlur={(e) => e.target.style.borderColor = "var(--ch-hairline)"}
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} style={{ position: "absolute", right: "12px", background: "none", border: "none", cursor: "pointer", color: "var(--ch-muted)" }}>
+                  <X size={16} />
+                </button>
+              )}
+            </div>
 
-      {/* ── SEARCH, LOCATION & SORT BY RADIUS ── */}
-      <div style={{ maxWidth: "1200px", margin: "0 auto 32px" }} className="bookservice-search-section">
-        <div className="bookservice-search-row">
-          {/* Search Input */}
-          <div className="bookservice-search-input" style={{
-            display: "flex",
-            alignItems: "center",
-            background: "#ffffff",
-            border: "1px solid #e6dfd8",
-            borderRadius: "12px",
-            padding: "12px 18px",
-            boxShadow: "0 2px 12px rgba(20,20,19,0.03)",
-          }}>
-            <Search size={20} color="#8e8b82" style={{ marginRight: "12px" }} />
-            <input
-              type="text"
-              placeholder="Search by name, village location, or skill..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontSize: "15px", color: "#141413" }}
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery("")} style={{ background: "none", border: "none", cursor: "pointer", color: "#8e8b82" }}>
-                <X size={18} />
+            <button
+              onClick={() => {
+                if (!sortByRadius && geoStatus !== "granted") {
+                  handleRequestLocation();
+                } else {
+                  setSortByRadius(!sortByRadius);
+                }
+              }}
+              style={{
+                padding: "10px 16px",
+                background: sortByRadius ? "var(--ch-deep-green)" : "var(--ch-canvas)",
+                color: sortByRadius ? "var(--ch-canvas)" : "var(--ch-ink)",
+                border: `1px solid ${sortByRadius ? "var(--ch-deep-green)" : "var(--ch-hairline)"}`,
+                borderRadius: "8px",
+                fontSize: "14px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                cursor: "pointer",
+              }}
+            >
+              {geoStatus === "loading" ? (
+                <><Crosshair size={16} className="animate-spin" /> Locating...</>
+              ) : (
+                <><Navigation size={16} /> Sort by Distance {sortByRadius && "✓"}</>
+              )}
+            </button>
+            {geoStatus === "denied" && (
+              <button
+                onClick={handleRequestLocation}
+                style={{
+                  padding: "10px 16px", background: "var(--ch-coral-soft)", color: "var(--ch-coral)",
+                  border: "none", borderRadius: "8px", fontSize: "14px",
+                  cursor: "pointer", display: "flex", alignItems: "center", gap: "6px",
+                }}
+              >
+                <Crosshair size={14} /> Enable Location
+              </button>
+            )}
+            {(searchQuery || selectedSkill !== "all") && (
+              <button
+                onClick={() => { setSearchQuery(""); setSelectedSkill("all"); }}
+                style={{ background: "none", border: "none", color: "var(--ch-action-blue)", fontSize: "14px", cursor: "pointer", padding: "10px" }}
+              >
+                Clear all
               </button>
             )}
           </div>
 
-          {/* Sort by Radius Toggle */}
-          <button
-            className="bookservice-radius-btn"
-            onClick={() => {
-              if (!sortByRadius && geoStatus !== "granted") {
-                handleRequestLocation();
-              } else {
-                setSortByRadius(!sortByRadius);
-              }
-            }}
-            style={{
-              padding: "12px 20px",
-              background: sortByRadius ? "#cc785c" : "#ffffff",
-              color: sortByRadius ? "#ffffff" : "#141413",
-              border: sortByRadius ? "none" : "1px solid #e6dfd8",
-              borderRadius: "12px",
-              fontSize: "14px",
-              fontWeight: 500,
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              cursor: "pointer",
-              boxShadow: "0 2px 12px rgba(20,20,19,0.03)",
-              transition: "all 0.15s",
-            }}
-          >
-            {geoStatus === "loading" ? (
-              <><Crosshair size={16} className="animate-spin" /> Locating...</>
-            ) : (
-              <><Navigation size={16} /> Sort by Radius {sortByRadius && "✓"}</>
-            )}
-          </button>
-          {geoStatus === "denied" && (
-            <button
-              className="bookservice-loc-btn"
-              onClick={handleRequestLocation}
-              style={{
-                padding: "12px 16px", background: "#fff5e6", color: "#c07000",
-                border: "1px solid #fce3b8", borderRadius: "12px", fontSize: "13px",
-                fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px",
-              }}
-            >
-              <Crosshair size={14} /> Enable Location
-            </button>
-          )}
-        </div>
-
-        {/* Category Pills */}
-        <div className="category-pills-scroll">
-          {SKILL_CATEGORIES.map((cat) => {
-            const active = selectedSkill === cat.id;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedSkill(cat.id)}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "10px 18px",
-                  borderRadius: "9999px",
-                  fontSize: "14px",
-                  fontWeight: active ? 600 : 400,
-                  background: active ? "#cc785c" : "#efe9de",
-                  color: active ? "#ffffff" : "#141413",
-                  border: active ? "none" : "1px solid #e6dfd8",
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                <span>{cat.icon}</span>
-                <span>{cat.label}</span>
-              </button>
-            );
-          })}
+          {/* Category Pills */}
+          <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px" }} className="hide-scrollbar">
+            {SKILL_CATEGORIES.map((cat) => {
+              const active = selectedSkill === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedSkill(cat.id)}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "5px 14px",
+                    borderRadius: "32px",
+                    fontSize: "13px",
+                    background: active ? "var(--ch-deep-green)" : "var(--ch-canvas)",
+                    color: active ? "var(--ch-canvas)" : "var(--ch-body-muted)",
+                    border: `1px solid ${active ? "var(--ch-deep-green)" : "var(--ch-hairline)"}`,
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <span>{cat.icon}</span>
+                  <span>{cat.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
       {/* ── WORKERS LIST ── */}
-      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-        <div style={{ fontSize: "14px", fontWeight: 600, color: "#6c6a64", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "20px" }}>
-          Available Verified Workers ({filteredWorkers.length})
-        </div>
-
+      <div style={{ maxWidth: "1200px", margin: "32px auto", padding: "0 24px" }}>
+        
         {filteredWorkers.length === 0 ? (
-          <div style={{ background: "#efe9de", borderRadius: "16px", padding: "48px", textAlign: "center", border: "1px solid #e6dfd8" }}>
-            <Filter size={36} color="#8e8b82" style={{ margin: "0 auto 12px" }} />
-            <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "22px", color: "#141413" }}>No matching workers</h3>
-            <p style={{ fontSize: "15px", color: "#6c6a64", marginTop: "6px" }}>Try clearing your search filters or choosing another skill.</p>
+          <div style={{ textAlign: "center", padding: "64px 24px" }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: "0.2px", color: "var(--ch-muted)", fontSize: "12px", marginBottom: "16px" }}>
+              Directory Empty
+            </div>
+            <h3 style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif", fontSize: "24px", color: "var(--ch-ink)", fontWeight: 400, letterSpacing: "-0.02em", margin: "0 0 12px" }}>
+              No matching workers found
+            </h3>
+            <p style={{ fontSize: "15px", color: "var(--ch-body-muted)", marginBottom: "24px" }}>
+              Try adjusting your search or filter criteria.
+            </p>
+            <button
+              onClick={() => { setSearchQuery(""); setSelectedSkill("all"); }}
+              style={{ padding: "10px 20px", background: "var(--ch-primary)", color: "var(--ch-canvas)", border: "none", borderRadius: "9999px", fontSize: "14px", cursor: "pointer" }}
+            >
+              Clear all filters
+            </button>
           </div>
         ) : (
-          <div className="worker-cards-grid">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 260px))", gap: "16px", justifyContent: "start" }}>
             {filteredWorkers.map((worker) => {
               const prof = worker.workerProfile || {};
-              const photo = prof.proofOfWork?.[0]?.url || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400";
+              const photo = prof.proofOfWork?.[0]?.url || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=600";
               const rating = prof.averageRating || 4.9;
               const reviews = prof.reviewCount || 12;
               const distanceKm = worker.calculatedDistance ? worker.calculatedDistance.toFixed(1) : "5.1";
-              const skillDisplay = prof.skills?.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(", ") || prof.skill || "Electrician";
+              const skillLabel = (prof.skill || "worker").charAt(0).toUpperCase() + (prof.skill || "worker").slice(1);
 
               return (
                 <div
                   key={worker.id || worker._id}
+                  onClick={() => handleOpenWorkerModal(worker)}
                   style={{
-                    background: "#ffffff",
-                    border: "1px solid #e6dfd8",
-                    borderRadius: "16px",
-                    padding: "24px",
-                    boxShadow: "0 2px 12px rgba(20,20,19,0.03)",
+                    background: "#1c1c1e",
+                    borderRadius: "20px",
+                    overflow: "hidden",
                     display: "flex",
                     flexDirection: "column",
-                    justifyContent: "space-between",
                     cursor: "pointer",
-                    transition: "transform 0.15s, box-shadow 0.15s",
+                    transition: "transform 0.18s, box-shadow 0.18s",
+                    boxShadow: "0 2px 16px rgba(0,0,0,0.18)",
                   }}
-                  onClick={() => handleOpenWorkerModal(worker)}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-3px)";
-                    e.currentTarget.style.boxShadow = "0 8px 24px rgba(20,20,19,0.08)";
+                    e.currentTarget.style.transform = "translateY(-4px)";
+                    e.currentTarget.style.boxShadow = "0 12px 32px rgba(0,0,0,0.28)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 2px 12px rgba(20,20,19,0.03)";
+                    e.currentTarget.style.boxShadow = "0 2px 16px rgba(0,0,0,0.18)";
                   }}
                 >
-                  <div>
-                    {/* Header */}
-                    <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", marginBottom: "16px" }}>
-                      <img
-                        src={photo}
-                        alt={worker.name}
-                        style={{ width: "72px", height: "72px", borderRadius: "14px", objectFit: "cover", border: "1.5px solid #e6dfd8", flexShrink: 0 }}
-                      />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "20px", fontWeight: 600, color: "#141413", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {worker.name}
-                        </h3>
-
-                        {/* Badges */}
-                        <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap", marginTop: "4px" }}>
-                          <span style={{ fontSize: "12px", color: "#cc785c", fontWeight: 600 }}>✔ Verified</span>
-                          <span style={{ fontSize: "12px", color: "#8e8b82" }}>•</span>
-                          <span style={{ fontSize: "12px", color: "#e8a55a", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-                            ⚡ {distanceKm} km away
-                          </span>
-                        </div>
-
-                        <div style={{ fontSize: "13px", color: "#6c6a64", marginTop: "4px", fontWeight: 500 }}>
-                          {skillDisplay}
-                        </div>
-
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "6px" }}>
-                          <Star size={14} fill="#e8a55a" color="#e8a55a" />
-                          <span style={{ fontSize: "13px", fontWeight: 600, color: "#141413", fontVariantNumeric: "tabular-nums" }}>{rating.toFixed(1)}</span>
-                          <span style={{ fontSize: "12px", color: "#8e8b82" }}>({reviews})</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <p style={{
-                      fontSize: "14px", color: "#3d3d3a", lineHeight: 1.45, margin: "0 0 20px 0",
-                      display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden"
+                  {/* ── Photo Zone ── */}
+                  <div style={{ height: "200px", position: "relative", overflow: "hidden" }}>
+                    <img
+                      src={photo}
+                      alt={worker.name}
+                      style={{
+                        width: "100%", height: "100%", objectFit: "cover",
+                        borderRadius: "16px 16px 0 0",
+                        display: "block",
+                      }}
+                    />
+                    {/* Gradient fade into card bottom */}
+                    <div style={{
+                      position: "absolute", bottom: 0, left: 0, right: 0,
+                      height: "50%",
+                      background: "linear-gradient(to bottom, transparent 0%, #1c1c1e 100%)",
+                      pointerEvents: "none",
+                    }} />
+                    {/* Skill mono label top-left */}
+                    <div style={{
+                      position: "absolute", top: "12px", left: "12px",
+                      background: "rgba(0,0,0,0.5)",
+                      backdropFilter: "blur(8px)",
+                      borderRadius: "99px",
+                      padding: "3px 10px",
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontSize: "10px",
+                      fontWeight: 500,
+                      color: "rgba(255,255,255,0.8)",
+                      letterSpacing: "0.2px",
+                      textTransform: "uppercase",
                     }}>
-                      "{prof.bio || "Available for home repairs and local village work requests."}"
-                    </p>
+                      {skillLabel}
+                    </div>
                   </div>
 
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenWorkerModal(worker);
-                    }}
-                    style={{
-                      width: "100%", padding: "11px 16px", background: "#cc785c", color: "#ffffff",
-                      border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 500,
-                      display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", cursor: "pointer",
-                    }}
-                  >
-                    View Profile & Call Now
-                  </button>
+                  {/* ── Content ── */}
+                  <div style={{ padding: "4px 16px 16px" }}>
+                    {/* Name + verified */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                      <span style={{
+                        fontFamily: "'Space Grotesk', 'Inter', sans-serif",
+                        fontSize: "16px", fontWeight: 600, color: "#ffffff",
+                        letterSpacing: "-0.02em",
+                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                        flex: 1,
+                      }}>
+                        {worker.name}
+                      </span>
+                      {prof.isVerified && (
+                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0 }}>
+                          <circle cx="10" cy="10" r="10" fill="#22c55e" />
+                          <path d="M6 10.5l2.5 2.5 5.5-5.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </div>
+
+                    {/* Bio */}
+                    <p style={{
+                      fontFamily: "'Inter', sans-serif",
+                      fontSize: "12.5px", color: "rgba(255,255,255,0.5)",
+                      lineHeight: 1.45, margin: "0 0 14px",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}>
+                      {prof.bio || `${prof.experience || 0}-year ${skillLabel} serving village communities.`}
+                    </p>
+
+                    {/* Stats row + Call button */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      {/* Rating */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                        <svg width="13" height="13" viewBox="0 0 20 20" fill="#f59e0b"><path d="M10 1l2.63 5.33L18.5 7.27l-4.25 4.14 1 5.84L10 14.77l-5.25 2.48 1-5.84L1.5 7.27l5.87-.94z"/></svg>
+                        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "12.5px", fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>{rating.toFixed(1)}</span>
+                      </div>
+                      {/* Distance */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+                        <MapPin size={11} color="rgba(255,255,255,0.4)" />
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10.5px", color: "rgba(255,255,255,0.4)", letterSpacing: "0.1px" }}>{distanceKm} km</span>
+                      </div>
+                      {/* Experience */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+                        <Award size={11} color="rgba(255,255,255,0.4)" />
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10.5px", color: "rgba(255,255,255,0.4)" }}>{prof.experience || 0}y</span>
+                      </div>
+                      {/* Spacer + Call pill */}
+                      <div style={{ flex: 1 }} />
+                      <button
+                        onClick={(e) => { e.stopPropagation(); window.location.href = `tel:${worker.phone}`; }}
+                        style={{
+                          background: "#ffffff", color: "#17171c",
+                          border: "none", borderRadius: "99px",
+                          padding: "7px 14px",
+                          fontFamily: "'Inter', sans-serif",
+                          fontSize: "12.5px", fontWeight: 600,
+                          cursor: "pointer", whiteSpace: "nowrap",
+                          display: "flex", alignItems: "center", gap: "4px",
+                          transition: "background 0.15s",
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = "#f0f0f0"}
+                        onMouseLeave={(e) => e.currentTarget.style.background = "#ffffff"}
+                      >
+                        <Phone size={11} />
+                        Call
+                      </button>
+                    </div>
+                  </div>
                 </div>
               );
             })}
           </div>
+
         )}
       </div>
 
-      {/* ── WORKER PROFILE POP-UP MODAL (Services, Gallery, Reviews Tabs) ── */}
+      {/* ── WORKER PROFILE POP-UP MODAL ── */}
       {activeModalWorker && (
         <div
-          className="worker-modal-backdrop"
           onClick={(e) => {
             if (e.target === e.currentTarget) setActiveModalWorker(null);
           }}
           style={{
-            position: "fixed", inset: 0, background: "rgba(24,23,21,0.65)", backdropFilter: "blur(6px)",
+            position: "fixed", inset: 0, background: "rgba(23,23,28,0.5)", backdropFilter: "blur(4px)",
             display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px"
           }}
         >
-          <div className="worker-modal-container" onClick={(e) => e.stopPropagation()}>
-            {/* Close Button */}
-            <button
-              onClick={() => setActiveModalWorker(null)}
-              style={{
-                position: "absolute", top: "20px", right: "20px", background: "#faf9f5", border: "1px solid #e6dfd8",
-                borderRadius: "50%", width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer"
-              }}
-            >
-              <X size={18} />
-            </button>
-
-            {/* Header Info */}
-            <div style={{ display: "flex", gap: "20px", alignItems: "flex-start", marginBottom: "20px" }}>
-              <img
-                className="worker-modal-header-img"
-                src={activeModalWorker.workerProfile?.proofOfWork?.[0]?.url || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400"}
-                alt={activeModalWorker.name}
-                onClick={() => {
-                  const proofPhotos = activeModalWorker.workerProfile?.proofOfWork?.map(p => p.url) || [activeModalWorker.workerProfile?.proofOfWork?.[0]?.url];
-                  if (proofPhotos.filter(Boolean).length > 0) {
-                    setLightboxImages(proofPhotos.filter(Boolean));
-                    setLightboxIndex(0);
-                  }
+          <div style={{ background: "var(--ch-canvas)", borderRadius: "8px", width: "100%", maxWidth: "600px", maxHeight: "90vh", overflowY: "auto", border: "1px solid var(--ch-hairline)" }} onClick={(e) => e.stopPropagation()}>
+            {/* Header Band */}
+            <div style={{ background: "var(--ch-deep-green)", color: "var(--ch-canvas)", padding: "24px", position: "relative" }}>
+              <button
+                onClick={() => setActiveModalWorker(null)}
+                style={{
+                  position: "absolute", top: "16px", right: "16px", background: "rgba(255,255,255,0.2)", border: "none", color: "var(--ch-canvas)",
+                  borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer"
                 }}
-                style={{ width: "88px", height: "88px", borderRadius: "16px", objectFit: "cover", border: "2px solid #cc785c", flexShrink: 0, cursor: "pointer" }}
-              />
-              <div>
-                <h2 className="worker-modal-name" style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "24px", fontWeight: 600, color: "#141413", margin: 0 }}>
-                  {activeModalWorker.name}
-                </h2>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "4px" }}>
-                  <span style={{ fontSize: "13px", color: "#cc785c", fontWeight: 600 }}>✔ Admin Verified</span>
-                  <span style={{ fontSize: "13px", color: "#e8a55a", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-                    ⚡ {activeModalWorker.calculatedDistance ? activeModalWorker.calculatedDistance.toFixed(1) : "5.1"} km away
-                  </span>
-                </div>
-                <div style={{ fontSize: "14px", color: "#6c6a64", marginTop: "4px" }}>
-                  {activeModalWorker.workerProfile?.skills?.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(", ") || activeModalWorker.workerProfile?.skill || "Electrician"}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "6px" }}>
-                  <Star size={16} fill="#e8a55a" color="#e8a55a" />
-                  <span style={{ fontSize: "14px", fontWeight: 600, color: "#141413", fontVariantNumeric: "tabular-nums" }}>
-                    {activeModalWorker.workerProfile?.averageRating || 4.9}
-                  </span>
-                  <span style={{ fontSize: "13px", color: "#8e8b82" }}>
-                    ({activeModalWorker.workerProfile?.reviews?.length || activeModalWorker.workerProfile?.reviewCount || 4} ratings)
-                  </span>
+              >
+                <X size={18} />
+              </button>
+              
+              <div style={{ display: "flex", gap: "20px", alignItems: "flex-start" }}>
+                <img
+                  src={activeModalWorker.workerProfile?.proofOfWork?.[0]?.url || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400"}
+                  alt={activeModalWorker.name}
+                  style={{ width: "80px", height: "80px", borderRadius: "8px", objectFit: "cover", border: "2px solid var(--ch-canvas)" }}
+                />
+                <div>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.2px", marginBottom: "4px", color: "rgba(255,255,255,0.7)" }}>
+                    {activeModalWorker.workerProfile?.skill || "Worker"}
+                  </div>
+                  <h2 style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif", fontSize: "24px", fontWeight: 500, margin: "0 0 8px", letterSpacing: "-0.02em" }}>
+                    {activeModalWorker.name}
+                  </h2>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <span style={{ fontSize: "13px", background: "rgba(255,255,255,0.1)", padding: "2px 8px", borderRadius: "32px", display: "flex", alignItems: "center", gap: "4px" }}>
+                      <MapPin size={12} /> {activeModalWorker.calculatedDistance ? activeModalWorker.calculatedDistance.toFixed(1) : "5.1"} km
+                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      <Star size={14} fill="#f59e0b" color="#f59e0b" />
+                      <span style={{ fontSize: "14px", fontWeight: 500 }}>
+                        {activeModalWorker.workerProfile?.averageRating || 4.9}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <p style={{ fontSize: "14px", color: "#3d3d3a", lineHeight: 1.5, marginBottom: "20px" }}>
-              "{activeModalWorker.workerProfile?.bio || "24/7 Service available. Best working skills, no delay work."}"
-            </p>
-
-            {/* CALL NOW BUTTON & PHONE STRIP */}
-            <div style={{ background: "#181715", color: "#faf9f5", borderRadius: "14px", padding: "18px", marginBottom: "24px", textAlign: "center" }}>
-              <div style={{ fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.05em", color: "#a09d96", marginBottom: "4px" }}>
-                Direct Contact Phone Number
-              </div>
-              <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", fontSize: "22px", color: "#faf9f5", marginBottom: "12px", fontVariantNumeric: "tabular-nums", fontWeight: 600, letterSpacing: "0.02em" }}>
-                {activeModalWorker.phone || "+91 98480 12345"}
-              </div>
-              <div style={{ display: "flex", gap: "10px" }}>
-                <a
-                  href={`tel:${activeModalWorker.phone || "+919848012345"}`}
-                  style={{
-                    flex: 1, padding: "11px", background: "#cc785c", color: "#ffffff", borderRadius: "8px",
-                    fontWeight: 600, fontSize: "15px", textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px"
-                  }}
-                >
-                  <Phone size={16} /> Call Now
-                </a>
+            <div style={{ padding: "24px" }}>
+              <div style={{ display: "flex", gap: "12px", marginBottom: "24px" }}>
                 <button
-                  onClick={() => handleCopyPhone(activeModalWorker.phone || "+919848012345")}
-                  style={{
-                    padding: "11px 18px", background: "#252320", color: "#faf9f5", border: "1px solid #3d3d3a",
-                    borderRadius: "8px", fontWeight: 500, fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px"
-                  }}
+                  onClick={() => window.location.href = `tel:${activeModalWorker.phone}`}
+                  style={{ flex: 1, padding: "12px", background: "var(--ch-primary)", color: "var(--ch-canvas)", border: "none", borderRadius: "32px", fontSize: "14px", fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
                 >
-                  {copiedNumber ? <Check size={16} color="#5db872" /> : <Copy size={16} />}
-                  {copiedNumber ? "Copied" : "Copy"}
+                  <Phone size={16} /> {activeModalWorker.phone}
                 </button>
               </div>
-            </div>
 
-            {/* ── PROFILE TABS: Services | Gallery | Reviews ── */}
-            <div style={{ display: "flex", borderBottom: "1px solid #e6dfd8", marginBottom: "20px" }}>
-              {[
-                { id: "services", label: "Services", icon: "💲" },
-                { id: "gallery", label: "Gallery", icon: "🖼️" },
-                { id: "reviews", label: "Reviews", icon: "💬" },
-              ].map((tab) => {
-                const active = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    style={{
-                      flex: 1,
-                      padding: "12px",
-                      background: "none",
-                      border: "none",
-                      borderBottom: active ? "2.5px solid #cc785c" : "2.5px solid transparent",
-                      color: active ? "#cc785c" : "#6c6a64",
-                      fontSize: "14px",
-                      fontWeight: active ? 600 : 400,
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "6px",
-                      transition: "all 0.15s"
-                    }}
-                  >
-                    <span>{tab.icon}</span>
-                    <span>{tab.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* TAB CONTENT: SERVICES */}
-            {activeTab === "services" && (
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: 600, color: "#8e8b82", textTransform: "uppercase", marginBottom: "12px" }}>
-                  Services & Pricing List
-                </div>
-                {(activeModalWorker.workerProfile?.services || [
-                  { name: "Fan Repair & Fitting", price: 100 },
-                  { name: "Switchboard Fitting", price: 250 },
-                  { name: "Inverter Line Wiring", price: 450 }
-                ]).map((svc, idx) => (
-                  <div key={idx} style={{
-                    display: "flex", justifyContent: "space-between", alignItems: "center",
-                    padding: "12px 16px", background: "#faf9f5", border: "1px solid #e6dfd8", borderRadius: "10px", marginBottom: "8px"
-                  }}>
-                    <span style={{ fontSize: "14px", fontWeight: 500, color: "#141413" }}>{svc.name}</span>
-                    <span style={{ fontSize: "15px", fontWeight: 600, color: "#cc785c", fontVariantNumeric: "tabular-nums" }}>₹{svc.price}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* TAB CONTENT: GALLERY */}
-            {activeTab === "gallery" && (
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: 600, color: "#8e8b82", textTransform: "uppercase", marginBottom: "12px" }}>
-                  Work Photos & Pictures (Click to maximize)
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
-                  {(activeModalWorker.workerProfile?.gallery || [
-                    "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=400",
-                    "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=400",
-                    "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=400"
-                  ]).map((imgUrl, idx, arr) => (
-                    <div
-                      key={idx}
-                      onClick={() => {
-                        setLightboxImages(arr);
-                        setLightboxIndex(idx);
-                      }}
-                      style={{ borderRadius: "10px", overflow: "hidden", aspectRatio: "1", border: "1px solid #e6dfd8", cursor: "pointer", transition: "transform 0.15s" }}
-                      onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.03)"}
-                      onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
-                    >
-                      <img src={imgUrl} alt="Work example" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* TAB CONTENT: REVIEWS */}
-            {activeTab === "reviews" && (
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                  <div style={{ fontSize: "15px", fontWeight: 600, color: "#141413" }}>Customer Reviews</div>
-                  <button
-                    onClick={() => setShowReviewModal(true)}
-                    style={{
-                      padding: "8px 14px", background: "#cc785c", color: "#ffffff", border: "none",
-                      borderRadius: "8px", fontSize: "13px", fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px"
-                    }}
-                  >
-                    <Edit3 size={14} /> Write Review
-                  </button>
-                </div>
-
-                {(activeModalWorker.workerProfile?.reviews || [
-                  { customerName: "Suresh Kumar", rating: 5, comment: "very good techian", date: "May 09, 2026" },
-                  { customerName: "Venkatesh P", rating: 5, comment: "nice Explanation reasonable Prices keep in touch", date: "Apr 07, 2026" }
-                ]).map((rev, idx) => {
-                  const isAuthorOrAdmin = rev.customerName === currentUser?.name || currentUser?.role === "Admin";
+              {/* TABS */}
+              <div style={{ display: "flex", borderBottom: "1px solid var(--ch-hairline)", marginBottom: "20px" }}>
+                {[
+                  { id: "services", label: "Services" },
+                  { id: "gallery", label: "Gallery" },
+                  { id: "reviews", label: "Reviews" },
+                ].map((tab) => {
+                  const active = activeTab === tab.id;
                   return (
-                    <div key={idx} style={{ padding: "16px", background: "#faf9f5", border: "1px solid #e6dfd8", borderRadius: "12px", marginBottom: "12px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={{ fontSize: "14px", fontWeight: 600, color: "#141413" }}>{rev.customerName}</span>
-                          {isAuthorOrAdmin && (
-                            <button
-                              type="button"
-                              onClick={() => setReviewToDelete({ rev, idx })}
-                              title="Delete Review"
-                              style={{ background: "none", border: "none", color: "#c64545", cursor: "pointer", display: "flex", alignItems: "center", padding: "2px" }}
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          )}
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px", background: "#fff5e6", padding: "2px 8px", borderRadius: "9999px", border: "1px solid #fce3b8" }}>
-                          <Star size={12} fill="#e8a55a" color="#e8a55a" />
-                          <span style={{ fontSize: "13px", fontWeight: 600, color: "#141413", fontVariantNumeric: "tabular-nums" }}>{rev.rating.toFixed(1)}</span>
-                        </div>
-                      </div>
-                      <p style={{ fontSize: "14px", color: "#3d3d3a", margin: "0 0 6px 0", lineHeight: 1.4 }}>"{rev.comment}"</p>
-                      <div style={{ fontSize: "11px", color: "#8e8b82" }}>{rev.date}</div>
-                    </div>
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      style={{
+                        flex: 1, padding: "12px", background: "none", border: "none",
+                        borderBottom: active ? "2px solid var(--ch-action-blue)" : "2px solid transparent",
+                        color: active ? "var(--ch-action-blue)" : "var(--ch-muted)",
+                        fontSize: "14px", fontWeight: 500, cursor: "pointer"
+                      }}
+                    >
+                      {tab.label}
+                    </button>
                   );
                 })}
               </div>
-            )}
+
+              {/* SERVICES TAB */}
+              {activeTab === "services" && (
+                <div>
+                  {(activeModalWorker.workerProfile?.services || [
+                    { name: "Fan Repair & Fitting", price: 100 }
+                  ]).map((svc, idx) => (
+                    <div key={idx} style={{
+                      display: "flex", justifyContent: "space-between", alignItems: "center",
+                      padding: "16px 0", borderBottom: "1px solid var(--ch-hairline)"
+                    }}>
+                      <span style={{ fontSize: "14px", color: "var(--ch-ink)" }}>{svc.name}</span>
+                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--ch-deep-green)" }}>₹{svc.price}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* GALLERY TAB */}
+              {activeTab === "gallery" && (
+                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                  {(activeModalWorker.workerProfile?.gallery || []).map((imgUrl, idx, arr) => (
+                    <img
+                      key={idx} src={imgUrl} alt="Work"
+                      onClick={() => { setLightboxImages(arr); setLightboxIndex(idx); }}
+                      style={{ width: "48px", height: "48px", borderRadius: "4px", objectFit: "cover", cursor: "pointer" }}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* REVIEWS TAB */}
+              {activeTab === "reviews" && (
+                <div>
+                  <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
+                    <button
+                      onClick={() => setShowReviewModal(true)}
+                      style={{ padding: "8px 16px", background: "var(--ch-canvas)", color: "var(--ch-action-blue)", border: "1px solid var(--ch-action-blue)", borderRadius: "32px", fontSize: "13px", cursor: "pointer" }}
+                    >
+                      Write Review
+                    </button>
+                  </div>
+                  {(activeModalWorker.workerProfile?.reviews || []).map((rev, idx) => (
+                    <div key={idx} style={{ padding: "16px 0", borderBottom: "1px solid var(--ch-hairline)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                        <span style={{ fontSize: "14px", fontWeight: 500 }}>{rev.customerName}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          <Star size={12} fill="#f59e0b" color="#f59e0b" />
+                          <span style={{ fontSize: "13px", fontWeight: 500 }}>{rev.rating}</span>
+                        </div>
+                      </div>
+                      <p style={{ fontSize: "14px", color: "var(--ch-body-muted)", margin: "0 0 4px" }}>{rev.comment}</p>
+                      <div style={{ fontSize: "12px", color: "var(--ch-muted)" }}>{rev.date}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
       {/* ── WRITE REVIEW POP-UP MODAL ── */}
       {showReviewModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(24,23,21,0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: "20px" }}>
-          <div style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "16px", maxWidth: "440px", width: "100%", padding: "28px", boxShadow: "0 20px 40px rgba(0,0,0,0.2)" }}>
-            <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "22px", color: "#141413", marginBottom: "8px" }}>
-              Write a Customer Review
-            </h3>
-            <p style={{ fontSize: "14px", color: "#6c6a64", marginBottom: "20px" }}>
-              Share your experience with <strong>{activeModalWorker?.name}</strong> to help the village community.
-            </p>
-
+        <div style={{ position: "fixed", inset: 0, background: "rgba(23,23,28,0.65)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: "20px" }}>
+          <div style={{ background: "var(--ch-canvas)", borderRadius: "8px", maxWidth: "440px", width: "100%", padding: "24px", border: "1px solid var(--ch-hairline)", boxShadow: "0 16px 40px rgba(0,0,0,0.3)" }}>
+            <h3 style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif", fontSize: "20px", color: "var(--ch-primary)", margin: "0 0 16px" }}>Write a Review</h3>
             <form onSubmit={handleAddReviewSubmit}>
-              {/* Star Rating Picker */}
-              <div style={{ marginBottom: "20px" }}>
-                <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#141413", marginBottom: "8px" }}>Select Star Rating</label>
+              <div style={{ marginBottom: "16px" }}>
                 <div style={{ display: "flex", gap: "8px" }}>
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => setReviewRating(star)}
-                      style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}
-                    >
-                      <Star size={26} fill={star <= reviewRating ? "#e8a55a" : "none"} color={star <= reviewRating ? "#e8a55a" : "#e6dfd8"} />
+                    <button key={star} type="button" onClick={() => setReviewRating(star)} style={{ background: "none", border: "none", cursor: "pointer" }}>
+                      <Star size={24} fill={star <= reviewRating ? "#f59e0b" : "none"} color={star <= reviewRating ? "#f59e0b" : "var(--ch-hairline)"} />
                     </button>
                   ))}
                 </div>
               </div>
-
-              {/* Review Textbox */}
-              <div style={{ marginBottom: "24px" }}>
-                <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#141413", marginBottom: "6px" }}>Your Review & Feedback</label>
-                <textarea
-                  required
-                  rows="4"
-                  value={reviewComment}
-                  onChange={(e) => setReviewComment(e.target.value)}
-                  placeholder="Share details of your experience, work quality, and timeliness..."
-                  style={{ width: "100%", padding: "10px 14px", background: "#faf9f5", border: "1px solid #e6dfd8", borderRadius: "8px", fontSize: "14px", outline: "none", resize: "vertical" }}
-                />
-              </div>
-
+              <textarea
+                required rows="4" value={reviewComment} onChange={(e) => setReviewComment(e.target.value)}
+                placeholder="Share your experience..."
+                style={{ width: "100%", padding: "12px", background: "var(--ch-input-bg)", color: "var(--ch-ink)", border: "1px solid var(--ch-hairline)", borderRadius: "8px", marginBottom: "16px", fontFamily: "'Inter', sans-serif", outline: "none", boxSizing: "border-box" }}
+              />
               <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-                <button
-                  type="button"
-                  onClick={() => setShowReviewModal(false)}
-                  style={{ padding: "10px 18px", background: "#efe9de", color: "#141413", border: "1px solid #e6dfd8", borderRadius: "8px", fontSize: "14px", fontWeight: 500, cursor: "pointer" }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={reviewSubmitting || reviewRating === 0}
-                  style={{ padding: "10px 18px", background: reviewRating === 0 ? "#e6dfd8" : "#cc785c", color: reviewRating === 0 ? "#8e8b82" : "#ffffff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: 500, cursor: reviewRating === 0 ? "not-allowed" : "pointer" }}
-                >
-                  {reviewSubmitting ? "Submitting..." : "Submit Review"}
-                </button>
+                <button type="button" onClick={() => setShowReviewModal(false)} style={{ padding: "8px 16px", border: "1px solid var(--ch-hairline)", borderRadius: "32px", background: "transparent", color: "var(--ch-body-muted)", cursor: "pointer" }}>Cancel</button>
+                <button type="submit" disabled={reviewSubmitting || reviewRating === 0} style={{ padding: "8px 16px", background: "var(--ch-primary)", color: "var(--ch-canvas)", border: "none", borderRadius: "32px", cursor: "pointer" }}>Submit</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* ── IMAGE LIGHTBOX OVERLAY ── */}
-      {lightboxImages && (
-        <ImageLightbox
-          images={lightboxImages}
-          initialIndex={lightboxIndex}
-          onClose={() => setLightboxImages(null)}
-        />
-      )}
+      {lightboxImages && <ImageLightbox images={lightboxImages} initialIndex={lightboxIndex} onClose={() => setLightboxImages(null)} />}
 
-      {/* ── DELETE REVIEW CONFIRMATION MODAL ── */}
       <ConfirmModal
         isOpen={!!reviewToDelete}
-        title="Remove Review"
-        message="Are you sure you want to delete this customer review? This will recalculate the worker's average rating."
-        confirmText="Yes, Delete Review"
-        cancelText="Cancel"
-        variant="danger"
+        title="Remove Review" message="Are you sure?"
         onCancel={() => setReviewToDelete(null)}
         onConfirm={() => {
           if (!reviewToDelete) return;
           const { rev, idx } = reviewToDelete;
           setReviewToDelete(null);
-
-          const previousModalWorker = { ...activeModalWorker };
-          const targetReviews = activeModalWorker.workerProfile?.reviews || [];
-          const updatedReviews = targetReviews.filter((_, i) => i !== idx);
-
-          // 1. Optimistically remove from UI in 0ms
-          setActiveModalWorker((prev) => ({
-            ...prev,
-            workerProfile: { ...prev.workerProfile, reviews: updatedReviews },
-          }));
-          showToast("Review removed successfully.", "success");
-
-          // 2. Perform backend delete in background
-          const deletePromise =
-            rev._id || rev.id
-              ? deleteReview(rev._id || rev.id)
-              : deleteWorkerProfileReview(activeModalWorker._id || activeModalWorker.id, idx);
-
-          deletePromise
-            .then(() => {
-              if (fetchUsers) fetchUsers();
-            })
-            .catch((err) => {
-              // 3. Rollback on failure
-              setActiveModalWorker(previousModalWorker);
-              showToast(err.message || "Could not delete review.", "error");
-            });
+          const deletePromise = (rev._id || rev.id) ? deleteReview(rev._id || rev.id) : deleteWorkerProfileReview(activeModalWorker._id || activeModalWorker.id, idx);
+          deletePromise.catch(err => showToast("Could not delete", "error"));
         }}
       />
     </div>

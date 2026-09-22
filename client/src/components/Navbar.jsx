@@ -3,8 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import { Bell, Sun, Moon, LogOut, User, Menu, X, Landmark } from "lucide-react";
+import { useTheme } from "../context/ThemeContext";
 
-export default function Navbar({ darkMode, setDarkMode }) {
+export default function Navbar({ darkMode: propDarkMode, setDarkMode: propSetDarkMode }) {
+  const themeContext = useTheme();
+  const darkMode = propDarkMode !== undefined ? propDarkMode : themeContext.isDark;
+  const setDarkMode = propSetDarkMode || themeContext.toggleTheme;
   const { currentUser, logout } = useAuth();
   const { notifications, markNotificationsAsRead } = useSocket();
   const navigate = useNavigate();

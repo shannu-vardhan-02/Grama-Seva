@@ -80,13 +80,13 @@ export default function ConfirmModal({
     >
       <div
         style={{
-          background: "#ffffff",
-          border: "1px solid #e6dfd8",
+          background: "var(--confirm-bg, #ffffff)",
+          border: "1px solid var(--confirm-border, #e6dfd8)",
           borderRadius: "18px",
           padding: "28px",
           width: "100%",
           maxWidth: "420px",
-          boxShadow: "0 24px 48px rgba(0, 0, 0, 0.18), 0 8px 16px rgba(0, 0, 0, 0.08)",
+          boxShadow: "0 24px 48px rgba(0, 0, 0, 0.28), 0 8px 16px rgba(0, 0, 0, 0.12)",
           animation: "modalScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards",
           fontFamily: "'Inter', sans-serif",
         }}
@@ -114,13 +114,13 @@ export default function ConfirmModal({
                 fontFamily: "'Playfair Display', Georgia, serif",
                 fontSize: "20px",
                 fontWeight: 600,
-                color: "#141413",
+                color: "var(--confirm-title, #141413)",
                 margin: "0 0 6px 0",
               }}
             >
               {title}
             </h3>
-            <p style={{ fontSize: "14px", color: "#6c6a64", margin: 0, lineHeight: 1.5 }}>
+            <p style={{ fontSize: "14px", color: "var(--confirm-text, #6c6a64)", margin: 0, lineHeight: 1.5 }}>
               {message}
             </p>
           </div>
@@ -132,7 +132,7 @@ export default function ConfirmModal({
               background: "none",
               border: "none",
               cursor: isLoading ? "not-allowed" : "pointer",
-              color: "#8e8b82",
+              color: "var(--confirm-text, #8e8b82)",
               padding: "4px",
               display: "flex",
               borderRadius: "6px",
@@ -149,17 +149,17 @@ export default function ConfirmModal({
             disabled={isLoading}
             style={{
               padding: "10px 18px",
-              background: "#efe9de",
-              color: "#141413",
-              border: "1px solid #e6dfd8",
+              background: "var(--confirm-cancel-bg, #efe9de)",
+              color: "var(--confirm-cancel-text, #141413)",
+              border: "1px solid var(--confirm-cancel-border, #e6dfd8)",
               borderRadius: "10px",
               fontSize: "14px",
               fontWeight: 500,
               cursor: isLoading ? "not-allowed" : "pointer",
               transition: "background 0.15s",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#e4dcce")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "#efe9de")}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--confirm-cancel-hover, #e4dcce)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "var(--confirm-cancel-bg, #efe9de)")}
           >
             {cancelText}
           </button>

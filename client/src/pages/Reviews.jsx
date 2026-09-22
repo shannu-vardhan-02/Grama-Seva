@@ -14,14 +14,9 @@ export default function Reviews() {
 
   if (!currentUser) return null;
 
-  // Gather reviews from both sources:
-  // 1. Booking-based reviews from SocketContext
-  // 2. Worker-profile-based reviews from users array (stored in workerProfile.reviews)
-
   let displayReviews = [];
 
   if (currentUser.role === "Customer") {
-    // Show booking-based reviews from SocketContext
     const bookingBased = bookingReviews.filter((r) => r.customer === currentUser.id || r.customer === currentUser._id);
     displayReviews = bookingBased.map(r => ({
       id: r._id || r.id,
@@ -33,12 +28,10 @@ export default function Reviews() {
       source: "booking"
     }));
 
-    // Also check worker profiles for reviews by this customer
     users.forEach(u => {
       if (u.role === "Worker" && u.workerProfile?.reviews) {
         u.workerProfile.reviews.forEach((rev, idx) => {
           if (rev.customerName === currentUser.name) {
-            // Avoid duplicates
             const exists = displayReviews.some(dr => dr.comment === rev.comment && dr.rating === rev.rating);
             if (!exists) {
               displayReviews.push({
@@ -56,7 +49,6 @@ export default function Reviews() {
       }
     });
   } else if (currentUser.role === "Worker") {
-    // Show booking-based reviews for this worker
     const bookingBased = bookingReviews.filter((r) => r.worker === currentUser.id || r.worker === currentUser._id);
     displayReviews = bookingBased.map(r => ({
       id: r._id || r.id,
@@ -68,7 +60,6 @@ export default function Reviews() {
       source: "booking"
     }));
 
-    // Also get reviews from own workerProfile
     if (currentUser.workerProfile?.reviews) {
       currentUser.workerProfile.reviews.forEach((rev, idx) => {
         const exists = displayReviews.some(dr => dr.comment === rev.comment && dr.rating === rev.rating);
@@ -86,7 +77,6 @@ export default function Reviews() {
       });
     }
   } else {
-    // Admin sees all
     displayReviews = bookingReviews.map(r => ({
       id: r._id || r.id,
       customerName: r.customerName || "Customer",
@@ -97,7 +87,6 @@ export default function Reviews() {
       source: "booking"
     }));
 
-    // Also include all worker profile reviews
     users.forEach(u => {
       if (u.role === "Worker" && u.workerProfile?.reviews) {
         u.workerProfile.reviews.forEach((rev, idx) => {
@@ -118,124 +107,94 @@ export default function Reviews() {
     });
   }
 
-  // Filter out any locally deleted reviews immediately (0ms latency)
   displayReviews = displayReviews.filter(r => !deletedReviewIds.includes(r.id));
 
   const avgRating = displayReviews.length
     ? (displayReviews.reduce((a, r) => a + r.rating, 0) / displayReviews.length).toFixed(1)
     : null;
 
-  function StarRow({ rating }) {
-    return (
-      <div style={{ display: "flex", gap: "3px" }}>
-        {[1,2,3,4,5].map((s) => (
-          <Star key={s} size={14} fill={s <= rating ? "#e8a55a" : "none"} color={s <= rating ? "#e8a55a" : "#e6dfd8"} />
-        ))}
-      </div>
-    );
-  }
-
   return (
-    <div className="reviews-page-padding" style={{ background: "#faf9f5", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ background: "var(--ch-canvas)", color: "var(--ch-ink)", padding: "32px 40px", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
       <div style={{ maxWidth: "900px", margin: "0 auto" }}>
         <div style={{ marginBottom: "32px" }}>
-          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "32px", fontWeight: 400, color: "#141413", letterSpacing: "-0.02em" }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", textTransform: "uppercase", color: "var(--ch-muted)", letterSpacing: "0.2px", marginBottom: "8px" }}>
+            Feedback
+          </div>
+          <h1 style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif", fontSize: "28px", fontWeight: 400, color: "var(--ch-primary)", letterSpacing: "-0.02em", margin: 0 }}>
             {currentUser.role === "Customer" ? "My Reviews" : currentUser.role === "Worker" ? "Client Feedback" : "All Reviews"}
           </h1>
-          <p style={{ fontSize: "15px", color: "#6c6a64", marginTop: "6px" }}>
-            {currentUser.role === "Customer" ? "Reviews you submitted for workers and completed services." :
-             currentUser.role === "Worker" ? "Direct feedback from customers who hired your services." :
-             "All reviews across the entire Grama Seva rural service portal."}
-          </p>
         </div>
 
-        {/* Stats header */}
         {displayReviews.length > 0 && (
-          <div style={{ display: "flex", gap: "16px", marginBottom: "28px" }}>
-            <div style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "16px", padding: "20px 24px" }}>
-              <div style={{ fontSize: "12px", fontWeight: 600, color: "#8e8b82", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                Total Reviews
-              </div>
-              <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", fontSize: "36px", fontWeight: 700, color: "#cc785c", lineHeight: 1.1, marginTop: "4px", fontVariantNumeric: "tabular-nums" }}>
-                {displayReviews.length}
-              </div>
+          <div style={{ display: "flex", gap: "16px", marginBottom: "32px", flexWrap: "wrap" }}>
+            <div style={{ background: "var(--ch-card-bg)", border: "1px solid var(--ch-hairline)", borderRadius: "8px", padding: "20px 24px", flex: 1, minWidth: "160px", maxWidth: "200px" }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", color: "var(--ch-muted)", textTransform: "uppercase", marginBottom: "8px" }}>Total Reviews</div>
+              <div style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif", fontSize: "32px", color: "var(--ch-action-blue)" }}>{displayReviews.length}</div>
             </div>
             {avgRating && (
-              <div style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "16px", padding: "20px 24px" }}>
-                <div style={{ fontSize: "12px", fontWeight: 600, color: "#8e8b82", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                  Average Rating
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
-                  <div style={{ fontFamily: "'Inter', -apple-system, sans-serif", fontSize: "36px", fontWeight: 700, color: "#e8a55a", lineHeight: 1.1, fontVariantNumeric: "tabular-nums" }}>
-                    {avgRating}
-                  </div>
-                  <Star size={22} fill="#e8a55a" color="#e8a55a" />
+              <div style={{ background: "var(--ch-card-bg)", border: "1px solid var(--ch-hairline)", borderRadius: "8px", padding: "20px 24px", flex: 1, minWidth: "160px", maxWidth: "200px" }}>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", color: "var(--ch-muted)", textTransform: "uppercase", marginBottom: "8px" }}>Avg Rating</div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif", fontSize: "32px", color: "var(--ch-deep-green)" }}>{avgRating}</div>
+                  <Star size={20} fill="#f59e0b" color="#f59e0b" />
                 </div>
               </div>
             )}
           </div>
         )}
 
-        {/* Reviews list */}
         {displayReviews.length === 0 ? (
-          <div style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "16px", padding: "60px 40px", textAlign: "center", boxShadow: "0 2px 12px rgba(20,20,19,0.03)" }}>
-            <MessageSquare size={48} color="#e6dfd8" style={{ margin: "0 auto 14px" }} />
-            <div style={{ fontSize: "17px", fontWeight: 600, color: "#141413" }}>No reviews yet</div>
-            <p style={{ fontSize: "14px", color: "#6c6a64", marginTop: "6px" }}>
-              {currentUser.role === "Customer" ? "Visit a worker profile to write a review." : "Completed jobs will generate reviews here."}
-            </p>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "64px 0" }}>
+            <MessageSquare size={40} color="var(--ch-muted)" style={{ marginBottom: "16px" }} />
+            <h3 style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif", fontSize: "20px", color: "var(--ch-primary)", margin: "0 0 8px 0" }}>No reviews yet</h3>
           </div>
         ) : (
-          <div className="reviews-card-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "16px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "16px" }}>
             {displayReviews.map((r) => (
-              <div key={r.id} style={{ background: "#ffffff", border: "1px solid #e6dfd8", borderRadius: "16px", padding: "24px", boxShadow: "0 2px 12px rgba(20,20,19,0.03)" }}>
+              <div key={r.id} style={{ background: "var(--ch-card-bg)", border: "1px solid var(--ch-hairline)", borderRadius: "8px", padding: "20px 24px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
                   <div>
-                    <div style={{ fontSize: "15px", fontWeight: 600, color: "#141413" }}>
+                    <div style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif", fontSize: "15px", fontWeight: 500, color: "var(--ch-primary)" }}>
                       {currentUser.role === "Worker" ? r.customerName : r.workerName}
                     </div>
                     {currentUser.role === "Customer" && (
-                      <div style={{ fontSize: "12px", color: "#8e8b82", marginTop: "2px" }}>Worker: {r.workerName}</div>
+                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", color: "var(--ch-muted)", textTransform: "uppercase", marginTop: "4px" }}>WORKER: {r.workerName}</div>
                     )}
                     {currentUser.role === "Admin" && (
-                      <div style={{ fontSize: "12px", color: "#8e8b82", marginTop: "2px" }}>{r.customerName} → {r.workerName}</div>
+                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", color: "var(--ch-muted)", textTransform: "uppercase", marginTop: "4px" }}>{r.customerName} → {r.workerName}</div>
                     )}
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    {(currentUser.role === "Admin" || (currentUser.role === "Customer" && r.customerName === currentUser.name)) && (
-                      <button
-                        type="button"
-                        onClick={() => setReviewToDelete(r)}
-                        title="Remove Review"
-                        style={{ background: "none", border: "none", color: "#c64545", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px" }}
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    )}
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px", background: "#fff5e6", padding: "3px 10px", borderRadius: "9999px", border: "1px solid #fce3b8" }}>
-                      <Star size={12} fill="#e8a55a" color="#e8a55a" />
-                      <span style={{ fontSize: "13px", fontWeight: 600, color: "#141413", fontVariantNumeric: "tabular-nums" }}>{r.rating.toFixed(1)}</span>
-                    </div>
+                  <div style={{ display: "flex", gap: "2px" }}>
+                    {[1,2,3,4,5].map((s) => (
+                      <Star key={s} size={14} fill={s <= r.rating ? "#f59e0b" : "none"} color={s <= r.rating ? "#f59e0b" : "var(--ch-hairline)"} />
+                    ))}
                   </div>
                 </div>
+                
                 {r.comment && (
-                  <p style={{ fontSize: "14px", color: "#3d3d3a", lineHeight: 1.47, fontStyle: "italic", margin: "0 0 8px 0" }}>
-                    "{r.comment}"
-                  </p>
+                  <p style={{ fontSize: "14px", color: "var(--ch-body-muted)", lineHeight: 1.5, margin: "0 0 16px 0" }}>"{r.comment}"</p>
                 )}
-                {r.date && (
-                  <div style={{ fontSize: "11px", color: "#8e8b82" }}>{r.date}</div>
-                )}
+                
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "var(--ch-muted)" }}>{r.date}</div>
+                  {(currentUser.role === "Admin" || (currentUser.role === "Customer" && r.customerName === currentUser.name)) && (
+                    <button
+                      onClick={() => setReviewToDelete(r)}
+                      style={{ background: "none", border: "none", color: "var(--ch-error)", fontSize: "13px", cursor: "pointer", textDecoration: "underline" }}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* ── Custom Delete Confirmation Modal ── */}
         <ConfirmModal
           isOpen={!!reviewToDelete}
           title="Remove Customer Review"
-          message={`Are you sure you want to delete this review for ${reviewToDelete?.workerName || "the worker"}? This action cannot be undone.`}
+          message={`Are you sure you want to delete this review?`}
           confirmText="Yes, Delete Review"
           cancelText="Cancel"
           variant="danger"
@@ -245,11 +204,9 @@ export default function Reviews() {
             const r = reviewToDelete;
             setReviewToDelete(null);
 
-            // 1. Immediately remove from view (0ms)
             setDeletedReviewIds((prev) => [...prev, r.id]);
             showToast("Review deleted.", "success");
 
-            // 2. Perform backend delete in background
             const deletePromise =
               r.source === "booking"
                 ? deleteReview(r.id)
@@ -267,7 +224,6 @@ export default function Reviews() {
                 if (fetchUsers) fetchUsers();
               })
               .catch((err) => {
-                // 3. Rollback if delete fails
                 setDeletedReviewIds((prev) => prev.filter((id) => id !== r.id));
                 showToast(err.message || "Failed to delete review.", "error");
                 if (fetchUsers) fetchUsers();

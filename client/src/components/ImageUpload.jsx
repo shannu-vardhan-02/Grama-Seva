@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from "react";
 import api from "../api";
+import { useTheme } from "../context/ThemeContext";
 
 /**
  * ImageUpload — reusable drag-and-drop image uploader backed by Cloudinary.
@@ -20,6 +21,7 @@ export default function ImageUpload({
   label,
   maxFiles = 6,
 }) {
+  const { isDark } = useTheme();
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -100,11 +102,22 @@ export default function ImageUpload({
     uploadFiles(e.dataTransfer.files);
   }, [uploadFiles]);
 
-  const handleDragOver = (e) => { e.preventDefault(); setDragging(true); };
-  const handleDragLeave = () => setDragging(false);
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    setDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    setDragging(false);
+  }, []);
+
   const handleInputChange = (e) => uploadFiles(e.target.files);
-  const handleRemoveSingle = () => onChange(null);
-  const handleRemoveMultiple = (idx) => onChange(images.filter((_, i) => i !== idx));
+  const handleRemoveSingle = () => onChange("");
+  const handleRemoveMultiple = (index) => {
+    const updated = images.filter((_, i) => i !== index);
+    onChange(updated);
+  };
 
   const canAddMore = mode === "multiple" ? images.length < maxFiles : !singleImage;
 
@@ -114,18 +127,18 @@ export default function ImageUpload({
       display: "block",
       fontSize: "12px",
       fontWeight: 600,
-      color: "#141413",
+      color: isDark ? "var(--ch-muted, #9ca3af)" : "#141413",
       marginBottom: "8px",
       textTransform: "uppercase",
       letterSpacing: "0.04em",
     },
     dropzone: {
-      border: `2px dashed ${dragging ? "#cc785c" : "#e0d8cf"}`,
+      border: `2px dashed ${dragging ? (isDark ? "#34d399" : "#cc785c") : (isDark ? "var(--ch-hairline)" : "#e0d8cf")}`,
       borderRadius: "12px",
       padding: "28px 20px",
       textAlign: "center",
       cursor: uploading ? "not-allowed" : "pointer",
-      background: dragging ? "rgba(204,120,92,0.05)" : "#faf9f5",
+      background: dragging ? (isDark ? "rgba(52,211,153,0.08)" : "rgba(204,120,92,0.05)") : (isDark ? "var(--ch-surface-subtle)" : "#faf9f5"),
       transition: "all 0.2s ease",
       position: "relative",
     },
@@ -133,26 +146,26 @@ export default function ImageUpload({
     uploadIcon: {
       width: "44px",
       height: "44px",
-      background: "#efe9de",
+      background: isDark ? "var(--ch-card-bg)" : "#efe9de",
       borderRadius: "50%",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
       margin: "0 auto 12px",
     },
-    uploadTitle: { fontSize: "14px", fontWeight: 600, color: "#141413", marginBottom: "4px" },
-    uploadSub: { fontSize: "12px", color: "#8e8b82" },
+    uploadTitle: { fontSize: "14px", fontWeight: 600, color: isDark ? "#f1f2f6" : "#141413", marginBottom: "4px" },
+    uploadSub: { fontSize: "12px", color: isDark ? "#9ca3af" : "#8e8b82" },
     progressBar: {
       width: "100%",
       height: "4px",
-      background: "#e6dfd8",
+      background: isDark ? "var(--ch-hairline)" : "#e6dfd8",
       borderRadius: "4px",
       marginTop: "12px",
       overflow: "hidden",
     },
     progressFill: {
       height: "100%",
-      background: "linear-gradient(90deg, #cc785c, #e8a55a)",
+      background: isDark ? "linear-gradient(90deg, #34d399, #60a5fa)" : "linear-gradient(90deg, #cc785c, #e8a55a)",
       borderRadius: "4px",
       transition: "width 0.3s ease",
       width: `${progress}%`,
@@ -161,7 +174,7 @@ export default function ImageUpload({
       position: "relative",
       borderRadius: "12px",
       overflow: "hidden",
-      border: "2px solid #e6dfd8",
+      border: `2px solid ${isDark ? "var(--ch-hairline)" : "#e6dfd8"}`,
       aspectRatio: "4/3",
     },
     singleImg: { width: "100%", height: "100%", objectFit: "cover", display: "block" },
@@ -193,13 +206,13 @@ export default function ImageUpload({
       aspectRatio: "1.2",
       borderRadius: "8px",
       overflow: "hidden",
-      border: "1px solid #e6dfd8",
+      border: `1px solid ${isDark ? "var(--ch-hairline)" : "#e6dfd8"}`,
     },
     gridImg: { width: "100%", height: "100%", objectFit: "cover", display: "block" },
     error: {
       marginTop: "8px",
       fontSize: "12px",
-      color: "#c64545",
+      color: isDark ? "#f87171" : "#c64545",
       display: "flex",
       alignItems: "center",
       gap: "4px",

@@ -8,7 +8,7 @@ export function SkeletonPulse({ className = "", style = {}, width, height, borde
         width: width || "100%",
         height: height || "16px",
         borderRadius,
-        background: "linear-gradient(90deg, #ece6dc 0%, #f7f3ed 50%, #ece6dc 100%)",
+        background: "var(--skeleton-gradient, linear-gradient(90deg, #ece6dc 0%, #f7f3ed 50%, #ece6dc 100%))",
         backgroundSize: "200% 100%",
         animation: "shimmerWave 1.6s ease-in-out infinite",
         ...style,
@@ -21,8 +21,8 @@ export function WorkerCardSkeleton() {
   return (
     <div
       style={{
-        background: "#ffffff",
-        border: "1px solid #e6dfd8",
+        background: "var(--ch-card-bg, #ffffff)",
+        border: "1px solid var(--ch-hairline, #e6dfd8)",
         borderRadius: "16px",
         padding: "24px",
         display: "flex",
@@ -55,7 +55,7 @@ export function WorkerCardSkeleton() {
       </div>
 
       {/* Footer buttons */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px", paddingTop: "14px", borderTop: "1px solid #f0ebe4" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px", paddingTop: "14px", borderTop: "1px solid var(--ch-hairline, #f0ebe4)" }}>
         <SkeletonPulse width="90px" height="32px" borderRadius="8px" />
         <SkeletonPulse width="110px" height="36px" borderRadius="8px" />
       </div>
@@ -67,8 +67,8 @@ export function StatCardSkeleton() {
   return (
     <div
       style={{
-        background: "#ffffff",
-        border: "1px solid #e6dfd8",
+        background: "var(--ch-card-bg, #ffffff)",
+        border: "1px solid var(--ch-hairline, #e6dfd8)",
         borderRadius: "14px",
         padding: "20px 24px",
         display: "flex",
@@ -90,8 +90,8 @@ export function BookingRowSkeleton() {
         alignItems: "center",
         justifyContent: "space-between",
         padding: "14px 18px",
-        background: "#faf9f5",
-        border: "1px solid #e6dfd8",
+        background: "var(--ch-surface-subtle, #faf9f5)",
+        border: "1px solid var(--ch-hairline, #e6dfd8)",
         borderRadius: "12px",
         gap: "14px",
       }}

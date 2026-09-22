@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
+import { useTheme } from "../context/ThemeContext";
 import {
   LayoutDashboard,
   Wrench,
@@ -19,9 +20,12 @@ import {
   Home,
   Search,
   User,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 import GramaSevaLogo from "./GramaSevaLogo";
+import logoImg from "../assets/grama-seva-logo.jpg";
 
 const NAV = [
   { to: "/book-service", label: "Search Workers", icon: Search },
@@ -37,7 +41,6 @@ const ROLE_ACCESS = {
   Admin:    ["/book-service", "/vetting-queue", "/users", "/settings"],
 };
 
-// Bottom nav tabs per role (mobile only)
 const BOTTOM_NAV = {
   Customer: [
     { to: "/",            label: "Home",     icon: Home },
@@ -59,9 +62,17 @@ const BOTTOM_NAV = {
   ],
 };
 
+// Role accent colors
+const ROLE_COLORS = {
+  Customer: { bg: "rgba(24,99,220,0.12)", color: "#1863dc" },
+  Worker:   { bg: "rgba(255,119,89,0.12)", color: "#ff7759" },
+  Admin:    { bg: "rgba(0,60,51,0.15)", color: "#4ade80" },
+};
+
 export default function AppLayout({ children }) {
   const { currentUser, logout } = useAuth();
   const { notifications, markNotificationsAsRead } = useSocket();
+  const { theme, isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -70,7 +81,6 @@ export default function AppLayout({ children }) {
   const [isOnline, setIsOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
   const [showReconnectedBanner, setShowReconnectedBanner] = useState(false);
 
-  // Network connection resilience listeners
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
@@ -82,22 +92,18 @@ export default function AppLayout({ children }) {
       setIsOnline(false);
       setShowReconnectedBanner(false);
     };
-
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
-
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Body scroll lock when drawer is open
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.classList.add("drawer-open");
@@ -133,77 +139,102 @@ export default function AppLayout({ children }) {
     .toUpperCase();
 
   const currentLabel = visibleNav.find((n) => location.pathname.startsWith(n.to))?.label || "Grama Seva";
+  const roleStyle = ROLE_COLORS[currentUser.role] || ROLE_COLORS.Customer;
 
   return (
-    <div className="app-layout" style={{ display: "flex", minHeight: "100vh", background: "#faf9f5", fontFamily: "'Inter', sans-serif" }}>
+    <div className="app-layout" style={{
+      display: "flex", minHeight: "100vh",
+      background: isDark ? "#0d0e12" : "#f8f8f8",
+      color: isDark ? "#f0f1f5" : "#17171c",
+      fontFamily: "'Inter', sans-serif",
+    }}>
 
       {/* ── Mobile overlay backdrop ── */}
       {mobileMenuOpen && (
         <div
           className="mobile-overlay"
           onClick={() => setMobileMenuOpen(false)}
+          style={{ background: "rgba(23,23,28,0.55)", backdropFilter: "blur(4px)" }}
         />
       )}
 
-      {/* ── LEFT SIDEBAR — Dark Navy ── */}
+      {/* ── LEFT SIDEBAR — Cohere Near-Black ── */}
       <aside
         className={`sidebar ${mobileMenuOpen ? "sidebar-open" : ""}`}
         style={{
-          width: "230px",
+          width: "232px",
           flexShrink: 0,
           display: "flex",
           flexDirection: "column",
-          background: "#181715",
-          color: "#faf9f5",
+          background: "#17171c",
+          color: "#ffffff",
           position: "sticky",
           top: 0,
           height: "100vh",
           overflowY: "auto",
-          borderRight: "1px solid #252320",
+          borderRight: "1px solid rgba(255,255,255,0.06)",
           zIndex: 50,
         }}
       >
-        {/* Mobile close button inside drawer */}
+        {/* Mobile close button */}
         <button
           onClick={() => setMobileMenuOpen(false)}
           className="hamburger-btn"
           style={{
-            position: "absolute",
-            top: "16px",
-            right: "12px",
-            background: "rgba(255,255,255,0.08)",
-            border: "none",
-            cursor: "pointer",
-            color: "#a09d96",
-            borderRadius: "8px",
-            padding: "6px",
-            alignItems: "center",
-            justifyContent: "center",
+            position: "absolute", top: "14px", right: "10px",
+            background: "rgba(255,255,255,0.07)",
+            border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)",
+            borderRadius: "6px", padding: "6px",
+            alignItems: "center", justifyContent: "center",
           }}
           aria-label="Close menu"
         >
-          <X size={18} />
+          <X size={16} />
         </button>
 
         {/* Brand */}
-        <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid #252320" }}>
-          <GramaSevaLogo size={34} showText={true} textVariant="light" />
+        <div style={{
+          padding: "22px 18px 18px",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          display: "flex", alignItems: "center", gap: "10px",
+        }}>
+          <div style={{
+            width: "30px", height: "30px", borderRadius: "6px",
+            overflow: "hidden", flexShrink: 0,
+          }}>
+            <img src={logoImg} alt="Grama Seva" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
+          <div>
+            <div style={{
+              fontFamily: "'Space Grotesk', 'Inter', sans-serif",
+              fontSize: "16px", fontWeight: 600, color: "#ffffff",
+              letterSpacing: "-0.32px", lineHeight: 1.1,
+            }}>Grama Seva</div>
+            <div style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: "9px", color: "rgba(255,255,255,0.3)",
+              letterSpacing: "0.18px", textTransform: "uppercase", marginTop: "2px",
+            }}>Village Directory</div>
+          </div>
         </div>
 
         {/* Role pill */}
-        <div style={{ padding: "14px 20px 10px" }}>
+        <div style={{ padding: "12px 18px 8px" }}>
           <span style={{
             display: "inline-flex", alignItems: "center", padding: "3px 10px",
-            background: "#252320", color: "#cc785c", borderRadius: "9999px",
-            fontSize: "11px", fontWeight: 600, letterSpacing: "0.04em",
-            textTransform: "uppercase", border: "1px solid #3d3d3a",
+            background: roleStyle.bg,
+            color: roleStyle.color,
+            borderRadius: "9999px",
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: "10px", fontWeight: 500, letterSpacing: "0.2px",
+            textTransform: "uppercase",
           }}>
             {currentUser.role}
           </span>
         </div>
 
         {/* Nav links */}
-        <nav style={{ flex: 1, padding: "8px 12px", display: "flex", flexDirection: "column", gap: "2px" }}>
+        <nav style={{ flex: 1, padding: "8px 10px", display: "flex", flexDirection: "column", gap: "1px" }}>
           {visibleNav.map((item) => (
             <NavLink
               key={item.to}
@@ -211,27 +242,29 @@ export default function AppLayout({ children }) {
               onClick={() => setMobileMenuOpen(false)}
               style={({ isActive }) => ({
                 display: "flex", alignItems: "center", gap: "10px",
-                padding: "11px 12px", borderRadius: "8px",
-                fontSize: "14px", fontWeight: isActive ? 600 : 400,
-                color: isActive ? "#ffffff" : "rgba(255,255,255,0.55)",
-                background: isActive ? "rgba(255,255,255,0.10)" : "transparent",
-                textDecoration: "none", transition: "all 0.15s", letterSpacing: "-0.01em",
-                minHeight: "44px",
+                padding: "10px 12px", borderRadius: "6px",
+                fontSize: "13.5px", fontWeight: isActive ? 500 : 400,
+                color: isActive ? "#ffffff" : "rgba(255,255,255,0.45)",
+                background: isActive ? "rgba(0,60,51,0.2)" : "transparent",
+                textDecoration: "none", transition: "all 0.12s",
+                letterSpacing: "0",
+                minHeight: "42px",
+                borderLeft: isActive ? "3px solid #003c33" : "3px solid transparent",
               })}
               onMouseEnter={(e) => {
                 if (!e.currentTarget.getAttribute("aria-current")) {
-                  e.currentTarget.style.color = "rgba(255,255,255,0.85)";
+                  e.currentTarget.style.color = "rgba(255,255,255,0.8)";
                   e.currentTarget.style.background = "rgba(255,255,255,0.05)";
                 }
               }}
               onMouseLeave={(e) => {
                 if (!e.currentTarget.getAttribute("aria-current")) {
-                  e.currentTarget.style.color = "rgba(255,255,255,0.55)";
+                  e.currentTarget.style.color = "rgba(255,255,255,0.45)";
                   e.currentTarget.style.background = "transparent";
                 }
               }}
             >
-              <item.icon size={16} style={{ flexShrink: 0 }} />
+              <item.icon size={15} style={{ flexShrink: 0 }} />
               {item.label}
             </NavLink>
           ))}
@@ -239,20 +272,25 @@ export default function AppLayout({ children }) {
 
         {/* Bottom user strip */}
         <div style={{
-          padding: "16px 16px 20px", borderTop: "1px solid rgba(255,255,255,0.08)",
+          padding: "14px 14px 18px",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
           display: "flex", alignItems: "center", gap: "10px",
         }}>
           <div style={{
-            width: "30px", height: "30px", borderRadius: "50%", background: "#cc785c",
+            width: "30px", height: "30px", borderRadius: "50%",
+            background: "rgba(0,60,51,0.6)",
+            border: "1px solid rgba(0,150,100,0.4)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: "12px", fontWeight: 600, color: "#ffffff", flexShrink: 0,
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: "11px", fontWeight: 600, color: "#4ade80", flexShrink: 0,
           }}>
             {initials}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{
-              fontSize: "13px", fontWeight: 600, color: "#ffffff",
+              fontSize: "12.5px", fontWeight: 500, color: "rgba(255,255,255,0.9)",
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              fontFamily: "'Inter', sans-serif",
             }}>{currentUser.name}</div>
           </div>
           <button
@@ -260,14 +298,14 @@ export default function AppLayout({ children }) {
             title="Sign out"
             style={{
               background: "none", border: "none", cursor: "pointer",
-              color: "rgba(255,255,255,0.45)", display: "flex",
+              color: "rgba(255,255,255,0.3)", display: "flex",
               alignItems: "center", justifyContent: "center",
-              padding: "4px", borderRadius: "6px", transition: "color 0.15s", flexShrink: 0,
+              padding: "4px", borderRadius: "4px", transition: "color 0.12s", flexShrink: 0,
             }}
-            onMouseEnter={(e) => e.currentTarget.style.color = "#ffffff"}
-            onMouseLeave={(e) => e.currentTarget.style.color = "rgba(255,255,255,0.45)"}
+            onMouseEnter={(e) => e.currentTarget.style.color = "rgba(255,255,255,0.8)"}
+            onMouseLeave={(e) => e.currentTarget.style.color = "rgba(255,255,255,0.3)"}
           >
-            <LogOut size={15} />
+            <LogOut size={14} />
           </button>
         </div>
       </aside>
@@ -279,53 +317,79 @@ export default function AppLayout({ children }) {
         <header className="top-header" style={{
           height: "52px", display: "flex", alignItems: "center",
           justifyContent: "space-between", padding: "0 24px",
-          background: "rgba(245,245,247,0.92)", backdropFilter: "saturate(180%) blur(20px)",
-          WebkitBackdropFilter: "saturate(180%) blur(20px)",
-          borderBottom: "1px solid rgba(0,0,0,0.08)", position: "sticky", top: 0, zIndex: 40,
+          background: isDark ? "rgba(18, 19, 25, 0.95)" : "rgba(255,255,255,0.95)",
+          backdropFilter: "saturate(180%) blur(16px)",
+          WebkitBackdropFilter: "saturate(180%) blur(16px)",
+          borderBottom: isDark ? "1px solid #232532" : "1px solid #e5e7eb",
+          position: "sticky", top: 0, zIndex: 40,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            {/* Hamburger — CSS controls display (flex on mobile, none on desktop) */}
             <button
               className="hamburger-btn"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               style={{
-                background: "none", border: "none", cursor: "pointer", color: "#141413",
-                alignItems: "center", padding: "4px", borderRadius: "6px",
+                background: "none", border: "none", cursor: "pointer", color: isDark ? "#f3f4f8" : "#17171c",
+                alignItems: "center", padding: "4px", borderRadius: "4px",
               }}
               aria-label="Open menu"
               aria-expanded={mobileMenuOpen}
             >
-              <Menu size={22} />
+              <Menu size={20} />
             </button>
             <span style={{
-              fontFamily: "'Playfair Display', Georgia, serif", fontSize: "18px",
-              fontWeight: 500, color: "#1d1d1f", letterSpacing: "-0.01em",
+              fontFamily: "'Space Grotesk', 'Inter', sans-serif",
+              fontSize: "16px", fontWeight: 500, color: isDark ? "#f3f4f8" : "#17171c", letterSpacing: "-0.32px",
             }}>
               {currentLabel}
             </span>
           </div>
 
           {/* Right cluster */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={toggleTheme}
+              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              style={{
+                width: "34px", height: "34px", display: "flex", alignItems: "center",
+                justifyContent: "center", background: isDark ? "rgba(255,255,255,0.06)" : "transparent",
+                border: isDark ? "1px solid #282a3a" : "1px solid #e5e7eb", borderRadius: "50%",
+                cursor: "pointer", color: isDark ? "#fbbf24" : "#616161", transition: "all 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = isDark ? "#fbbf24" : "#d9d9dd";
+                e.currentTarget.style.color = isDark ? "#fde68a" : "#17171c";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = isDark ? "#282a3a" : "#e5e7eb";
+                e.currentTarget.style.color = isDark ? "#fbbf24" : "#616161";
+              }}
+              aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {isDark ? <Sun size={15} /> : <Moon size={15} />}
+            </button>
 
             {/* Notification bell */}
             <div style={{ position: "relative" }}>
               <button
                 onClick={toggleNotif}
                 style={{
-                  width: "36px", height: "36px", display: "flex", alignItems: "center",
-                  justifyContent: "center", background: "rgba(0,0,0,0.04)",
-                  border: "1px solid rgba(0,0,0,0.08)", borderRadius: "50%",
-                  cursor: "pointer", color: "#1d1d1f", transition: "background 0.15s", position: "relative",
+                  width: "34px", height: "34px", display: "flex", alignItems: "center",
+                  justifyContent: "center", background: isDark ? "rgba(255,255,255,0.06)" : "transparent",
+                  border: isDark ? "1px solid #282a3a" : "1px solid #e5e7eb", borderRadius: "50%",
+                  cursor: "pointer", color: isDark ? "#b2b5c5" : "#616161", transition: "border-color 0.15s", position: "relative",
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = isDark ? "#383b4e" : "#d9d9dd"; e.currentTarget.style.color = isDark ? "#f3f4f8" : "#17171c"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = isDark ? "#282a3a" : "#e5e7eb"; e.currentTarget.style.color = isDark ? "#b2b5c5" : "#616161"; }}
                 aria-label="Notifications"
               >
-                <Bell size={15} />
+                <Bell size={14} />
                 {unread > 0 && (
                   <span style={{
-                    position: "absolute", top: "2px", right: "2px",
-                    width: "8px", height: "8px", background: "#ff3b30",
-                    borderRadius: "50%", border: "1.5px solid #f5f5f7",
+                    position: "absolute", top: "1px", right: "1px",
+                    width: "8px", height: "8px", background: "#ff7759",
+                    borderRadius: "50%", border: isDark ? "1.5px solid #171822" : "1.5px solid #ffffff",
                   }} />
                 )}
               </button>
@@ -334,36 +398,46 @@ export default function AppLayout({ children }) {
               {showNotif && (
                 <div className="notif-dropdown" style={{
                   position: "absolute", right: 0, top: "calc(100% + 8px)",
-                  width: "320px", background: "#ffffff", border: "1px solid #e6dfd8",
-                  borderRadius: "16px", boxShadow: "0 8px 40px rgba(0,0,0,0.12)",
+                  width: "310px", background: isDark ? "#171822" : "#ffffff",
+                  border: isDark ? "1px solid #282a3a" : "1px solid #e5e7eb",
+                  borderRadius: "8px", boxShadow: isDark ? "0 8px 32px rgba(0,0,0,0.5)" : "0 8px 32px rgba(0,0,0,0.1)",
                   zIndex: 100, overflow: "hidden",
                 }}>
                   <div style={{
                     display: "flex", alignItems: "center", justifyContent: "space-between",
-                    padding: "14px 18px", borderBottom: "1px solid #e6dfd8",
+                    padding: "12px 16px", borderBottom: isDark ? "1px solid #232532" : "1px solid #e5e7eb",
                   }}>
-                    <span style={{ fontSize: "14px", fontWeight: 600, color: "#141413" }}>Notifications</span>
+                    <span style={{
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontSize: "11px", fontWeight: 500, color: isDark ? "#7e8194" : "#93939f",
+                      textTransform: "uppercase", letterSpacing: "0.22px",
+                    }}>Notifications</span>
                     <button
                       onClick={() => setShowNotif(false)}
                       className="no-min-height"
-                      style={{ background: "none", border: "none", cursor: "pointer", color: "#8e8b82", display: "flex" }}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: isDark ? "#7e8194" : "#93939f", display: "flex" }}
                     >
                       <X size={14} />
                     </button>
                   </div>
                   <div style={{ maxHeight: "280px", overflowY: "auto" }}>
                     {userNotifs.length === 0 ? (
-                      <p style={{ padding: "28px 18px", textAlign: "center", fontSize: "14px", color: "#8e8b82" }}>
+                      <p style={{ padding: "28px 18px", textAlign: "center", fontSize: "13px", color: isDark ? "#7e8194" : "#93939f" }}>
                         No notifications
                       </p>
                     ) : userNotifs.map((n) => (
                       <div key={n.id} style={{
-                        padding: "12px 18px", borderBottom: "1px solid rgba(0,0,0,0.05)",
-                        background: !n.isRead ? "rgba(204,120,92,0.06)" : "transparent",
+                        padding: "12px 16px", borderBottom: isDark ? "1px solid #20222d" : "1px solid #f2f2f2",
+                        background: !n.isRead ? (isDark ? "rgba(52,211,153,0.08)" : "rgba(0,60,51,0.04)") : "transparent",
+                        borderLeft: !n.isRead ? (isDark ? "3px solid #34d399" : "3px solid #003c33") : "3px solid transparent",
                       }}>
-                        <div style={{ fontSize: "13px", fontWeight: 600, color: "#141413" }}>{n.title}</div>
-                        <div style={{ fontSize: "13px", color: "#6c6a64", marginTop: "2px", lineHeight: 1.4 }}>{n.message}</div>
-                        <div style={{ fontSize: "11px", color: "#8e8b82", marginTop: "4px" }}>
+                        <div style={{ fontSize: "13px", fontWeight: 500, color: isDark ? "#f3f4f8" : "#17171c", fontFamily: "'Inter', sans-serif" }}>{n.title}</div>
+                        <div style={{ fontSize: "12px", color: isDark ? "#b2b5c5" : "#616161", marginTop: "2px", lineHeight: 1.4, fontFamily: "'Inter', sans-serif" }}>{n.message}</div>
+                        <div style={{
+                          fontFamily: "'JetBrains Mono', monospace",
+                          fontSize: "10px", color: isDark ? "#7e8194" : "#93939f", marginTop: "4px",
+                          textTransform: "uppercase", letterSpacing: "0.2px",
+                        }}>
                           {new Date(n.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                         </div>
                       </div>
@@ -373,18 +447,19 @@ export default function AppLayout({ children }) {
               )}
             </div>
 
-            {/* Sign out button — hidden on mobile via .signout-btn CSS */}
+            {/* Sign out button */}
             <button
               className="signout-btn"
               onClick={handleLogout}
               style={{
                 display: "inline-flex", alignItems: "center", gap: "6px",
-                padding: "7px 14px", background: "#181715", color: "#ffffff",
-                border: "none", borderRadius: "8px", fontSize: "13px", fontWeight: 400,
-                cursor: "pointer", letterSpacing: "-0.01em", transition: "transform 0.1s",
+                padding: "7px 14px", background: isDark ? "#232534" : "#17171c", color: "#ffffff",
+                border: isDark ? "1px solid #34374b" : "none", borderRadius: "32px", fontSize: "12.5px", fontWeight: 500,
+                cursor: "pointer", letterSpacing: "0", transition: "all 0.15s",
+                fontFamily: "'Inter', sans-serif",
               }}
-              onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.95)"}
-              onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = "0.85"}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
             >
               <LogOut size={13} />
               Sign Out
@@ -392,21 +467,15 @@ export default function AppLayout({ children }) {
           </div>
         </header>
 
-        {/* ── Network Resilience Banner ── */}
+        {/* ── Network Resilience Banners ── */}
         {!isOnline && (
           <div
             className="offline-banner"
             style={{
-              background: "#c07000",
-              color: "#ffffff",
-              padding: "8px 16px",
-              fontSize: "13px",
-              fontWeight: 500,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              boxShadow: "0 2px 8px rgba(192,112,0,0.25)",
+              background: "#c07000", color: "#ffffff",
+              padding: "8px 16px", fontSize: "13px", fontWeight: 500,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+              fontFamily: "'Inter', sans-serif",
             }}
           >
             <span>⚡ You are currently offline. Showing cached village directory.</span>
@@ -417,16 +486,10 @@ export default function AppLayout({ children }) {
           <div
             className="offline-banner"
             style={{
-              background: "#248a3d",
-              color: "#ffffff",
-              padding: "8px 16px",
-              fontSize: "13px",
-              fontWeight: 500,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              boxShadow: "0 2px 8px rgba(36,138,61,0.25)",
+              background: "#003c33", color: "#ffffff",
+              padding: "8px 16px", fontSize: "13px", fontWeight: 500,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+              fontFamily: "'Inter', sans-serif",
             }}
           >
             <span>✓ Connection restored. Data synchronized in real-time.</span>
@@ -434,13 +497,16 @@ export default function AppLayout({ children }) {
         )}
 
         {/* ── Main content ── */}
-        <main className="app-main-content" style={{ flex: 1, overflowY: "auto" }}>
+        <main className="app-main-content" style={{ flex: 1, overflowY: "auto", background: isDark ? "#0d0e12" : "#f8f8f8" }}>
           {children}
         </main>
       </div>
 
-      {/* ── BOTTOM NAVIGATION — Mobile only (CSS hides on desktop) ── */}
-      <nav className="bottom-nav" aria-label="Mobile navigation">
+      {/* ── BOTTOM NAVIGATION — Mobile only ── */}
+      <nav className="bottom-nav" aria-label="Mobile navigation" style={{
+        background: isDark ? "#0d0e12" : "#181715",
+        borderTop: isDark ? "1px solid #232532" : "1px solid #252320"
+      }}>
         {bottomNavItems.map((item) => {
           const isActive = location.pathname === item.to ||
             (item.to !== "/" && location.pathname.startsWith(item.to));
@@ -451,6 +517,7 @@ export default function AppLayout({ children }) {
               className={`bottom-nav-item no-min-height ${isActive ? "active" : ""}`}
               aria-label={item.label}
               aria-current={isActive ? "page" : undefined}
+              style={isActive ? { color: isDark ? "#34d399" : "#4ade80" } : {}}
             >
               <item.icon size={20} />
               <span>{item.label}</span>

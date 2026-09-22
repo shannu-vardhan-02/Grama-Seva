@@ -7,6 +7,22 @@
     <link rel="icon" type="image/jpeg" href="/grama-seva-logo.jpg" />
     <link rel="apple-touch-icon" href="/grama-seva-logo.jpg" />
     <title>Grama Seva — Rural Community Skilled Workers Portal</title>
+    <script>
+      (function () {
+        try {
+          var theme = localStorage.getItem("grama_seva_theme");
+          if (theme === "dark") {
+            document.documentElement.classList.add("dark");
+            document.documentElement.setAttribute("data-theme", "dark");
+            document.documentElement.style.colorScheme = "dark";
+          } else {
+            document.documentElement.classList.remove("dark");
+            document.documentElement.setAttribute("data-theme", "light");
+            document.documentElement.style.colorScheme = "light";
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

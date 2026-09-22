@@ -4,15 +4,14 @@ import { useAuth } from "../context/AuthContext";
 import {
   Eye, EyeOff, Mail, User, Phone,
   MapPin, Briefcase, FileText, CheckCircle2,
-  ArrowRight, Shield, Star, Users,
+  ArrowRight, Shield, Star, Users, Sun, Moon,
 } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
+import { useTheme } from "../context/ThemeContext";
 import ImageUpload from "../components/ImageUpload";
 import GramaSevaLogo from "../components/GramaSevaLogo";
 
-
-/* ─── Lightweight spinner — replaces the broken thinking-orbs library ── */
-function Spinner({ size = 20, color = "#ffffff" }) {
+function Spinner({ size = 20, color = "#17171c" }) {
   return (
     <span style={{
       display: "inline-block",
@@ -27,73 +26,37 @@ function Spinner({ size = 20, color = "#ffffff" }) {
   );
 }
 
-const C = {
-  /* surfaces */
-  dark:      "#0f0e0d",
-  panelBg:   "rgba(15,14,13,0.0)",  /* transparent — sits on gradient */
-  inputBg:   "rgba(255,255,255,0.06)",
-  inputBdr:  "rgba(255,255,255,0.12)",
-  inputFoc:  "#cc785c",             /* brand coral */
-  /* text */
-  textPri:   "#faf9f5",
-  textMut:   "#a09d96",
-  textSub:   "#8e8b82",
-  /* accent — brand coral, NOT blue */
-  accent:    "#cc785c",
-  accentHov: "#b5604a",
-  accentLight: "rgba(204,120,92,0.15)",
-  /* secondary button */
-  btnSec:    "rgba(255,255,255,0.06)",
-  btnSecBdr: "rgba(255,255,255,0.12)",
-  btnSecHov: "rgba(255,255,255,0.10)",
-  /* worker section */
-  workerBg:  "rgba(255,255,255,0.04)",
-  workerBdr:  "rgba(255,255,255,0.10)",
-  /* banners */
-  errorBg:   "rgba(198,69,69,0.12)",
-  errorBdr:  "rgba(198,69,69,0.30)",
-  errorTxt:  "#f87171",
-  okBg:      "rgba(93,184,166,0.12)",
-  okBdr:     "rgba(93,184,166,0.30)",
-  okTxt:     "#5db8a6",
-};
-
-/* ─── Trust stats shown on left ────────────────────────────── */
 const STATS = [
   { value: "2,400+", label: "Verified workers" },
   { value: "18K+",   label: "Jobs completed" },
   { value: "4.8★",   label: "Avg. rating" },
 ];
 
-/* ─── Feature bullets shown on register ────────────────────── */
 const FEATURES = [
   "Skill-verified worker profiles",
   "Community-driven ratings & reviews",
   "Admin-approved secure onboarding",
 ];
 
-/* ─── Reusable labelled input ───────────────────────────────── */
 function Field({ label, type = "text", value, onChange, placeholder, required, icon: Icon, min, rows, autoComplete }) {
+  const { isDark } = useTheme();
   const [focused, setFocused] = useState(false);
   const isTextarea = type === "textarea";
 
   const sharedStyle = {
     width: "100%",
-    padding: isTextarea ? "12px 16px" : "13px 16px",
-    paddingRight: Icon ? "44px" : "16px",
-    background: C.inputBg,
-    color: C.textPri,
-    border: `1px solid ${focused ? C.inputFoc : C.inputBdr}`,
-    borderRadius: "10px",
+    padding: "10px 14px",
+    paddingRight: Icon ? "40px" : "14px",
+    background: isDark ? "var(--ch-input-bg)" : "#ffffff",
+    color: isDark ? "#f1f2f6" : "#212121",
+    border: `1px solid ${focused ? (isDark ? "#60a5fa" : "#1863dc") : (isDark ? "var(--ch-hairline)" : "#d9d9dd")}`,
+    borderRadius: "8px",
     fontSize: "14px",
     fontFamily: "'Inter', sans-serif",
     outline: "none",
-    transition: "border-color 0.18s, box-shadow 0.18s",
+    transition: "all 0.2s",
     boxSizing: "border-box",
-    caretColor: C.accent,
-    boxShadow: focused ? `0 0 0 3px rgba(204,120,92,0.18)` : "none",
-    backdropFilter: "blur(12px)",
-    WebkitBackdropFilter: "blur(12px)",
+    boxShadow: focused ? (isDark ? "0 0 0 3px rgba(96,165,250,0.2)" : "0 0 0 3px rgba(24,99,220,0.15)") : "none",
     resize: isTextarea ? "none" : undefined,
   };
 
@@ -101,13 +64,13 @@ function Field({ label, type = "text", value, onChange, placeholder, required, i
     <div style={{ marginBottom: "16px" }}>
       <label style={{
         display: "block",
-        fontSize: "10.5px",
+        fontSize: "10px",
         fontWeight: 600,
-        color: focused ? C.accent : C.textSub,
+        color: isDark ? "#9ca3af" : "#75758a",
         letterSpacing: "0.08em",
         textTransform: "uppercase",
         marginBottom: "6px",
-        transition: "color 0.18s",
+        fontFamily: "'JetBrains Mono', monospace",
       }}>
         {label}
       </label>
@@ -138,16 +101,15 @@ function Field({ label, type = "text", value, onChange, placeholder, required, i
         {Icon && (
           <div style={{
             position: "absolute",
-            right: "14px",
-            top: isTextarea ? "14px" : "50%",
+            right: "12px",
+            top: isTextarea ? "12px" : "50%",
             transform: isTextarea ? "none" : "translateY(-50%)",
-            color: focused ? C.accent : C.textMut,
+            color: focused ? (isDark ? "#60a5fa" : "#1863dc") : (isDark ? "#9ca3af" : "#93939f"),
+            pointerEvents: "none",
             display: "flex",
             alignItems: "center",
-            pointerEvents: "none",
-            transition: "color 0.18s",
           }}>
-            <Icon size={15} />
+            <Icon size={16} />
           </div>
         )}
       </div>
@@ -155,40 +117,42 @@ function Field({ label, type = "text", value, onChange, placeholder, required, i
   );
 }
 
-/* ─── Role toggle pill ──────────────────────────────────────── */
 function RolePill({ active, onClick, emoji, label, desc }) {
+  const { isDark } = useTheme();
   return (
     <button
       type="button"
       onClick={onClick}
       style={{
         flex: 1,
-        padding: "14px 16px",
-        background: active ? C.accentLight : C.btnSec,
-        color: active ? C.accent : C.textSub,
-        border: active ? `1.5px solid ${C.accent}` : `1px solid ${C.btnSecBdr}`,
-        borderRadius: "12px",
-        fontSize: "13.5px",
-        fontWeight: active ? 600 : 400,
+        padding: "12px 14px",
+        background: active
+          ? (isDark ? "rgba(52,211,153,0.15)" : "rgba(0,60,51,0.07)")
+          : (isDark ? "var(--ch-card-bg)" : "#ffffff"),
+        border: active
+          ? `1.5px solid ${isDark ? "#34d399" : "#003c33"}`
+          : `1px solid ${isDark ? "var(--ch-hairline)" : "#d9d9dd"}`,
+        borderRadius: "8px",
         cursor: "pointer",
+        textAlign: "left",
         transition: "all 0.2s",
         fontFamily: "'Inter', sans-serif",
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
-        textAlign: "left",
-        lineHeight: 1,
       }}
     >
-      <div style={{ fontSize: "20px", marginBottom: "6px" }}>{emoji}</div>
-      <div style={{ fontWeight: 600, fontSize: "13px", marginBottom: "2px" }}>{label}</div>
-      <div style={{ fontSize: "11px", color: active ? C.accent : C.textMut, opacity: 0.85 }}>{desc}</div>
+      <div style={{ fontSize: "18px", marginBottom: "4px" }}>{emoji}</div>
+      <div style={{ fontWeight: 600, fontSize: "13px", color: active ? (isDark ? "#34d399" : "#003c33") : (isDark ? "#f1f2f6" : "#212121"), marginBottom: "2px" }}>
+        {label}
+      </div>
+      <div style={{ fontSize: "11px", color: active ? (isDark ? "#a7f3d0" : "#003c33") : (isDark ? "#9ca3af" : "#75758a") }}>
+        {desc}
+      </div>
     </button>
   );
 }
 
-/* ─── Auth page ─────────────────────────────────────────────── */
 export default function Auth() {
   const { login, register, loginWithGoogle } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -226,7 +190,6 @@ export default function Auth() {
     try {
       if (isLogin) {
         await login(email, password);
-        // Navigate immediately to primary Search Workers home
         navigate("/book-service", { replace: true });
       } else {
         if (!name || !email || !password || !phone)
@@ -249,7 +212,6 @@ export default function Auth() {
           });
         }
         await register({ name, email, password, role, phone, workerProfile: wp });
-        // Navigate immediately to primary Search Workers home
         navigate("/book-service", { replace: true });
       }
     } catch (err) {
@@ -262,7 +224,6 @@ export default function Auth() {
     } finally { setLoading(false); }
   };
 
-  /* Bug fix: proper loading state + error handling for Google OAuth */
   const handleGoogleSuccess = async (credentialResponse) => {
     setError("");
     setGoogleLoading(true);
@@ -280,456 +241,287 @@ export default function Auth() {
     }
   };
 
-  const switchMode = () => {
-    setIsLogin(!isLogin);
-    setError("");
-    setSuccess("");
-  };
-
   const isAnyLoading = loading || googleLoading;
 
-  /* ─────────────────────────── RENDER ─────────────────────────── */
   return (
     <>
-      {/* Inject scrollbar-hiding CSS (Windows needs webkit prefix) */}
       <style>{`
-        .auth-panel::-webkit-scrollbar { display: none; }
-        .auth-panel { -ms-overflow-style: none; scrollbar-width: none; }
-        @keyframes subtleFloat {
-          0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.6; }
-          50% { transform: translateY(-12px) rotate(3deg); opacity: 0.8; }
-        }
-        @keyframes gradientShift {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
+        .auth-container { display: flex; height: 100vh; overflow: hidden; font-family: 'Inter', sans-serif; }
+        .auth-left { width: 45%; background-color: #003c33; padding: 48px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+        .auth-right { width: 55%; background-color: ${isDark ? "var(--ch-canvas)" : "#ffffff"}; display: flex; flex-direction: column; overflow-y: auto; transition: background-color 0.3s ease; }
+        .auth-mobile-header { display: none; padding: 14px 20px; border-bottom: 1px solid ${isDark ? "var(--ch-hairline)" : "#d9d9dd"}; background: ${isDark ? "var(--ch-canvas)" : "#ffffff"}; }
         @keyframes auth-spin { to { transform: rotate(360deg); } }
-        @media (max-width: 768px) {
-          .auth-split-right { display: none !important; }
-          .auth-panel { width: 100% !important; }
-          .auth-inner { padding: 0 24px !important; }
+        @media (max-width: 900px) {
+          .auth-left { display: none; }
+          .auth-right { width: 100%; }
+          .auth-mobile-header { display: flex; align-items: center; justify-content: space-between; }
+          .mobile-hide-logo { display: none !important; }
         }
         .google-btn-wrapper > div { width: 100% !important; }
-        .google-btn-wrapper > div > div { width: 100% !important; }
         .google-btn-wrapper iframe { width: 100% !important; }
+        .tab-btn { flex: 1; padding: 12px; text-align: center; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; border-bottom: 2px solid transparent; color: ${isDark ? "#9ca3af" : "#75758a"}; }
+        .tab-btn.active { color: ${isDark ? "#34d399" : "#003c33"}; border-bottom-color: ${isDark ? "#34d399" : "#003c33"}; font-weight: 600; }
+        
+        .worker-card {
+           background: rgba(255,255,255,0.06);
+           border: 1px solid rgba(255,255,255,0.1);
+           border-radius: 8px;
+           padding: 12px;
+           display: flex;
+           align-items: center;
+           gap: 12px;
+        }
+        .worker-avatar {
+           width: 32px; height: 32px; border-radius: 50%;
+           background: #4ade80; color: #003c33; display: flex; align-items: center; justify-content: center;
+           font-weight: 600; font-size: 12px;
+        }
       `}</style>
 
-      <div style={{
-        position: "relative",
-        height: "100vh",
-        overflow: "hidden",
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-        background: C.dark,
-      }}>
-
-        {/* ── Animated background orbs ── */}
-        <div style={{
-          position: "absolute",
-          inset: 0,
-          overflow: "hidden",
-          zIndex: 0,
-          pointerEvents: "none",
-        }}>
-          {/* Right side hero image */}
-          <div style={{
-            position: "absolute",
-            right: 0,
-            top: 0,
-            width: "58%",
-            height: "100%",
-            backgroundImage: "url('https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1400&q=85&auto=format&fit=crop')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }} />
-          {/* Gradient overlay on image */}
-          <div style={{
-            position: "absolute",
-            right: 0,
-            top: 0,
-            width: "58%",
-            height: "100%",
-            background: "linear-gradient(to right, #0f0e0d 0%, rgba(15,14,13,0.85) 30%, rgba(15,14,13,0.3) 100%)",
-          }} />
-          {/* Ambient glow — coral on bottom left */}
-          <div style={{
-            position: "absolute",
-            bottom: "-80px",
-            left: "5%",
-            width: "500px",
-            height: "500px",
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(204,120,92,0.12) 0%, transparent 70%)",
-            filter: "blur(40px)",
-          }} />
-          {/* Ambient glow — subtle warm on top */}
-          <div style={{
-            position: "absolute",
-            top: "-100px",
-            left: "20%",
-            width: "400px",
-            height: "400px",
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(232,165,90,0.07) 0%, transparent 70%)",
-            filter: "blur(60px)",
-          }} />
-        </div>
-
-        {/* ══════════════ FORM PANEL ══════════════ */}
-        <div
-          className="auth-panel"
-          style={{
-            position: "relative",
-            zIndex: 2,
-            width: "min(50%, 640px)",
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            overflowY: "auto",
-          }}
-        >
-          {/* Subtle left panel frosted background */}
-          <div style={{
-            position: "absolute",
-            inset: 0,
-            background: "linear-gradient(to right, rgba(15,14,13,0.98) 0%, rgba(15,14,13,0.96) 80%, rgba(15,14,13,0.8) 100%)",
-            borderRight: "1px solid rgba(255,255,255,0.06)",
-            backdropFilter: "blur(24px)",
-            WebkitBackdropFilter: "blur(24px)",
-            zIndex: -1,
-          }} />
-
-          {/* Inner padding wrapper */}
-          <div
-            className="auth-inner"
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              minHeight: "100%",
-              padding: "0 56px 0 56px",
-            }}
-          >
-
-            {/* ── Brand header ── */}
-            <div style={{
-              paddingTop: "40px",
-              display: "flex",
-              alignItems: "center",
-              flexShrink: 0,
-            }}>
-              <GramaSevaLogo size={36} showText={true} textVariant="light" />
+      <div className="auth-container">
+        {/* LEFT PANEL */}
+        <div className="auth-left">
+          {/* Decorative shapes */}
+          <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(74,222,128,0.1) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+          
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+              <img src="/grama-seva-logo.jpg" alt="Logo" style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover' }} />
+              <div style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif", fontSize: '32px', fontWeight: 600, color: '#ffffff', letterSpacing: '-0.03em' }}>
+                Grama Seva
+              </div>
+            </div>
+            <div style={{ fontSize: '18px', color: 'rgba(255,255,255,0.75)', maxWidth: '80%' }}>
+              Verified Village Workers. Direct Contact.
             </div>
 
-            {/* ── Main content — grows to fill, centers vertically ── */}
-            <div style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              paddingTop: "28px",
-              paddingBottom: "28px",
-            }}>
-
-              {/* Eyebrow */}
-              <div style={{
-                fontSize: "11px",
-                fontWeight: 600,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                color: C.accent,
-                marginBottom: "10px",
-              }}>
-                {isLogin ? "Welcome back" : "Start for free"}
-              </div>
-
-              {/* Headline — Playfair Display to match rest of app */}
-              <h1 style={{
-                fontSize: "clamp(34px, 3.5vw, 48px)",
-                fontWeight: 700,
-                fontFamily: "'Playfair Display', Georgia, serif",
-                color: C.textPri,
-                lineHeight: 1.08,
-                letterSpacing: "-0.02em",
-                marginBottom: "12px",
-              }}>
-                {isLogin ? "Sign in" : "Create account"}
-                <span style={{ color: C.accent }}>.</span>
-              </h1>
-
-              {/* Tagline (register only) */}
-              {!isLogin && (
-                <p style={{
-                  fontSize: "14.5px",
-                  color: C.textMut,
-                  lineHeight: 1.6,
-                  marginBottom: "16px",
-                  maxWidth: "400px",
-                }}>
-                  Join the Grama Seva network — connecting rural communities
-                  with trusted, verified local talent.
-                </p>
-              )}
-
-              {/* Feature bullets — register only */}
-              {!isLogin && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px" }}>
-                  {FEATURES.map((f) => (
-                    <div key={f} style={{ display: "flex", alignItems: "center", gap: "9px" }}>
-                      <CheckCircle2 size={14} color={C.accent} style={{ flexShrink: 0 }} />
-                      <span style={{ fontSize: "13px", color: C.textSub }}>{f}</span>
-                    </div>
-                  ))}
+            <div style={{ marginTop: '48px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {FEATURES.map((f, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <CheckCircle2 size={16} color="#4ade80" />
+                  <span style={{ color: '#ffffff', fontSize: '15px' }}>{f}</span>
                 </div>
-              )}
+              ))}
+            </div>
+          </div>
 
-              {/* Switch mode link */}
-              <div style={{
-                display: "flex",
+          <div>
+            {/* Worker Cards Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '40px', opacity: 0.8 }}>
+              <div className="worker-card">
+                <div className="worker-avatar">RK</div>
+                <div>
+                  <div style={{ color: '#fff', fontSize: '13px', fontWeight: 500 }}>Ramesh Kumar</div>
+                  <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px' }}>Electrician • 4.9★</div>
+                </div>
+              </div>
+              <div className="worker-card" style={{ transform: 'translateY(16px)' }}>
+                <div className="worker-avatar" style={{ background: '#ff7759', color: '#fff' }}>SL</div>
+                <div>
+                  <div style={{ color: '#fff', fontSize: '13px', fontWeight: 500 }}>Sujatha L.</div>
+                  <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px' }}>Tailoring • 4.8★</div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '32px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '32px' }}>
+              {STATS.map(s => (
+                <div key={s.label}>
+                  <div style={{ fontSize: '28px', fontWeight: 700, color: '#ffffff', fontFamily: "'Space Grotesk', sans-serif" }}>
+                    {s.value}
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', fontFamily: "'JetBrains Mono', monospace", textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '4px' }}>
+                    {s.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT PANEL */}
+        <div className="auth-right">
+          {/* Mobile Header */}
+          <div className="auth-mobile-header">
+            <GramaSevaLogo size={32} showText={true} />
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                border: `1px solid ${isDark ? "var(--ch-hairline)" : "#e5e7eb"}`,
+                background: isDark ? "var(--ch-surface-subtle)" : "#f3f4f6",
+                color: isDark ? "#fbbf24" : "#4b5563",
+                cursor: "pointer",
+              }}
+            >
+              {isDark ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+          </div>
+
+          {/* Desktop Theme Toggle Bar */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '16px 24px 0', width: '100%', boxSizing: 'border-box' }} className="mobile-hide-logo">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              style={{
+                display: "inline-flex",
                 alignItems: "center",
                 gap: "6px",
-                fontSize: "13.5px",
-                color: C.textMut,
-                marginBottom: isLogin ? "28px" : "20px",
-              }}>
-                <span>{isLogin ? "Don't have an account?" : "Already a member?"}</span>
-                <button onClick={switchMode} style={{
-                  background: "none", border: "none", cursor: "pointer",
-                  color: C.accent, fontSize: "13.5px", fontWeight: 600,
-                  padding: 0, fontFamily: "'Inter', sans-serif",
-                  textDecoration: "underline", textDecorationColor: "rgba(204,120,92,0.4)",
-                }}>
-                  {isLogin ? "Sign Up" : "Log In"}
-                </button>
+                padding: "6px 14px",
+                borderRadius: "9999px",
+                border: `1px solid ${isDark ? "var(--ch-hairline)" : "#e5e7eb"}`,
+                background: isDark ? "var(--ch-card-bg)" : "#f9fafb",
+                color: isDark ? "#fbbf24" : "#4b5563",
+                fontSize: "12px",
+                fontWeight: 500,
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+            >
+              {isDark ? <Sun size={14} /> : <Moon size={14} />}
+              <span style={{ color: isDark ? "#e5e7eb" : "#4b5563" }}>{isDark ? "Light Mode" : "Dark Mode"}</span>
+            </button>
+          </div>
+
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 24px 40px' }}>
+            <div style={{ width: '100%', maxWidth: '440px' }}>
+              
+              <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                <div style={{ display: 'inline-flex', marginBottom: '16px' }} className="mobile-hide-logo">
+                   <GramaSevaLogo size={40} showText={false} />
+                </div>
+                <h1 style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif", fontSize: '28px', fontWeight: 600, color: isDark ? "#f1f2f6" : "#17171c", letterSpacing: '-0.02em', margin: 0 }}>
+                  {isLogin ? "Sign in to Grama Seva" : "Create an account"}
+                </h1>
+              </div>
+
+              {/* Tabs */}
+              <div style={{ display: 'flex', borderBottom: `1px solid ${isDark ? "var(--ch-hairline)" : "#d9d9dd"}`, marginBottom: '24px' }}>
+                <div className={"tab-btn " + (isLogin ? 'active' : '')} onClick={() => { setIsLogin(true); setError(''); setSuccess(''); }}>
+                  Log In
+                </div>
+                <div className={"tab-btn " + (!isLogin ? 'active' : '')} onClick={() => { setIsLogin(false); setError(''); setSuccess(''); }}>
+                  Register
+                </div>
               </div>
 
               {/* Banners */}
               {error && (
-                <div style={{
-                  padding: "12px 15px",
-                  background: C.errorBg,
-                  border: `1px solid ${C.errorBdr}`,
-                  borderRadius: "10px",
-                  fontSize: "13px",
-                  color: C.errorTxt,
-                  marginBottom: "18px",
-                  backdropFilter: "blur(8px)",
-                  lineHeight: 1.5,
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "8px",
-                }}>
-                  <span style={{ flexShrink: 0, marginTop: "1px" }}>⚠</span>
-                  {error}
+                <div style={{ padding: '12px 16px', background: isDark ? 'rgba(239, 68, 68, 0.15)' : '#fff0f0', border: `1px solid ${isDark ? 'rgba(239, 68, 68, 0.3)' : '#ffcdd2'}`, borderRadius: '8px', color: isDark ? '#f87171' : '#b30000', fontSize: '13px', marginBottom: '24px', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                  <span style={{ marginTop: '2px' }}>⚠</span>
+                  <div>{error}</div>
                 </div>
               )}
               {success && (
-                <div style={{
-                  padding: "12px 15px",
-                  background: C.okBg,
-                  border: `1px solid ${C.okBdr}`,
-                  borderRadius: "10px",
-                  fontSize: "13px",
-                  color: C.okTxt,
-                  marginBottom: "18px",
-                  backdropFilter: "blur(8px)",
-                  lineHeight: 1.5,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}>
-                  <CheckCircle2 size={14} style={{ flexShrink: 0 }} />
-                  {success}
+                <div style={{ padding: '12px 16px', background: isDark ? 'rgba(52, 211, 153, 0.15)' : '#f0fdf4', border: `1px solid ${isDark ? 'rgba(52, 211, 153, 0.3)' : '#bbf7d0'}`, borderRadius: '8px', color: isDark ? '#34d399' : '#166534', fontSize: '13px', marginBottom: '24px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <CheckCircle2 size={16} />
+                  <div>{success}</div>
                 </div>
               )}
 
-              {/* ── Google OAuth — Primary CTA ── */}
-              {googleLoading ? (
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "12px",
-                  padding: "14px",
-                  background: C.btnSec,
-                  border: `1px solid ${C.btnSecBdr}`,
-                  borderRadius: "10px",
-                  marginBottom: "18px",
-                  color: C.textMut,
-                  fontSize: "14px",
-                }}>
-                  <Spinner size={20} color={C.textMut} />
-                  <span>Signing in with Google…</span>
-                </div>
-              ) : (
-                <div
-                  className="google-btn-wrapper"
-                  style={{
-                    marginBottom: "18px",
-                    display: "flex",
-                    justifyContent: "stretch",
-                  }}
-                >
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={() => setError("Google sign-in failed. Please try again.")}
-                    shape="rectangular"
-                    theme="filled_black"
-                    size="large"
-                    text={isLogin ? "signin_with" : "signup_with"}
-                    logo_alignment="left"
-                    useOneTap={false}
-                    width="528"
-                  />
-                </div>
-              )}
-
-              {/* ── Divider ── */}
-              <div style={{
-                display: "flex", alignItems: "center", gap: "14px", marginBottom: "18px",
-              }}>
-                <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.08)" }} />
-                <span style={{ fontSize: "12px", color: C.textMut, letterSpacing: "0.04em" }}>or continue with email</span>
-                <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.08)" }} />
+              {/* Google Auth */}
+              <div style={{ marginBottom: '24px' }}>
+                {googleLoading ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: '12px', border: `1px solid ${isDark ? "var(--ch-hairline)" : "#d9d9dd"}`, borderRadius: '32px' }}>
+                    <Spinner size={20} color={isDark ? "#34d399" : "#17171c"} />
+                  </div>
+                ) : (
+                  <div className="google-btn-wrapper">
+                    <GoogleLogin
+                      onSuccess={handleGoogleSuccess}
+                      onError={() => setError("Google sign-in failed.")}
+                      shape="pill"
+                      theme={isDark ? "filled_black" : "outline"}
+                      size="large"
+                      text={isLogin ? "signin_with" : "signup_with"}
+                      width="440"
+                    />
+                  </div>
+                )}
               </div>
 
-              {/* ── Form ── */}
-              <form onSubmit={handleSubmit}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                <div style={{ flex: 1, height: '1px', background: isDark ? 'var(--ch-hairline)' : '#d9d9dd' }} />
+                <div style={{ fontSize: '12px', color: isDark ? '#9ca3af' : '#93939f', textTransform: 'uppercase', letterSpacing: '0.05em' }}>or</div>
+                <div style={{ flex: 1, height: '1px', background: isDark ? 'var(--ch-hairline)' : '#d9d9dd' }} />
+              </div>
 
-                {/* Register: Name + Phone side-by-side */}
+              <form onSubmit={handleSubmit}>
                 {!isLogin && (
-                  <div style={{ display: "flex", gap: "12px" }}>
+                  <div style={{ display: 'flex', gap: '12px' }}>
                     <div style={{ flex: 1 }}>
-                      <Field label="Full Name" value={name} onChange={(e) => setName(e.target.value)}
-                        placeholder="Ramesh Kumar" required icon={User} autoComplete="name" />
+                      <Field label="Full Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ramesh Kumar" required icon={User} />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <Field label="Phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-                        placeholder="10-digit number" required icon={Phone} autoComplete="tel" />
+                      <Field label="Phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="10-digit number" required icon={Phone} />
                     </div>
                   </div>
                 )}
 
-                {/* Email */}
-                <Field label="Email Address" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com" required icon={Mail} autoComplete="email" />
+                <Field label="Email Address" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" required icon={Mail} />
 
-                {/* Password */}
-                <div style={{ marginBottom: "16px" }}>
-                  <label style={{
-                    display: "block",
-                    fontSize: "10.5px",
-                    fontWeight: 600,
-                    color: pwdFocused ? C.accent : C.textSub,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    marginBottom: "6px",
-                    transition: "color 0.18s",
-                  }}>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '10px', fontWeight: 600, color: isDark ? '#9ca3af' : '#75758a', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '6px', fontFamily: "'JetBrains Mono', monospace" }}>
                     Password
                   </label>
-                  <div style={{ position: "relative" }}>
+                  <div style={{ position: 'relative' }}>
                     <input
                       type={showPwd ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder={isLogin ? "Enter your password" : "Min. 8 chars · 1 uppercase · 1 number"}
+                      placeholder={isLogin ? "Enter your password" : "Min. 8 characters"}
                       required
-                      autoComplete={isLogin ? "current-password" : "new-password"}
                       onFocus={() => setPwdFocused(true)}
                       onBlur={() => setPwdFocused(false)}
                       style={{
-                        width: "100%",
-                        padding: "13px 44px 13px 16px",
-                        background: C.inputBg,
-                        color: C.textPri,
-                        border: `1px solid ${pwdFocused ? C.inputFoc : C.inputBdr}`,
-                        borderRadius: "10px",
-                        fontSize: "14px",
-                        fontFamily: "'Inter', sans-serif",
-                        outline: "none",
-                        boxSizing: "border-box",
-                        caretColor: C.accent,
-                        backdropFilter: "blur(12px)",
-                        WebkitBackdropFilter: "blur(12px)",
-                        boxShadow: pwdFocused ? "0 0 0 3px rgba(204,120,92,0.18)" : "none",
-                        transition: "border-color 0.18s, box-shadow 0.18s",
+                        width: '100%',
+                        padding: '10px 40px 10px 14px',
+                        background: isDark ? 'var(--ch-input-bg)' : '#ffffff',
+                        color: isDark ? '#f1f2f6' : '#212121',
+                        border: `1px solid ${pwdFocused ? (isDark ? '#60a5fa' : '#1863dc') : (isDark ? 'var(--ch-hairline)' : '#d9d9dd')}`,
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        outline: 'none',
+                        transition: 'all 0.2s',
+                        boxSizing: 'border-box',
+                        boxShadow: pwdFocused ? (isDark ? '0 0 0 3px rgba(96,165,250,0.2)' : '0 0 0 3px rgba(24,99,220,0.15)') : 'none',
                       }}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPwd(!showPwd)}
-                      style={{
-                        position: "absolute", right: "14px", top: "50%",
-                        transform: "translateY(-50%)",
-                        background: "none", border: "none", cursor: "pointer",
-                        color: C.textMut, display: "flex", alignItems: "center", padding: 0,
-                        transition: "color 0.15s",
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = C.textPri}
-                      onMouseLeave={(e) => e.currentTarget.style.color = C.textMut}
-                    >
-                      {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
+                    <button type="button" onClick={() => setShowPwd(!showPwd)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: isDark ? '#9ca3af' : '#93939f', display: 'flex', padding: 0 }}>
+                      {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                 </div>
 
-                {/* Register: Role selector */}
                 {!isLogin && (
-                  <div style={{ marginBottom: "18px" }}>
-                    <label style={{
-                      display: "block", fontSize: "10.5px", fontWeight: 600,
-                      color: C.textSub, letterSpacing: "0.08em",
-                      textTransform: "uppercase", marginBottom: "10px",
-                    }}>
-                      I want to…
+                  <div style={{ marginBottom: '24px' }}>
+                    <label style={{ display: 'block', fontSize: '10px', fontWeight: 600, color: isDark ? '#9ca3af' : '#75758a', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px', fontFamily: "'JetBrains Mono', monospace" }}>
+                      I want to...
                     </label>
-                    <div style={{ display: "flex", gap: "10px" }}>
-                      <RolePill
-                        active={role === "Customer"}
-                        onClick={() => setRole("Customer")}
-                        emoji="🏠"
-                        label="Hire a Worker"
-                        desc="Book local services"
-                      />
-                      <RolePill
-                        active={role === "Worker"}
-                        onClick={() => setRole("Worker")}
-                        emoji="🔧"
-                        label="Offer Services"
-                        desc="Get hired for work"
-                      />
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <RolePill active={role === "Customer"} onClick={() => setRole("Customer")} emoji="🏠" label="Hire a Worker" desc="Book local services" />
+                      <RolePill active={role === "Worker"} onClick={() => setRole("Worker")} emoji="🔧" label="Offer Services" desc="Get hired for work" />
                     </div>
 
-                    {/* Worker expanded fields */}
                     {role === "Worker" && (
-                      <div style={{
-                        padding: "20px 20px",
-                        background: C.workerBg,
-                        border: `1px solid ${C.workerBdr}`,
-                        borderRadius: "14px",
-                        backdropFilter: "blur(12px)",
-                        WebkitBackdropFilter: "blur(12px)",
-                        marginTop: "12px",
-                      }}>
-                        <div style={{
-                          fontSize: "10.5px", fontWeight: 700,
-                          color: C.accent, marginBottom: "14px",
-                          textTransform: "uppercase", letterSpacing: "0.09em",
-                          display: "flex", alignItems: "center", gap: "6px",
-                        }}>
-                          <Shield size={12} />
-                          Worker Profile Details
+                      <div style={{ marginTop: '16px', padding: '16px', background: isDark ? 'var(--ch-surface-subtle)' : '#f1f5ff', border: `1px solid ${isDark ? 'var(--ch-hairline)' : '#d9d9dd'}`, borderRadius: '12px' }}>
+                        <div style={{ fontSize: '12px', fontWeight: 600, color: isDark ? '#60a5fa' : '#1863dc', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Shield size={14} /> Worker Profile Details
                         </div>
 
-                        {/* Skills grid */}
-                        <div style={{ marginBottom: "16px" }}>
-                          <label style={{
-                            display: "block", fontSize: "10.5px", fontWeight: 600,
-                            color: C.textSub, letterSpacing: "0.08em",
-                            textTransform: "uppercase", marginBottom: "10px",
-                          }}>
+                        <div style={{ marginBottom: '16px' }}>
+                          <label style={{ display: 'block', fontSize: '10px', fontWeight: 600, color: isDark ? '#9ca3af' : '#75758a', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px', fontFamily: "'JetBrains Mono', monospace" }}>
                             Skills (select all that apply)
                           </label>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "6px" }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                             {[
                               { id: "electrician", label: "Electrician" },
                               { id: "mason",       label: "Mason" },
@@ -740,17 +532,7 @@ export default function Auth() {
                               { id: "cleaning",    label: "Cleaning" },
                               { id: "other",       label: "Gen. Labour" },
                             ].map((s) => (
-                              <label key={s.id} style={{
-                                display: "flex", alignItems: "center", gap: "5px",
-                                fontSize: "12px", color: skills.includes(s.id) ? C.accent : C.textSub,
-                                cursor: "pointer",
-                                padding: "7px 8px",
-                                background: skills.includes(s.id) ? C.accentLight : "rgba(255,255,255,0.03)",
-                                borderRadius: "7px",
-                                border: `1px solid ${skills.includes(s.id) ? "rgba(204,120,92,0.35)" : "transparent"}`,
-                                transition: "all 0.15s",
-                                fontWeight: skills.includes(s.id) ? 600 : 400,
-                              }}>
+                              <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: isDark ? '#e5e7eb' : '#212121', cursor: 'pointer' }}>
                                 <input
                                   type="checkbox"
                                   checked={skills.includes(s.id)}
@@ -758,7 +540,7 @@ export default function Auth() {
                                     if (ev.target.checked) setSkills([...skills, s.id]);
                                     else setSkills(skills.filter((sk) => sk !== s.id));
                                   }}
-                                  style={{ accentColor: C.accent, flexShrink: 0, width: "12px", height: "12px" }}
+                                  style={{ accentColor: isDark ? '#34d399' : '#1863dc', width: '14px', height: '14px' }}
                                 />
                                 {s.label}
                               </label>
@@ -766,259 +548,55 @@ export default function Auth() {
                           </div>
                         </div>
 
-                        {/* Experience & Location */}
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "2px" }}>
-                          <Field label="Experience (Yrs)" type="number" value={experience}
-                            onChange={(e) => setExperience(e.target.value)} placeholder="e.g. 5" min="0" required icon={Briefcase} />
-                          <Field label="Village / Service Area" value={address}
-                            onChange={(e) => setAddress(e.target.value)} placeholder="Shamshabad Ward 3" required icon={MapPin} />
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                          <div style={{ flex: 1 }}><Field label="Experience (Yrs)" type="number" value={experience} onChange={(e) => setExperience(e.target.value)} placeholder="e.g. 5" min="0" required icon={Briefcase} /></div>
+                          <div style={{ flex: 1 }}><Field label="Service Area" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Shamshabad" required icon={MapPin} /></div>
                         </div>
 
-                        {/* Bio */}
-                        <Field label="Bio / Work Description" type="textarea" value={bio}
-                          onChange={(e) => setBio(e.target.value)}
-                          placeholder="Describe your expertise and availability..." icon={FileText} />
+                        <Field label="Bio / Description" type="textarea" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Describe your expertise..." icon={FileText} />
 
-                        {/* Proof upload */}
                         <div>
-                          <ImageUpload
-                            mode="multiple" endpoint="proof" label="Proof-of-Work Photos"
-                            value={proofUrls} onChange={setProofUrls} maxFiles={3}
-                          />
-                          <div style={{ fontSize: "11px", color: C.textMut, marginTop: "6px", fontStyle: "italic" }}>
-                            Upload 1–3 work photos. Reviewed by administrator before approval.
-                          </div>
+                          <ImageUpload mode="multiple" endpoint="proof" label="Proof-of-Work Photos" value={proofUrls} onChange={setProofUrls} maxFiles={3} />
+                          <div style={{ fontSize: '11px', color: isDark ? '#9ca3af' : '#75758a', marginTop: '6px' }}>Upload 1-3 work photos.</div>
                         </div>
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* ── Primary CTA ── */}
                 <button
                   type="submit"
                   disabled={isAnyLoading}
                   style={{
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    padding: "14px 28px",
+                    width: '100%',
+                    padding: '12px 24px',
                     background: isAnyLoading
-                      ? "rgba(204,120,92,0.5)"
-                      : `linear-gradient(135deg, ${C.accent} 0%, ${C.accentHov} 100%)`,
-                    color: "#ffffff",
-                    border: "none",
-                    borderRadius: "10px",
-                    fontSize: "14.5px",
+                      ? (isDark ? '#374151' : '#93939f')
+                      : (isDark ? '#34d399' : '#17171c'),
+                    color: isDark ? '#0d0e12' : '#ffffff',
+                    border: 'none',
+                    borderRadius: '32px',
+                    fontSize: '15px',
                     fontWeight: 600,
-                    letterSpacing: "0.01em",
-                    cursor: isAnyLoading ? "not-allowed" : "pointer",
-                    fontFamily: "'Inter', sans-serif",
-                    opacity: isAnyLoading ? 0.75 : 1,
-                    transition: "all 0.18s",
-                    boxShadow: isAnyLoading ? "none" : "0 4px 20px rgba(204,120,92,0.30)",
+                    cursor: isAnyLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'background 0.2s',
                   }}
-                  onMouseEnter={(e) => !isAnyLoading && (e.currentTarget.style.boxShadow = "0 6px 28px rgba(204,120,92,0.45)")}
-                  onMouseLeave={(e) => !isAnyLoading && (e.currentTarget.style.boxShadow = "0 4px 20px rgba(204,120,92,0.30)")}
-                  onMouseDown={(e) => !isAnyLoading && (e.currentTarget.style.transform = "scale(0.98)")}
-                  onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
                 >
-                  {loading
-                    ? <Spinner size={18} color="#ffffff" />
-                    : (
-                      <>
-                        {isLogin ? "Sign In" : "Create Account"}
-                        <ArrowRight size={16} style={{ transition: "transform 0.15s" }} />
-                      </>
-                    )
-                  }
+                  {loading ? <Spinner size={20} color={isDark ? "#0d0e12" : "#ffffff"} /> : (
+                    <>
+                      {isLogin ? "Sign In" : "Create Account"}
+                      <ArrowRight size={18} />
+                    </>
+                  )}
                 </button>
-
               </form>
-
-            </div>{/* end flex-1 main content */}
-
-            {/* ── Footer ── */}
-            <div style={{
-              paddingBottom: "28px",
-              paddingTop: "18px",
-              borderTop: "1px solid rgba(255,255,255,0.06)",
-              flexShrink: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}>
-              <span style={{ fontSize: "11.5px", color: C.textMut }}>
-                © 2026 Grama Seva Rural Network
-              </span>
-              <span style={{ fontSize: "11.5px", color: C.textMut }}>
-                All rights reserved
-              </span>
             </div>
-
-          </div>{/* end inner padding wrapper */}
-        </div>{/* end form panel */}
-
-        {/* ══════════════ RIGHT INFO PANEL ══════════════ */}
-        <div
-          className="auth-split-right"
-          style={{
-            position: "absolute",
-            right: 0,
-            top: 0,
-            width: "50%",
-            height: "100%",
-            zIndex: 1,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "flex-end",
-            padding: "48px 52px",
-            pointerEvents: "none",
-          }}
-        >
-          {/* Top Brand Card on Right Panel */}
-          <div style={{
-            position: "absolute",
-            top: "40px",
-            left: "52px",
-            display: "flex",
-            alignItems: "center",
-            gap: "14px",
-            background: "rgba(15,14,13,0.65)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            padding: "10px 18px 10px 12px",
-            borderRadius: "16px",
-            border: "1px solid rgba(255,255,255,0.08)",
-          }}>
-            <img
-              src="/grama-seva-logo.jpg"
-              alt="Grama Seva"
-              style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "10px",
-                objectFit: "cover",
-              }}
-            />
-            <div>
-              <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "16px", fontWeight: 600, color: "#faf9f5" }}>
-                Grama Seva
-              </div>
-              <div style={{ fontSize: "11px", color: "#a09d96" }}>
-                Verified Village Network
-              </div>
-            </div>
-          </div>
-
-          {/* Stats row */}
-          <div style={{
-            display: "flex",
-            gap: "32px",
-            marginBottom: "32px",
-          }}>
-            {STATS.map((stat) => (
-              <div key={stat.label}>
-                <div style={{
-                  fontSize: "22px",
-                  fontWeight: 800,
-                  color: "#faf9f5",
-                  letterSpacing: "-0.03em",
-                  fontFamily: "'Inter', sans-serif",
-                  lineHeight: 1,
-                }}>
-                  {stat.value}
-                </div>
-                <div style={{
-                  fontSize: "12px",
-                  color: "rgba(250,249,245,0.55)",
-                  marginTop: "4px",
-                  fontWeight: 400,
-                }}>
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Quote */}
-          <div style={{
-            background: "rgba(15,14,13,0.6)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            borderRadius: "16px",
-            padding: "24px 28px",
-            border: "1px solid rgba(255,255,255,0.08)",
-            maxWidth: "380px",
-          }}>
-            <div style={{
-              display: "flex",
-              gap: "3px",
-              marginBottom: "12px",
-            }}>
-              {[1,2,3,4,5].map(i => (
-                <Star key={i} size={13} fill="#cc785c" color="#cc785c" />
-              ))}
-            </div>
-            <p style={{
-              fontSize: "14.5px",
-              color: "rgba(250,249,245,0.90)",
-              lineHeight: 1.65,
-              fontStyle: "italic",
-              fontFamily: "'Playfair Display', Georgia, serif",
-              marginBottom: "16px",
-            }}>
-              "Grama Seva connected me with a skilled electrician within 2 hours. The verification process gave me real confidence."
-            </p>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "50%",
-                background: "linear-gradient(135deg, #cc785c, #e8a55a)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "13px",
-                fontWeight: 700,
-                color: "#fff",
-                flexShrink: 0,
-              }}>
-                PL
-              </div>
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: 600, color: "#faf9f5" }}>Priya Lakshmi</div>
-                <div style={{ fontSize: "11.5px", color: "rgba(250,249,245,0.5)" }}>Shamshabad, Telangana</div>
-              </div>
-            </div>
-          </div>
-
-          {/* GS watermark */}
-          <div style={{
-            position: "absolute",
-            top: "36px",
-            right: "40px",
-            display: "flex",
-            alignItems: "center",
-            gap: "7px",
-            opacity: 0.55,
-          }}>
-            <svg width="18" height="18" fill="none" stroke="#faf9f5" strokeWidth="2.2" viewBox="0 0 24 24">
-              <path d="M3 21V7l9-4 9 4v14" />
-              <path d="M9 21v-6h6v6" />
-            </svg>
-            <span style={{
-              fontFamily: "'Inter', sans-serif",
-              fontSize: "15px",
-              fontWeight: 700,
-              color: "#faf9f5",
-              letterSpacing: "0.06em",
-            }}>GS</span>
           </div>
         </div>
-
       </div>
     </>
   );

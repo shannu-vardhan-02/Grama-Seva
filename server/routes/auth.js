@@ -58,10 +58,9 @@ const passkeyLimiter = rateLimit({
 
 // ─── WebAuthn / Passkey Configuration ────────────────────────────────────────
 // rpID must match the hostname of the page that calls navigator.credentials.*
-// Change to your real domain (no port) when deploying to production.
 const RP_NAME   = "Grama Seva";
-const RP_ID     = "localhost";
-const RP_ORIGIN = "http://localhost:5173"; // change to https://yourdomain.com in prod
+const RP_ID     = process.env.RP_ID     || "localhost";
+const RP_ORIGIN = process.env.RP_ORIGIN || "http://localhost:5173";
 
 // ─── In-memory Challenge Store ────────────────────────────────────────────────
 // Challenges are short-lived (5 min) and one-time-use.

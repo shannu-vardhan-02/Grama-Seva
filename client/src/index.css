@@ -1979,7 +1979,7 @@ html.dark body {
   text-align: center;
   border-bottom: 1px solid var(--ch-hairline);
 }
-/* -- Page-level background image (light mode only � rendered conditionally in JSX) -- */
+/* -- Page-level background image (light mode only ─ rendered conditionally in JSX) -- */
 .ch-page-bg {
   position: absolute;
   top: 0;
@@ -1997,6 +1997,16 @@ html.dark body {
   object-fit: cover;
   object-position: center top;
   display: block;
+}
+/* Gradient fade at the bottom of the hero bg image → no hard cut */
+.ch-page-bg-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 45%;
+  background: linear-gradient(to bottom, transparent 0%, var(--ch-canvas, #faf9f5) 100%);
+  pointer-events: none;
 }
 /* Ensure inner content floats above the bg */
 .ch-hero-inner {

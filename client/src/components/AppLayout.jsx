@@ -93,6 +93,7 @@ export default function AppLayout({ children }) {
   const profileMenuRef = useRef(null);
   const [isOnline, setIsOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
   const [showReconnectedBanner, setShowReconnectedBanner] = useState(false);
+  const [headerScrolled, setHeaderScrolled] = useState(false);
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -138,6 +139,12 @@ export default function AppLayout({ children }) {
     }
     return () => document.body.classList.remove("drawer-open");
   }, [mobileMenuOpen]);
+
+  useEffect(() => {
+    const onScroll = () => setHeaderScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   if (!currentUser) return <>{children}</>;
 
@@ -588,10 +595,18 @@ export default function AppLayout({ children }) {
         <header className="top-header" style={{
           height: "52px", display: "flex", alignItems: "center",
           justifyContent: "space-between", padding: "0 24px",
-          background: isDark ? "rgba(18, 19, 25, 0.95)" : "rgba(255,255,255,0.95)",
-          backdropFilter: "saturate(180%) blur(16px)",
-          WebkitBackdropFilter: "saturate(180%) blur(16px)",
-          borderBottom: isDark ? "1px solid #232532" : "1px solid #e5e7eb",
+          background: headerScrolled
+            ? (isDark ? "rgba(18, 19, 25, 0.96)" : "rgba(255,255,255,0.92)")
+            : (isDark ? "rgba(18, 19, 25, 0.55)" : "rgba(255,255,255,0.55)"),
+          backdropFilter: headerScrolled ? "saturate(180%) blur(24px)" : "saturate(120%) blur(8px)",
+          WebkitBackdropFilter: headerScrolled ? "saturate(180%) blur(24px)" : "saturate(120%) blur(8px)",
+          borderBottom: headerScrolled
+            ? (isDark ? "1px solid #232532" : "1px solid #e5e7eb")
+            : "1px solid transparent",
+          boxShadow: headerScrolled
+            ? (isDark ? "0 2px 16px rgba(0,0,0,0.3)" : "0 2px 12px rgba(0,0,0,0.06)")
+            : "none",
+          transition: "background 0.35s ease, backdrop-filter 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease",
           position: "sticky", top: 0, zIndex: 100,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>

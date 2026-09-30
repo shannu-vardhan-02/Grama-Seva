@@ -445,7 +445,126 @@ export default function BookService() {
   });
 
   return (
-    <div style={{ background: T.canvas, minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
+    <div style={{
+      background: isDark
+        ? "#0d0e12"
+        : "linear-gradient(135deg, #faf8f3 0%, #f0ede3 35%, #e8f0ea 70%, #f5f2ea 100%)",
+      minHeight: "100vh",
+      fontFamily: "'Inter', sans-serif",
+      position: "relative",
+      overflow: "hidden",
+    }}>
+
+      {/* ── RURAL BACKGROUND SCENE (light mode only, very subtle) ── */}
+      {!isDark && (
+        <div aria-hidden="true" style={{
+          position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none", overflow: "hidden",
+        }}>
+          <svg
+            viewBox="0 0 1440 900"
+            preserveAspectRatio="xMidYMid slice"
+            style={{ width: "100%", height: "100%", opacity: 0.55 }}
+          >
+            <defs>
+              <radialGradient id="bk-sun" cx="82%" cy="18%" r="28%">
+                <stop offset="0%" stopColor="#fff3c4" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#fff3c4" stopOpacity="0" />
+              </radialGradient>
+              <linearGradient id="bk-hill1" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#c8ddc0" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="#b8d0ae" stopOpacity="0.15" />
+              </linearGradient>
+              <linearGradient id="bk-hill2" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#aecba4" stopOpacity="0.18" />
+                <stop offset="100%" stopColor="#9fc498" stopOpacity="0.1" />
+              </linearGradient>
+            </defs>
+
+            {/* Sun glow */}
+            <ellipse cx="1180" cy="160" rx="260" ry="200" fill="url(#bk-sun)" />
+
+            {/* Far rolling hills */}
+            <path d="M0,620 Q180,550 360,580 Q540,510 720,555 Q900,490 1080,530 Q1260,500 1440,545 L1440,900 L0,900 Z"
+              fill="url(#bk-hill1)" />
+
+            {/* Mid hills */}
+            <path d="M0,680 Q120,650 280,660 Q440,630 600,648 Q760,620 920,640 Q1100,618 1280,642 L1440,648 L1440,900 L0,900 Z"
+              fill="url(#bk-hill2)" />
+
+            {/* Ground strip */}
+            <path d="M0,760 Q360,745 720,752 Q1080,742 1440,755 L1440,900 L0,900 Z"
+              fill="rgba(180,210,170,0.12)" />
+
+            {/* House silhouette */}
+            <g transform="translate(920,598)" opacity="0.22">
+              <rect x="0" y="36" width="72" height="54" rx="2" fill="#c4a882" />
+              <polygon points="36,0 -14,36 86,36" fill="#b08860" />
+              <rect x="26" y="58" width="18" height="32" rx="1" fill="#9e7a5a" />
+              <rect x="8" y="50" width="13" height="11" rx="1" fill="#9dbfb0" />
+              <rect x="51" y="50" width="13" height="11" rx="1" fill="#9dbfb0" />
+              {/* Chimney */}
+              <rect x="48" y="-8" width="8" height="20" rx="1" fill="#b08860" />
+            </g>
+
+            {/* Tall tree (left of house) */}
+            <g opacity="0.18">
+              <line x1="870" y1="740" x2="878" y2="600" stroke="#7a9870" strokeWidth="8" strokeLinecap="round" />
+              <ellipse cx="874" cy="592" rx="32" ry="48" fill="#6a9060" />
+              <ellipse cx="860" cy="610" rx="22" ry="36" fill="#7aa870" />
+            </g>
+
+            {/* Palm trees (right) */}
+            <g opacity="0.17">
+              {/* Palm 1 */}
+              <path d="M1180,760 Q1185,700 1192,640" stroke="#8a9870" strokeWidth="9" fill="none" strokeLinecap="round" />
+              <ellipse cx="1192" cy="635" rx="40" ry="22" fill="#6a9060" transform="rotate(-20,1192,635)" />
+              <ellipse cx="1175" cy="648" rx="35" ry="18" fill="#7aa870" transform="rotate(15,1175,648)" />
+              <ellipse cx="1208" cy="648" rx="35" ry="18" fill="#6a9060" transform="rotate(-15,1208,648)" />
+              {/* Palm 2 */}
+              <path d="M1250,760 Q1256,710 1260,665" stroke="#8a9870" strokeWidth="7" fill="none" strokeLinecap="round" />
+              <ellipse cx="1260" cy="660" rx="34" ry="18" fill="#7aa870" transform="rotate(-10,1260,660)" />
+              <ellipse cx="1245" cy="672" rx="28" ry="14" fill="#6a9060" transform="rotate(18,1245,672)" />
+            </g>
+
+            {/* Distant small tree (far left) */}
+            <g opacity="0.14">
+              <line x1="140" y1="720" x2="145" y2="650" stroke="#8a9870" strokeWidth="6" strokeLinecap="round" />
+              <ellipse cx="143" cy="643" rx="24" ry="36" fill="#7aa870" />
+            </g>
+
+            {/* Birds (flying, simple arc pairs) */}
+            <g fill="none" stroke="#6a8878" strokeWidth="1.5" strokeLinecap="round" opacity="0.28">
+              <path d="M320,180 Q328,175 336,180" />
+              <path d="M340,173 Q348,168 356,173" />
+              <path d="M620,140 Q629,135 638,140" />
+              <path d="M644,133 Q653,128 662,133" />
+              <path d="M900,220 Q907,215 914,220" />
+              <path d="M420,200 Q428,196 436,200" />
+            </g>
+
+            {/* Corner foliage — bottom left */}
+            <g transform="translate(-10,820)" opacity="0.22">
+              <ellipse cx="40" cy="80" rx="55" ry="35" fill="#7aaa70" transform="rotate(-30,40,80)" />
+              <ellipse cx="80" cy="60" rx="45" ry="28" fill="#6a9a60" transform="rotate(-10,80,60)" />
+              <ellipse cx="20" cy="60" rx="40" ry="24" fill="#8aba80" transform="rotate(-50,20,60)" />
+              <ellipse cx="100" cy="80" rx="38" ry="22" fill="#7aaa70" transform="rotate(10,100,80)" />
+            </g>
+
+            {/* Corner foliage — bottom right */}
+            <g transform="translate(1340,810)" opacity="0.20">
+              <ellipse cx="60" cy="90" rx="55" ry="35" fill="#7aaa70" transform="rotate(30,60,90)" />
+              <ellipse cx="30" cy="70" rx="45" ry="28" fill="#6a9a60" transform="rotate(10,30,70)" />
+              <ellipse cx="90" cy="70" rx="40" ry="24" fill="#8aba80" transform="rotate(50,90,70)" />
+            </g>
+
+            {/* Subtle top-left leaf accent */}
+            <g transform="translate(-20,80)" opacity="0.15">
+              <ellipse cx="50" cy="120" rx="40" ry="24" fill="#8aba80" transform="rotate(-40,50,120)" />
+              <ellipse cx="80" cy="100" rx="34" ry="20" fill="#7aaa70" transform="rotate(-20,80,100)" />
+            </g>
+          </svg>
+        </div>
+      )}
 
       {/* ── STICKY SEARCH + FILTER BAR ── */}
       <div
@@ -453,7 +572,9 @@ export default function BookService() {
           position: "sticky",
           top: 0,
           zIndex: 30,
-          background: T.canvas,
+          background: isDark ? T.canvas : "rgba(250,248,243,0.88)",
+          backdropFilter: isDark ? "none" : "saturate(160%) blur(16px)",
+          WebkitBackdropFilter: isDark ? "none" : "saturate(160%) blur(16px)",
           borderBottom: `1px solid ${T.hairline}`,
           padding: "16px 24px",
         }}
@@ -875,7 +996,7 @@ export default function BookService() {
       </div>
 
       {/* ── HEADER ── */}
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px 24px 16px" }}>
+      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px 24px 16px", position: "relative", zIndex: 1 }}>
         <div
           style={{
             fontFamily: "'Space Grotesk', 'Inter', sans-serif",
@@ -893,7 +1014,7 @@ export default function BookService() {
       </div>
 
       {/* ── WORKERS LIST ── */}
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px 48px" }}>
+      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px 48px", position: "relative", zIndex: 1 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
           <div
             style={{
@@ -955,7 +1076,9 @@ export default function BookService() {
                     border: `1px solid ${T.cardBorder}`,
                     borderRadius: "16px",
                     padding: "24px",
-                    boxShadow: isDark ? "0 2px 16px rgba(0,0,0,0.2)" : "0 2px 12px rgba(20,20,19,0.03)",
+                    boxShadow: isDark
+                      ? "0 2px 16px rgba(0,0,0,0.2)"
+                      : "0 4px 20px rgba(20,20,19,0.07), 0 1px 4px rgba(20,20,19,0.04)",
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",

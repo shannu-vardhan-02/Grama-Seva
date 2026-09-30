@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import logoImg from "../assets/grama-seva-logo.jpg";
 
-// ── Animated Verified SVG — cycles through 60 exported frames ──
+// -- Animated Verified SVG � cycles through 60 exported frames --
 const FRAME_COUNT = 60;
 const FRAME_INTERVAL_MS = 60; // ~16fps
 const VerifiedAnimatedSVG = ({ isDark }) => {
@@ -67,8 +67,7 @@ const VerifiedAnimatedSVG = ({ isDark }) => {
   );
 };
 
-
-// ── Inline SVG icons for capability cards (thin-line geometric) ──
+// -- Inline SVG icons for capability cards (thin-line geometric) --
 const CapIcon = ({ children }) => (
   <div className="ch-cap-icon">
     <svg
@@ -201,7 +200,7 @@ const HOW_IT_WORKS = [
   {
     step: "Step 03",
     title: "Direct Community Contact",
-    desc: "Once verified, workers are published to the public search directory. Customers view full profiles and call workers directly — no middleman.",
+    desc: "Once verified, workers are published to the public search directory. Customers view full profiles and call workers directly � no middleman.",
     icon: <PhoneCall size={20} />,
   },
 ];
@@ -220,21 +219,21 @@ const SAMPLE_WORKERS = [
     skill: "Electrician",
     status: "Verified",
     chip: "ch-chip-green",
-    avatar: "⚡",
+    avatar: "?",
   },
   {
     name: "Suresh Reddy",
     skill: "Mason & Builder",
     status: "Active",
     chip: "ch-chip-green",
-    avatar: "🧱",
+    avatar: "??",
   },
   {
     name: "Lakshmi Devi",
     skill: "House Cleaning",
     status: "Pending",
     chip: "ch-chip-yellow",
-    avatar: "🧹",
+    avatar: "??",
   },
 ];
 
@@ -248,13 +247,26 @@ export default function Home() {
   const closeDrawer = () => setMobileDrawerOpen(false);
 
   return (
-    <div style={{ background: "var(--ch-canvas)", color: "var(--ch-ink)", minHeight: "100vh" }}>
-      {/* ── ANNOUNCEMENT BAR ── */}
+    <div
+      style={{
+        background: "var(--ch-canvas)",
+        color: "var(--ch-ink)",
+        minHeight: "100vh",
+        position: "relative",
+      }}
+    >
+      {/* Page-level background image � light mode only */}
+      {!isDark && (
+        <div className="ch-page-bg" aria-hidden="true">
+          <img src="/layout_bg.png" alt="" className="ch-page-bg-img" />
+        </div>
+      )}
+      {/* -- ANNOUNCEMENT BAR -- */}
       {announcementVisible && (
         <div className="ch-announcement-bar">
           <span>
             Administrator-verified workers across Andhra villages.{" "}
-            <Link to="/book-service">Search the directory →</Link>
+            <Link to="/book-service">Search the directory ?</Link>
           </span>
           <button
             className="ch-announcement-close"
@@ -266,7 +278,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── GLOBAL NAV ── */}
+      {/* -- GLOBAL NAV -- */}
       <nav className="ch-nav">
         <div className="ch-nav-inner">
           {/* Logo */}
@@ -284,21 +296,33 @@ export default function Home() {
               onClick={toggleTheme}
               title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
               style={{
-                width: "36px", height: "36px", display: "flex", alignItems: "center",
-                justifyContent: "center", background: isDark ? "rgba(255,255,255,0.06)" : "transparent",
-                border: "1px solid var(--ch-hairline)", borderRadius: "50%",
-                cursor: "pointer", color: isDark ? "#fbbf24" : "var(--ch-ink)",
+                width: "36px",
+                height: "36px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: isDark ? "rgba(255,255,255,0.06)" : "transparent",
+                border: "1px solid var(--ch-hairline)",
+                borderRadius: "50%",
+                cursor: "pointer",
+                color: isDark ? "#fbbf24" : "var(--ch-ink)",
                 transition: "all 0.15s",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = "var(--ch-primary)";
-                e.currentTarget.style.background = isDark ? "rgba(251, 191, 36, 0.12)" : "rgba(0,0,0,0.04)";
+                e.currentTarget.style.background = isDark
+                  ? "rgba(251, 191, 36, 0.12)"
+                  : "rgba(0,0,0,0.04)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.borderColor = "var(--ch-hairline)";
-                e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.06)" : "transparent";
+                e.currentTarget.style.background = isDark
+                  ? "rgba(255,255,255,0.06)"
+                  : "transparent";
               }}
-              aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              aria-label={
+                isDark ? "Switch to Light Mode" : "Switch to Dark Mode"
+              }
             >
               {isDark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
@@ -320,14 +344,23 @@ export default function Home() {
           </div>
 
           {/* Mobile actions cluster */}
-          <div style={{ display: "none", alignItems: "center", gap: "8px" }} className="ch-mobile-nav-cluster">
+          <div
+            style={{ display: "none", alignItems: "center", gap: "8px" }}
+            className="ch-mobile-nav-cluster"
+          >
             <button
               onClick={toggleTheme}
               style={{
-                width: "36px", height: "36px", display: "flex", alignItems: "center",
-                justifyContent: "center", background: isDark ? "rgba(255,255,255,0.06)" : "transparent",
-                border: "1px solid var(--ch-hairline)", borderRadius: "50%",
-                cursor: "pointer", color: isDark ? "#fbbf24" : "var(--ch-ink)",
+                width: "36px",
+                height: "36px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: isDark ? "rgba(255,255,255,0.06)" : "transparent",
+                border: "1px solid var(--ch-hairline)",
+                borderRadius: "50%",
+                cursor: "pointer",
+                color: isDark ? "#fbbf24" : "var(--ch-ink)",
               }}
               aria-label="Toggle dark mode"
             >
@@ -344,7 +377,7 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* ── MOBILE DRAWER ── */}
+      {/* -- MOBILE DRAWER -- */}
       <div
         className={`ch-mobile-drawer ${mobileDrawerOpen ? "open" : ""}`}
         aria-modal="true"
@@ -408,22 +441,32 @@ export default function Home() {
           </Link>
 
           {/* Theme switch in drawer */}
-          <div style={{
-            marginTop: "16px",
-            padding: "12px",
-            background: "var(--ch-soft-stone)",
-            borderRadius: "8px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}>
-            <span style={{ fontSize: "13px", fontWeight: 500, color: "var(--ch-ink)" }}>
+          <div
+            style={{
+              marginTop: "16px",
+              padding: "12px",
+              background: "var(--ch-soft-stone)",
+              borderRadius: "8px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "13px",
+                fontWeight: 500,
+                color: "var(--ch-ink)",
+              }}
+            >
               Appearance
             </span>
             <button
               onClick={toggleTheme}
               style={{
-                display: "inline-flex", alignItems: "center", gap: "6px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
                 padding: "6px 12px",
                 background: "var(--ch-canvas)",
                 border: "1px solid var(--ch-hairline)",
@@ -481,12 +524,12 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── HERO BAND ── */}
+      {/* -- HERO BAND -- */}
       <section className="ch-hero">
         <div className="ch-hero-inner">
           {/* Mono label */}
           <div className="ch-hero-mono-label">
-            Village Labour Directory · Andhra Pradesh
+            Village Labour Directory � Andhra Pradesh
           </div>
 
           {/* Monumental headline */}
@@ -499,7 +542,7 @@ export default function Home() {
           {/* Sub-headline */}
           <p className="ch-hero-subhead">
             Connect with administrator-verified electricians, masons, plumbers,
-            and craftsmen across rural Andhra villages — direct contact, no
+            and craftsmen across rural Andhra villages � direct contact, no
             intermediary.
           </p>
 
@@ -519,9 +562,9 @@ export default function Home() {
             )}
           </div>
 
-          {/* ── Hero Media Composition ── */}
+          {/* -- Hero Media Composition -- */}
           <div className="ch-hero-media">
-            {/* Wide dark card — agent console mockup */}
+            {/* Wide dark card � agent console mockup */}
             <div className="ch-hero-card-wide">
               {/* Subtle background pattern */}
               <div
@@ -539,7 +582,7 @@ export default function Home() {
                   <div className="ch-console-dot" style={{ opacity: 0.5 }} />
                   <div className="ch-console-dot" style={{ opacity: 0.25 }} />
                   <span className="ch-console-title">
-                    Worker Directory — Live
+                    Worker Directory � Live
                   </span>
                 </div>
                 {SAMPLE_WORKERS.map((w) => (
@@ -555,7 +598,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Narrow stone card — contextual info */}
+            {/* Narrow stone card � contextual info */}
             <div className="ch-hero-card-narrow">
               <div
                 style={{
@@ -566,7 +609,7 @@ export default function Home() {
                     : "linear-gradient(160deg, #eeece7 0%, #e4e1d8 100%)",
                 }}
               />
-              {/* Animated SVG — desktop only */}
+              {/* Animated SVG � desktop only */}
               <div
                 style={{
                   position: "relative",
@@ -601,7 +644,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── TRUST STRIP ── */}
+      {/* -- TRUST STRIP -- */}
       <section className="ch-trust-strip">
         <div className="ch-trust-label">
           Serving communities across Andhra Pradesh
@@ -616,7 +659,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── SKILL CAPABILITIES ── */}
+      {/* -- SKILL CAPABILITIES -- */}
       <section className="ch-capabilities">
         <div className="ch-capabilities-inner">
           <div className="ch-section-header">
@@ -649,7 +692,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS — Dark Feature Band ── */}
+      {/* -- HOW IT WORKS � Dark Feature Band -- */}
       <section className="ch-dark-band">
         <div className="ch-dark-band-inner">
           <div className="ch-dark-band-header">
@@ -677,7 +720,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CTA BAND — Pale green split layout ── */}
+      {/* -- CTA BAND � Pale green split layout -- */}
       <section className="ch-cta-band">
         <div className="ch-cta-band-inner">
           {/* Left: copy + CTA */}
@@ -691,7 +734,7 @@ export default function Home() {
             <p className="ch-cta-band-body">
               Every worker in our directory has been personally reviewed by the
               local village administrator. Browse profiles, view skill
-              certifications, and contact workers directly by phone — no booking
+              certifications, and contact workers directly by phone � no booking
               fee, no commission.
             </p>
             <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
@@ -731,43 +774,43 @@ export default function Home() {
               {[
                 {
                   name: "Ravi Kumar",
-                  skill: "Electrician · 8 yrs",
+                  skill: "Electrician � 8 yrs",
                   badge: "Verified",
                   bStyle: {
                     background: "rgba(74,222,128,0.15)",
                     color: "#4ade80",
                   },
-                  avatar: "⚡",
+                  avatar: "?",
                 },
                 {
                   name: "Suresh Reddy",
-                  skill: "Mason · 12 yrs",
+                  skill: "Mason � 12 yrs",
                   badge: "Verified",
                   bStyle: {
                     background: "rgba(74,222,128,0.15)",
                     color: "#4ade80",
                   },
-                  avatar: "🧱",
+                  avatar: "??",
                 },
                 {
                   name: "Anand Babu",
-                  skill: "Plumber · 6 yrs",
+                  skill: "Plumber � 6 yrs",
                   badge: "Active",
                   bStyle: {
                     background: "rgba(251,191,36,0.15)",
                     color: "#fbbf24",
                   },
-                  avatar: "🔧",
+                  avatar: "??",
                 },
                 {
                   name: "Kavya Sharma",
-                  skill: "Painter · 4 yrs",
+                  skill: "Painter � 4 yrs",
                   badge: "Verified",
                   bStyle: {
                     background: "rgba(74,222,128,0.15)",
                     color: "#4ade80",
                   },
-                  avatar: "🖌️",
+                  avatar: "???",
                 },
               ].map((w) => (
                 <div key={w.name} className="ch-wc-worker">
@@ -794,7 +837,7 @@ export default function Home() {
                     textTransform: "uppercase",
                   }}
                 >
-                  View All →
+                  View All ?
                 </Link>
               </div>
             </div>
@@ -802,7 +845,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
+      {/* -- FOOTER -- */}
       <footer className="ch-footer">
         <div className="ch-footer-inner">
           <div className="ch-footer-top">
@@ -877,7 +920,11 @@ export default function Home() {
 
           <div className="ch-footer-bottom">
             <span className="ch-footer-copy">
-              © 2026 Grama Seva Rural Development. All rights reserved.
+              � 2026 Grama Seva Rural Development. Developed by{" "}
+              <strong style={{ color: "var(--ch-ink)" }}>
+                Pedapatruni Shanmukh Vardhan
+              </strong>
+              . All rights reserved.
             </span>
             <div className="ch-footer-bottom-links">
               <Link to="/book-service" className="ch-footer-bottom-link">

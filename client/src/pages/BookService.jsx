@@ -1,8 +1,29 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useSocket, getDistance } from "../context/SocketContext";
 import { useToast } from "../context/ToastContext";
-import { Search, Phone, Star, MapPin, Award, CheckCircle, X, Copy, Check, Filter, Navigation, DollarSign, Image, MessageSquare, Edit3, Crosshair, Trash2 } from "lucide-react";
+import { useTheme } from "../context/ThemeContext";
+import { useLanguage } from "../context/LanguageContext";
+import {
+  Search,
+  Phone,
+  Star,
+  MapPin,
+  X,
+  Copy,
+  Check,
+  Filter,
+  Navigation,
+  DollarSign,
+  Image,
+  MessageSquare,
+  Edit3,
+  Crosshair,
+  Trash2,
+  LayoutGrid,
+  List,
+  ChevronDown,
+} from "lucide-react";
 import ImageLightbox from "../components/ImageLightbox";
 import { WorkerCardSkeleton } from "../components/SkeletonLoader";
 import { useDebounce } from "../hooks/useDebounce";
@@ -24,16 +45,16 @@ const MOCK_TELUGU_WORKERS = [
       isVerified: true,
       averageRating: 4.9,
       reviewCount: 3,
-      proofOfWork: [{ url: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=600" }],
+      proofOfWork: [{ url: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400" }],
       services: [
         { name: "Fan Repair & Fitting", price: 100 },
         { name: "Switchboard Installation", price: 250 },
         { name: "Inverter Wiring & Connection", price: 450 }
       ],
       gallery: [
-        "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=600",
-        "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=600",
-        "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=600"
+        "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=400",
+        "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=400",
+        "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=400"
       ],
       reviews: [
         { customerName: "Suresh Kumar", rating: 5, comment: "Very fast and clean ceiling fan wiring work.", date: "May 09, 2026" },
@@ -57,16 +78,16 @@ const MOCK_TELUGU_WORKERS = [
       isVerified: true,
       averageRating: 4.8,
       reviewCount: 3,
-      proofOfWork: [{ url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600" }],
+      proofOfWork: [{ url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400" }],
       services: [
         { name: "3-Phase Submersible Starter Fix", price: 350 },
         { name: "Complete Room Wiring", price: 1200 },
         { name: "LED Ceiling Light Fitting", price: 150 }
       ],
       gallery: [
-        "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=600",
-        "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=600",
-        "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=600"
+        "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=400",
+        "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=400",
+        "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=400"
       ],
       reviews: [
         { customerName: "Koti Rao", rating: 5, comment: "Prompt response and clean wiring work.", date: "Jun 12, 2026" },
@@ -89,16 +110,16 @@ const MOCK_TELUGU_WORKERS = [
       isVerified: true,
       averageRating: 4.9,
       reviewCount: 3,
-      proofOfWork: [{ url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=600" }],
+      proofOfWork: [{ url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400" }],
       services: [
         { name: "Tile Laying per sq ft", price: 25 },
         { name: "Wall Plastering per Day", price: 700 },
         { name: "Compound Wall Construction", price: 1500 }
       ],
       gallery: [
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600",
-        "https://images.unsplash.com/photo-1541888946425-d0fbb186a5b7?auto=format&fit=crop&q=80&w=600",
-        "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600"
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400",
+        "https://images.unsplash.com/photo-1541888946425-d0fbb186a5b7?auto=format&fit=crop&q=80&w=400",
+        "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=400"
       ],
       reviews: [
         { customerName: "Prasad Raju", rating: 5, comment: "Excellent masonry and cement plastering work for my home extension.", date: "May 18, 2026" },
@@ -121,27 +142,57 @@ const MOCK_TELUGU_WORKERS = [
       isVerified: true,
       averageRating: 4.8,
       reviewCount: 3,
-      proofOfWork: [{ url: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=600" }],
+      proofOfWork: [{ url: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=400" }],
       services: [
         { name: "Tap & Pipe Leakage Fix", price: 120 },
         { name: "Water Tank Line Cleaning", price: 400 },
         { name: "Overhead Tank Installation", price: 800 }
       ],
       gallery: [
-        "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=600",
-        "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=600",
-        "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&q=80&w=600"
+        "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=400",
+        "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=400",
+        "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&q=80&w=400"
       ],
       reviews: [
         { customerName: "Srinivasa Reddy", rating: 5, comment: "Fixed underground PVC pipe leakage cleanly in 30 minutes.", date: "May 02, 2026" },
         { customerName: "Kishore V", rating: 5, comment: "Installed 1000L overhead water tank with booster pipes.", date: "Apr 11, 2026" }
       ]
     }
+  },
+  {
+    id: "tw-5",
+    name: "Ramaiah Painting Works",
+    phone: "+91 95559 67890",
+    role: "Worker",
+    workerProfile: {
+      skill: "painter",
+      skills: ["painter"],
+      experience: 7,
+      address: "Gandhi Nagar, Shamshabad",
+      location: { type: "Point", coordinates: [78.3589, 17.2381] },
+      bio: "Interior & exterior house painting, whitewashing, waterproofing and texture designs for modern homes.",
+      isVerified: true,
+      averageRating: 4.7,
+      reviewCount: 2,
+      proofOfWork: [{ url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=400" }],
+      services: [
+        { name: "Interior Emulsion per sqft", price: 18 },
+        { name: "Exterior Painting per sqft", price: 22 },
+        { name: "Waterproofing Treatment", price: 2500 }
+      ],
+      gallery: [
+        "https://images.unsplash.com/photo-1562259929-b4e1fd3aef09?auto=format&fit=crop&q=80&w=400",
+        "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&q=80&w=400"
+      ],
+      reviews: [
+        { customerName: "Madhavi Latha", rating: 5, comment: "Beautiful texture work on living room walls. Very neat.", date: "Jun 01, 2026" },
+        { customerName: "Ravi Teja", rating: 4, comment: "Good exterior painting, completed in 3 days as promised.", date: "May 10, 2026" }
+      ]
+    }
   }
 ];
 
 const SKILL_CATEGORIES = [
-  { id: "all", label: "All Skills", icon: "✨" },
   { id: "electrician", label: "Electrician", icon: "⚡" },
   { id: "mason", label: "Mason / Builder", icon: "🧱" },
   { id: "plumber", label: "Plumber", icon: "🔧" },
@@ -156,526 +207,1170 @@ export default function BookService() {
   const { currentUser, users, fetchUsers } = useAuth();
   const { submitWorkerReview, deleteWorkerProfileReview, deleteReview } = useSocket();
   const { showToast } = useToast();
+  const { isDark } = useTheme();
+  const { t, lang } = useLanguage();
 
-  const [selectedSkill, setSelectedSkill] = useState("all");
+  const [selectedSkills, setSelectedSkills] = useState([]);
+  const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
+  const [filterSearchOpen, setFilterSearchOpen] = useState(false);
+  const [filterSearchQuery, setFilterSearchQuery] = useState("");
+  const filterDropdownRef = useRef(null);
+  const filterSearchInputRef = useRef(null);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [sortByRadius, setSortByRadius] = useState(false);
-  const [userCoords, setUserCoords] = useState([78.3489, 17.2181]); // Default: Shamshabad
-  const [geoStatus, setGeoStatus] = useState("idle"); // "idle" | "loading" | "granted" | "denied"
+  const [userCoords, setUserCoords] = useState([78.3489, 17.2181]);
+  const [geoStatus, setGeoStatus] = useState("idle");
+  const [viewMode, setViewMode] = useState("grid");
 
   const [activeModalWorker, setActiveModalWorker] = useState(null);
-  const [activeTab, setActiveTab] = useState("services"); // "services" | "gallery" | "reviews"
+  const [activeTab, setActiveTab] = useState("services");
   const [copiedNumber, setCopiedNumber] = useState(false);
-  const [cardStyle, setCardStyle] = useState(() => {
-    try {
-      return localStorage.getItem("gs_card_design") || "mist";
-    } catch {
-      return "mist";
-    }
-  });
 
-  // Write Review State
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState(null);
 
-  // Lightbox State
   const [lightboxImages, setLightboxImages] = useState(null);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
-  // Request geolocation on mount for accurate radius sorting
+  const debouncedSearchQuery = useDebounce(searchQuery, 160);
+
+  // On initial mount: only use user profile coordinates if available.
+  // Geolocation and distance sorting are NOT automatically triggered on page load;
+  // they only apply when the user explicitly clicks the Nearby sort button.
   useEffect(() => {
-    if (navigator.geolocation) {
-      setGeoStatus("loading");
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setUserCoords([pos.coords.longitude, pos.coords.latitude]);
-          setGeoStatus("granted");
-        },
-        () => setGeoStatus("denied"),
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
+    const loc = currentUser?.workerProfile?.location?.coordinates || currentUser?.location?.coordinates;
+    if (loc && loc[0] !== 0 && loc[1] !== 0) {
+      setUserCoords(loc);
     }
+  }, [currentUser]);
+
+  // Handle outside click for filter dropdown
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(e.target)) {
+        setFilterDropdownOpen(false);
+        setFilterSearchOpen(false);
+        setFilterSearchQuery("");
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // Also update userCoords from currentUser's stored location if available
-  useEffect(() => {
-    if (geoStatus === "denied" || geoStatus === "idle") {
-      const loc = currentUser?.workerProfile?.location?.coordinates || currentUser?.location?.coordinates;
-      if (loc && loc[0] !== 0 && loc[1] !== 0) {
-        setUserCoords(loc);
-      }
-    }
-  }, [currentUser, geoStatus]);
-
   const handleRequestLocation = useCallback(() => {
-    if (!navigator.geolocation) { showToast("Geolocation not supported by your browser", "error"); return; }
+    if (!navigator.geolocation) {
+      setSortByRadius(true);
+      return;
+    }
     setGeoStatus("loading");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setUserCoords([pos.coords.longitude, pos.coords.latitude]);
         setGeoStatus("granted");
-        showToast("Location updated! Workers sorted by distance.", "success");
         setSortByRadius(true);
       },
       () => {
         setGeoStatus("denied");
-        showToast("Location permission denied. Using default location.", "error");
+        setSortByRadius(true);
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
-  }, [showToast]);
+  }, []);
 
-  const debouncedSearchQuery = useDebounce(searchQuery, 250);
-
-  const realWorkers = users.filter((u) => u.role === "Worker" && u.workerProfile?.isVerified);
-  const allWorkers = realWorkers.length > 0 ? realWorkers : MOCK_TELUGU_WORKERS;
-
-  // Filter workers with debounced search query for 60fps typing performance
-  const filteredBase = useMemo(() => {
-    return allWorkers.filter((w) => {
-      const prof = w.workerProfile || {};
-      const skillMatch = selectedSkill === "all" || prof.skill === selectedSkill || prof.skills?.includes(selectedSkill);
-      const searchLower = (debouncedSearchQuery || "").toLowerCase().trim();
-      if (!searchLower) return skillMatch;
-
-      const nameMatch = w.name?.toLowerCase().includes(searchLower);
-      const addressMatch = prof.address?.toLowerCase().includes(searchLower);
-      const bioMatch = prof.bio?.toLowerCase().includes(searchLower);
-      return skillMatch && (nameMatch || addressMatch || bioMatch);
-    });
-  }, [allWorkers, selectedSkill, debouncedSearchQuery]);
-
-  // Calculate distance for workers
-  const workersWithDist = useMemo(() => {
-    return filteredBase.map(w => {
-      const coords = w.workerProfile?.location?.coordinates;
-      const hasCoords = coords && coords[0] !== 0 && coords[1] !== 0;
-      const dist = hasCoords ? getDistance(userCoords, coords) : 999;
-      return { ...w, calculatedDistance: dist };
-    });
-  }, [filteredBase, userCoords]);
-
-  // Sort by radius if active
-  const filteredWorkers = useMemo(() => {
+  const handleToggleNearbySort = useCallback(() => {
     if (sortByRadius) {
-      return [...workersWithDist].sort((a, b) => a.calculatedDistance - b.calculatedDistance);
+      // User explicitly toggling sort OFF -> restores default natural catalog order
+      setSortByRadius(false);
+    } else {
+      // User explicitly toggling sort ON
+      if (geoStatus !== "granted" && navigator.geolocation) {
+        handleRequestLocation();
+      } else {
+        setSortByRadius(true);
+      }
     }
-    return workersWithDist;
-  }, [workersWithDist, sortByRadius]);
+  }, [sortByRadius, geoStatus, handleRequestLocation]);
+
+  const handleOpenWorkerModal = useCallback((worker) => {
+    setActiveModalWorker(worker);
+    setActiveTab("services");
+    setCopiedNumber(false);
+  }, []);
 
   const handleCopyPhone = (phone) => {
-    navigator.clipboard.writeText(phone);
+    navigator.clipboard?.writeText(phone);
     setCopiedNumber(true);
     setTimeout(() => setCopiedNumber(false), 2000);
   };
 
-  const handleOpenWorkerModal = (worker) => {
-    setActiveModalWorker(worker);
-    setActiveTab("services");
-    setReviewRating(0);
-    setReviewComment("");
+  const toggleSkillFilter = (skillId) => {
+    setSelectedSkills((prev) =>
+      prev.includes(skillId) ? prev.filter((s) => s !== skillId) : [...prev, skillId]
+    );
   };
 
-  const handleAddReviewSubmit = (e) => {
+  const removeSkillFilter = (skillId) => {
+    setSelectedSkills((prev) => prev.filter((s) => s !== skillId));
+  };
+
+  // Helper to format skill with capital first letter
+  const formatSkillName = (s) => {
+    if (!s) return "";
+    const str = String(s).trim();
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
+
+  // Localized skill helper
+  const getLocalizedSkill = (s) => {
+    if (!s) return "";
+    const key = String(s).trim().toLowerCase();
+    const translated = t(`skills.${key}`);
+    if (translated && !translated.startsWith("skills.")) {
+      return formatSkillName(translated);
+    }
+    return formatSkillName(s);
+  };
+
+  const realWorkers = users.filter((u) => u.role === "Worker" && u.workerProfile?.isVerified);
+  const allWorkers = realWorkers.length > 0 ? realWorkers : MOCK_TELUGU_WORKERS;
+
+  const filteredWorkers = useMemo(() => {
+    let list = allWorkers.filter((w) => {
+      const prof = w.workerProfile || {};
+      const skillMatch =
+        selectedSkills.length === 0 ||
+        selectedSkills.some((s) => prof.skill === s || prof.skills?.includes(s));
+      const searchLower = (debouncedSearchQuery || "").toLowerCase().trim();
+      if (!searchLower) return skillMatch;
+      return (
+        skillMatch &&
+        (w.name?.toLowerCase().includes(searchLower) ||
+          prof.skill?.toLowerCase().includes(searchLower) ||
+          prof.skills?.some((s) => s.toLowerCase().includes(searchLower)) ||
+          prof.address?.toLowerCase().includes(searchLower) ||
+          prof.bio?.toLowerCase().includes(searchLower))
+      );
+    });
+
+    if (sortByRadius) {
+      list = list
+        .map((w) => {
+          const coords = w.workerProfile?.location?.coordinates;
+          const hasCoords = coords && coords[0] !== 0 && coords[1] !== 0;
+          return {
+            ...w,
+            calculatedDistance: hasCoords ? getDistance(userCoords, coords) : 999,
+          };
+        })
+        .sort((a, b) => a.calculatedDistance - b.calculatedDistance);
+    }
+    return list;
+  }, [allWorkers, selectedSkills, debouncedSearchQuery, sortByRadius, userCoords]);
+
+  const handleAddReviewSubmit = async (e) => {
     e.preventDefault();
-    if (!reviewComment.trim() || reviewRating === 0) return;
-
-    const workerId = activeModalWorker._id || activeModalWorker.id;
-    const previousModalWorker = { ...activeModalWorker };
-    const savedComment = reviewComment;
+    if (!reviewRating) return;
+    setReviewSubmitting(true);
+    const workerId = activeModalWorker?._id || activeModalWorker?.id;
     const savedRating = reviewRating;
-
-    // 1. Construct optimistic review object
+    const savedComment = reviewComment;
     const newRev = {
-      customerName: currentUser?.name || "Verified Customer",
+      customerName: currentUser?.name || "Anonymous",
       rating: savedRating,
       comment: savedComment,
-      date: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
+      date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
     };
-
     const existingReviews = activeModalWorker.workerProfile?.reviews || [];
     const updatedRevList = [newRev, ...existingReviews];
     const totalRating = updatedRevList.reduce((sum, r) => sum + Number(r.rating || 0), 0);
     const newAvg = totalRating / updatedRevList.length;
 
-    // 2. Optimistically update local active worker modal in 0ms
-    setActiveModalWorker({
-      ...activeModalWorker,
+    setActiveModalWorker((prev) => ({
+      ...prev,
       workerProfile: {
-        ...activeModalWorker.workerProfile,
+        ...prev.workerProfile,
         reviews: updatedRevList,
         reviewCount: updatedRevList.length,
         averageRating: newAvg,
       },
-    });
+    }));
 
-    // 3. Immediately close modal and reset inputs — zero perceived latency!
+    setReviewSubmitting(false);
     setShowReviewModal(false);
     setReviewComment("");
     setReviewRating(0);
     showToast("Review submitted successfully!", "success");
 
-    // 4. Perform network request in background
     if (workerId && !String(workerId).startsWith("tw-")) {
       submitWorkerReview(workerId, savedRating, savedComment)
         .then(() => {
           if (fetchUsers) fetchUsers();
         })
-        .catch((err) => {
-          // 5. Rollback on failure
-          setActiveModalWorker(previousModalWorker);
-          showToast(err.message || "Failed to submit review", "error");
-        });
+        .catch((err) => showToast(err.message || "Failed to submit review", "error"));
     }
   };
 
+  const T = {
+    canvas: isDark ? "#0d0e12" : "#faf9f5",
+    card: isDark ? "#15161e" : "#ffffff",
+    cardBorder: isDark ? "#232532" : "#e6dfd8",
+    cardHoverShadow: isDark ? "0 8px 28px rgba(0,0,0,0.45)" : "0 8px 24px rgba(20,20,19,0.08)",
+    input: isDark ? "#161720" : "#ffffff",
+    inputBorder: isDark ? "#232532" : "#e6dfd8",
+    hairline: isDark ? "#232532" : "#e6dfd8",
+    ink: isDark ? "#f0f1f5" : "#141413",
+    muted: isDark ? "#7e8194" : "#6c6a64",
+    muted2: isDark ? "#9396a8" : "#8e8b82",
+    accent: isDark ? "#34d399" : "#cc785c",
+    accentText: isDark ? "#071a12" : "#ffffff",
+    tagBg: isDark ? "#171821" : "#efe9de",
+    tagBorder: isDark ? "#2a2c3e" : "#e6dfd8",
+    tagColor: isDark ? "#b2b5c5" : "#3d3d3a",
+    emptyBg: isDark ? "#14151d" : "#efe9de",
+    deepGreen: isDark ? "#34d399" : "#003c33",
+    modalHeader: isDark ? "#0e1f19" : "#003c33",
+  };
+
+  // Filter skills in dropdown based on mini search
+  const visibleCategories = SKILL_CATEGORIES.filter((cat) => {
+    if (!filterSearchQuery) return true;
+    const q = filterSearchQuery.toLowerCase();
+    const trans = t(`skills.${cat.id}`);
+    const localized = ((trans && !trans.startsWith("skills.")) ? trans : cat.label).toLowerCase();
+    return localized.includes(q) || cat.label.toLowerCase().includes(q) || cat.id.toLowerCase().includes(q);
+  });
+
   return (
-    <div className="bookservice-page-padding" style={{ background: "var(--ch-canvas)", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
-      
-      {/* ── SEARCH & FILTER BAR ── */}
-      <div style={{ 
-        borderBottom: "1px solid var(--ch-hairline)", 
-        padding: "20px 24px",
-        background: "var(--ch-canvas)",
-        position: "sticky",
-        top: 0,
-        zIndex: 10
-      }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "20px" }}>
-          
-          <div style={{ display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              flex: "1 1 300px",
-              position: "relative"
-            }}>
-              <Search size={18} color="var(--ch-muted)" style={{ position: "absolute", left: "14px" }} />
+    <div style={{ background: T.canvas, minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
+
+      {/* ── STICKY SEARCH + FILTER BAR ── */}
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 30,
+          background: T.canvas,
+          borderBottom: `1px solid ${T.hairline}`,
+          padding: "16px 24px",
+        }}
+      >
+        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "12px" }}>
+
+          <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+
+            {/* Search Input */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                flex: "1 1 280px",
+                background: T.input,
+                border: `1px solid ${T.inputBorder}`,
+                borderRadius: "12px",
+                padding: "10px 16px",
+                boxShadow: isDark ? "none" : "0 2px 8px rgba(20,20,19,0.03)",
+                gap: "10px",
+              }}
+            >
+              <Search size={18} color={T.muted2} style={{ flexShrink: 0 }} />
               <input
                 type="text"
-                placeholder="Search by name, village, or skill..."
+                placeholder={t("searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ 
-                  width: "100%",
-                  background: "var(--ch-input-bg)",
-                  border: "1px solid var(--ch-hairline)", 
-                  borderRadius: "8px", 
-                  padding: "10px 14px 10px 40px", 
-                  fontSize: "14px", 
-                  color: "var(--ch-ink)",
+                style={{
+                  flex: 1,
+                  border: "none",
                   outline: "none",
-                  fontFamily: "'Inter', sans-serif"
+                  background: "transparent",
+                  fontSize: "14px",
+                  color: T.ink,
+                  fontFamily: "'Inter', sans-serif",
                 }}
-                onFocus={(e) => e.target.style.borderColor = "var(--ch-action-blue)"}
-                onBlur={(e) => e.target.style.borderColor = "var(--ch-hairline)"}
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery("")} style={{ position: "absolute", right: "12px", background: "none", border: "none", cursor: "pointer", color: "var(--ch-muted)" }}>
+                <button
+                  onClick={() => setSearchQuery("")}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: T.muted2, display: "flex", padding: 0 }}
+                >
                   <X size={16} />
                 </button>
               )}
             </div>
 
+            {/* Filter Dropdown */}
+            <div ref={filterDropdownRef} style={{ position: "relative", flexShrink: 0 }}>
+              <button
+                onClick={() => setFilterDropdownOpen((v) => !v)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "10px 16px",
+                  background: selectedSkills.length > 0 ? T.accent : T.input,
+                  color: selectedSkills.length > 0 ? T.accentText : T.ink,
+                  border: `1px solid ${selectedSkills.length > 0 ? T.accent : T.inputBorder}`,
+                  borderRadius: "12px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  boxShadow: isDark ? "none" : "0 2px 8px rgba(20,20,19,0.03)",
+                  transition: "all 0.15s",
+                }}
+              >
+                <Filter size={15} />
+                {t("filterLabel")}{selectedSkills.length > 0 ? ` (${selectedSkills.length})` : ""}
+                <ChevronDown
+                  size={14}
+                  style={{
+                    transform: filterDropdownOpen ? "rotate(180deg)" : "none",
+                    transition: "transform 0.2s",
+                  }}
+                />
+              </button>
+
+              {filterDropdownOpen && (
+                <div
+                  className="filter-dropdown-menu"
+                  style={{
+                    position: "absolute",
+                    top: "calc(100% + 8px)",
+                    left: 0,
+                    background: T.card,
+                    border: `1px solid ${T.cardBorder}`,
+                    borderRadius: "12px",
+                    padding: "8px",
+                    boxShadow: isDark ? "0 16px 40px rgba(0,0,0,0.5)" : "0 8px 32px rgba(20,20,19,0.12)",
+                    zIndex: 200,
+                    minWidth: "240px",
+                  }}
+                >
+                  {/* Dropdown Header with Mini Search Logo that expands */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "6px 8px 8px",
+                      gap: "8px",
+                      minHeight: "34px",
+                    }}
+                  >
+                    {!filterSearchOpen ? (
+                      <>
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            fontFamily: "'JetBrains Mono', monospace",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.2px",
+                            color: T.muted2,
+                          }}
+                        >
+                          {t("selectSkillTypes")}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFilterSearchOpen(true);
+                            setTimeout(() => filterSearchInputRef.current?.focus(), 60);
+                          }}
+                          title="Search skills"
+                          style={{
+                            background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                            border: `1px solid ${T.cardBorder}`,
+                            borderRadius: "50%",
+                            width: "24px",
+                            height: "24px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                            color: T.muted2,
+                            transition: "all 0.15s ease",
+                            flexShrink: 0,
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.color = T.ink;
+                            e.currentTarget.style.borderColor = T.accent;
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.color = T.muted2;
+                            e.currentTarget.style.borderColor = T.cardBorder;
+                          }}
+                        >
+                          <Search size={12} />
+                        </button>
+                      </>
+                    ) : (
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          width: "100%",
+                          background: T.input,
+                          border: `1px solid ${T.accent}`,
+                          borderRadius: "8px",
+                          padding: "3px 8px",
+                          gap: "6px",
+                          animation: "fadeIn 0.2s ease",
+                        }}
+                      >
+                        <Search size={12} color={T.accent} style={{ flexShrink: 0 }} />
+                        <input
+                          ref={filterSearchInputRef}
+                          type="text"
+                          value={filterSearchQuery}
+                          onChange={(e) => setFilterSearchQuery(e.target.value)}
+                          placeholder={t("filterSkillsPlaceholder")}
+                          style={{
+                            flex: 1,
+                            border: "none",
+                            outline: "none",
+                            background: "transparent",
+                            fontSize: "12px",
+                            color: T.ink,
+                            padding: "2px 0",
+                            fontFamily: "'Inter', sans-serif",
+                            minWidth: 0,
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFilterSearchQuery("");
+                            setFilterSearchOpen(false);
+                          }}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            color: T.muted2,
+                            padding: 0,
+                            display: "flex",
+                          }}
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Skills List in Dropdown */}
+                  <div style={{ maxHeight: "260px", overflowY: "auto" }}>
+                    {visibleCategories.length === 0 ? (
+                      <div style={{ padding: "12px 10px", fontSize: "12px", color: T.muted2, textAlign: "center" }}>
+                        No skills found
+                      </div>
+                    ) : (
+                      visibleCategories.map((cat) => {
+                        const active = selectedSkills.includes(cat.id);
+                        const trans = t(`skills.${cat.id}`);
+                        const catLabel = (trans && !trans.startsWith("skills.")) ? trans : cat.label;
+                        return (
+                          <button
+                            key={cat.id}
+                            onClick={() => toggleSkillFilter(cat.id)}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "10px",
+                              width: "100%",
+                              padding: "8px 10px",
+                              background: active
+                                ? (isDark ? "rgba(52,211,153,0.12)" : "rgba(204,120,92,0.08)")
+                                : "transparent",
+                              border: "none",
+                              borderRadius: "8px",
+                              color: active ? T.accent : T.ink,
+                              fontSize: "13.5px",
+                              cursor: "pointer",
+                              textAlign: "left",
+                              transition: "background 0.12s",
+                              fontFamily: "'Inter', sans-serif",
+                            }}
+                          >
+                            <span style={{ fontSize: "15px", width: "20px", textAlign: "center" }}>{cat.icon}</span>
+                            <span style={{ flex: 1 }}>{catLabel}</span>
+                            {active && (
+                              <span
+                                style={{
+                                  width: "16px",
+                                  height: "16px",
+                                  borderRadius: "50%",
+                                  background: T.accent,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                <Check size={10} color={T.accentText} />
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {selectedSkills.length > 0 && (
+                    <div style={{ borderTop: `1px solid ${T.hairline}`, marginTop: "6px", paddingTop: "6px" }}>
+                      <button
+                        onClick={() => {
+                          setSelectedSkills([]);
+                          setFilterDropdownOpen(false);
+                          setFilterSearchOpen(false);
+                          setFilterSearchQuery("");
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          width: "100%",
+                          padding: "8px 10px",
+                          background: "none",
+                          border: "none",
+                          color: isDark ? "#f87171" : "#b30000",
+                          fontSize: "13px",
+                          cursor: "pointer",
+                          borderRadius: "8px",
+                          fontFamily: "'Inter', sans-serif",
+                        }}
+                      >
+                        <X size={13} /> {t("clearAllFilters")}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Nearby Sort */}
             <button
-              onClick={() => {
-                if (!sortByRadius && geoStatus !== "granted") {
-                  handleRequestLocation();
-                } else {
-                  setSortByRadius(!sortByRadius);
-                }
-              }}
+              onClick={handleToggleNearbySort}
               style={{
-                padding: "10px 16px",
-                background: sortByRadius ? "var(--ch-deep-green)" : "var(--ch-canvas)",
-                color: sortByRadius ? "var(--ch-canvas)" : "var(--ch-ink)",
-                border: `1px solid ${sortByRadius ? "var(--ch-deep-green)" : "var(--ch-hairline)"}`,
-                borderRadius: "8px",
-                fontSize: "14px",
-                display: "flex",
+                display: "inline-flex",
                 alignItems: "center",
                 gap: "8px",
+                padding: "10px 16px",
+                background: sortByRadius ? (isDark ? "#164e3f" : "#003c33") : T.input,
+                color: sortByRadius ? "#ffffff" : T.ink,
+                border: `1px solid ${sortByRadius ? (isDark ? "#34d399" : "#003c33") : T.inputBorder}`,
+                borderRadius: "12px",
+                fontSize: "14px",
+                fontWeight: 500,
                 cursor: "pointer",
+                flexShrink: 0,
+                boxShadow: isDark ? "none" : "0 2px 8px rgba(20,20,19,0.03)",
+                transition: "all 0.15s",
               }}
             >
               {geoStatus === "loading" ? (
-                <><Crosshair size={16} className="animate-spin" /> Locating...</>
+                <>
+                  <Crosshair size={15} className="animate-spin" /> {t("locating")}
+                </>
               ) : (
-                <><Navigation size={16} /> Sort by Distance {sortByRadius && "✓"}</>
+                <>
+                  <Navigation size={15} /> {t("nearbyLabel")} {sortByRadius && "✓"}
+                </>
               )}
             </button>
-            {geoStatus === "denied" && (
-              <button
-                onClick={handleRequestLocation}
-                style={{
-                  padding: "10px 16px", background: "var(--ch-coral-soft)", color: "var(--ch-coral)",
-                  border: "none", borderRadius: "8px", fontSize: "14px",
-                  cursor: "pointer", display: "flex", alignItems: "center", gap: "6px",
-                }}
-              >
-                <Crosshair size={14} /> Enable Location
-              </button>
-            )}
-            {(searchQuery || selectedSkill !== "all") && (
-              <button
-                onClick={() => { setSearchQuery(""); setSelectedSkill("all"); }}
-                style={{ background: "none", border: "none", color: "var(--ch-action-blue)", fontSize: "14px", cursor: "pointer", padding: "10px" }}
-              >
-                Clear all
-              </button>
-            )}
-          </div>
 
-          {/* Category Pills */}
-          <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px" }} className="hide-scrollbar">
-            {SKILL_CATEGORIES.map((cat) => {
-              const active = selectedSkill === cat.id;
-              return (
+            {/* View Toggle */}
+            <div
+              style={{
+                display: "inline-flex",
+                borderRadius: "10px",
+                border: `1px solid ${T.inputBorder}`,
+                overflow: "hidden",
+                flexShrink: 0,
+              }}
+            >
+              {[
+                ["grid", LayoutGrid, t("cardView")],
+                ["list", List, t("listView")],
+              ].map(([mode, Icon, titleStr]) => (
                 <button
-                  key={cat.id}
-                  onClick={() => setSelectedSkill(cat.id)}
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  title={titleStr}
                   style={{
-                    display: "inline-flex",
+                    display: "flex",
                     alignItems: "center",
-                    gap: "6px",
-                    padding: "5px 14px",
-                    borderRadius: "32px",
-                    fontSize: "13px",
-                    background: active ? "var(--ch-deep-green)" : "var(--ch-canvas)",
-                    color: active ? "var(--ch-canvas)" : "var(--ch-body-muted)",
-                    border: `1px solid ${active ? "var(--ch-deep-green)" : "var(--ch-hairline)"}`,
+                    justifyContent: "center",
+                    padding: "10px 12px",
+                    background: viewMode === mode ? (isDark ? "#1a1c26" : "#17171c") : "transparent",
+                    color: viewMode === mode ? (isDark ? "#f0f1f5" : "#ffffff") : T.muted,
+                    border: "none",
                     cursor: "pointer",
-                    whiteSpace: "nowrap",
+                    transition: "all 0.15s",
                   }}
                 >
-                  <span>{cat.icon}</span>
-                  <span>{cat.label}</span>
+                  <Icon size={16} />
                 </button>
-              );
-            })}
+              ))}
+            </div>
           </div>
+
+          {/* Active filter tags */}
+          {selectedSkills.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
+              <span
+                style={{
+                  fontSize: "11px",
+                  color: T.muted,
+                  fontFamily: "'JetBrains Mono', monospace",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.2px",
+                }}
+              >
+                {t("filtering")}
+              </span>
+              {selectedSkills.map((skillId) => {
+                const cat = SKILL_CATEGORIES.find((c) => c.id === skillId);
+                const trans = t(`skills.${skillId}`);
+                const tagLabel = (trans && !trans.startsWith("skills.")) ? trans : (cat?.label || formatSkillName(skillId));
+                return (
+                  <span
+                    key={skillId}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "4px 10px 4px 12px",
+                      background: T.tagBg,
+                      border: `1px solid ${T.tagBorder}`,
+                      borderRadius: "9999px",
+                      fontSize: "13px",
+                      color: T.tagColor,
+                    }}
+                  >
+                    {cat?.icon} {tagLabel}
+                    <button
+                      onClick={() => removeSkillFilter(skillId)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        color: T.muted2,
+                        display: "flex",
+                        padding: 0,
+                        marginLeft: "2px",
+                      }}
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
+      {/* ── HEADER ── */}
+      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px 24px 16px" }}>
+        <div
+          style={{
+            fontFamily: "'Space Grotesk', 'Inter', sans-serif",
+            fontSize: "32px",
+            fontWeight: 400,
+            color: isDark ? "#f0f1f5" : "#141413",
+            letterSpacing: "-0.03em",
+          }}
+        >
+          {t("pageTitleSearch")}
+        </div>
+        <p style={{ fontSize: "15px", color: T.muted, marginTop: "6px" }}>
+          {t("pageSubSearch")}
+        </p>
+      </div>
+
       {/* ── WORKERS LIST ── */}
-      <div style={{ maxWidth: "1200px", margin: "32px auto", padding: "0 24px" }}>
-        
-        {filteredWorkers.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "64px 24px" }}>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: "0.2px", color: "var(--ch-muted)", fontSize: "12px", marginBottom: "16px" }}>
-              Directory Empty
-            </div>
-            <h3 style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif", fontSize: "24px", color: "var(--ch-ink)", fontWeight: 400, letterSpacing: "-0.02em", margin: "0 0 12px" }}>
-              No matching workers found
-            </h3>
-            <p style={{ fontSize: "15px", color: "var(--ch-body-muted)", marginBottom: "24px" }}>
-              Try adjusting your search or filter criteria.
-            </p>
-            <button
-              onClick={() => { setSearchQuery(""); setSelectedSkill("all"); }}
-              style={{ padding: "10px 20px", background: "var(--ch-primary)", color: "var(--ch-canvas)", border: "none", borderRadius: "9999px", fontSize: "14px", cursor: "pointer" }}
-            >
-              Clear all filters
-            </button>
+      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px 48px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+          <div
+            style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: "11px",
+              color: T.muted,
+              textTransform: "uppercase",
+              letterSpacing: "0.2px",
+            }}
+          >
+            {t("verifiedWorkersCount", filteredWorkers.length)}
           </div>
-        ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 260px))", gap: "16px", justifyContent: "start" }}>
+        </div>
+
+        {filteredWorkers.length === 0 ? (
+          <div
+            style={{
+              background: T.emptyBg,
+              borderRadius: "16px",
+              padding: "48px",
+              textAlign: "center",
+              border: `1px solid ${T.hairline}`,
+            }}
+          >
+            <Filter size={36} color={T.muted2} style={{ margin: "0 auto 12px" }} />
+            <h3
+              style={{
+                fontFamily: "'Space Grotesk', 'Inter', sans-serif",
+                fontSize: "22px",
+                fontWeight: 400,
+                color: isDark ? "#f0f1f5" : "#141413",
+                margin: "0 0 8px",
+              }}
+            >
+              {t("noMatchingWorkers")}
+            </h3>
+            <p style={{ fontSize: "15px", color: T.muted }}>
+              {t("noMatchingDesc")}
+            </p>
+          </div>
+        ) : viewMode === "grid" ? (
+          /* ── CARD GRID VIEW ── */
+          <div className="worker-cards-grid">
             {filteredWorkers.map((worker) => {
               const prof = worker.workerProfile || {};
-              const photo = prof.proofOfWork?.[0]?.url || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=600";
+              const photo =
+                prof.proofOfWork?.[0]?.url ||
+                "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400";
               const rating = prof.averageRating || 4.9;
               const reviews = prof.reviewCount || 12;
               const distanceKm = worker.calculatedDistance ? worker.calculatedDistance.toFixed(1) : "5.1";
-              const skillLabel = (prof.skill || "worker").charAt(0).toUpperCase() + (prof.skill || "worker").slice(1);
+              const skillsList = prof.skills?.length ? prof.skills : (prof.skill ? [prof.skill] : ["Worker"]);
 
               return (
                 <div
                   key={worker.id || worker._id}
-                  onClick={() => handleOpenWorkerModal(worker)}
                   style={{
-                    background: "#1c1c1e",
-                    borderRadius: "20px",
-                    overflow: "hidden",
+                    background: T.card,
+                    border: `1px solid ${T.cardBorder}`,
+                    borderRadius: "16px",
+                    padding: "24px",
+                    boxShadow: isDark ? "0 2px 16px rgba(0,0,0,0.2)" : "0 2px 12px rgba(20,20,19,0.03)",
                     display: "flex",
                     flexDirection: "column",
+                    justifyContent: "space-between",
                     cursor: "pointer",
-                    transition: "transform 0.18s, box-shadow 0.18s",
-                    boxShadow: "0 2px 16px rgba(0,0,0,0.18)",
+                    transition: "transform 0.15s, box-shadow 0.15s",
                   }}
+                  onClick={() => handleOpenWorkerModal(worker)}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-4px)";
-                    e.currentTarget.style.boxShadow = "0 12px 32px rgba(0,0,0,0.28)";
+                    e.currentTarget.style.transform = "translateY(-3px)";
+                    e.currentTarget.style.boxShadow = T.cardHoverShadow;
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 2px 16px rgba(0,0,0,0.18)";
+                    e.currentTarget.style.boxShadow = isDark
+                      ? "0 2px 16px rgba(0,0,0,0.2)"
+                      : "0 2px 12px rgba(20,20,19,0.03)";
                   }}
                 >
-                  {/* ── Photo Zone ── */}
-                  <div style={{ height: "200px", position: "relative", overflow: "hidden" }}>
-                    <img
-                      src={photo}
-                      alt={worker.name}
-                      style={{
-                        width: "100%", height: "100%", objectFit: "cover",
-                        borderRadius: "16px 16px 0 0",
-                        display: "block",
-                      }}
-                    />
-                    {/* Gradient fade into card bottom */}
-                    <div style={{
-                      position: "absolute", bottom: 0, left: 0, right: 0,
-                      height: "50%",
-                      background: "linear-gradient(to bottom, transparent 0%, #1c1c1e 100%)",
-                      pointerEvents: "none",
-                    }} />
-                    {/* Skill mono label top-left */}
-                    <div style={{
-                      position: "absolute", top: "12px", left: "12px",
-                      background: "rgba(0,0,0,0.5)",
-                      backdropFilter: "blur(8px)",
-                      borderRadius: "99px",
-                      padding: "3px 10px",
-                      fontFamily: "'JetBrains Mono', monospace",
-                      fontSize: "10px",
-                      fontWeight: 500,
-                      color: "rgba(255,255,255,0.8)",
-                      letterSpacing: "0.2px",
-                      textTransform: "uppercase",
-                    }}>
-                      {skillLabel}
-                    </div>
-                  </div>
-
-                  {/* ── Content ── */}
-                  <div style={{ padding: "4px 16px 16px" }}>
-                    {/* Name + verified */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
-                      <span style={{
-                        fontFamily: "'Space Grotesk', 'Inter', sans-serif",
-                        fontSize: "16px", fontWeight: 600, color: "#ffffff",
-                        letterSpacing: "-0.02em",
-                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        flex: 1,
-                      }}>
-                        {worker.name}
-                      </span>
-                      {prof.isVerified && (
-                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0 }}>
-                          <circle cx="10" cy="10" r="10" fill="#22c55e" />
-                          <path d="M6 10.5l2.5 2.5 5.5-5.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      )}
-                    </div>
-
-                    {/* Bio */}
-                    <p style={{
-                      fontFamily: "'Inter', sans-serif",
-                      fontSize: "12.5px", color: "rgba(255,255,255,0.5)",
-                      lineHeight: 1.45, margin: "0 0 14px",
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                    }}>
-                      {prof.bio || `${prof.experience || 0}-year ${skillLabel} serving village communities.`}
-                    </p>
-
-                    {/* Stats row + Call button */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      {/* Rating */}
-                      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                        <svg width="13" height="13" viewBox="0 0 20 20" fill="#f59e0b"><path d="M10 1l2.63 5.33L18.5 7.27l-4.25 4.14 1 5.84L10 14.77l-5.25 2.48 1-5.84L1.5 7.27l5.87-.94z"/></svg>
-                        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "12.5px", fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>{rating.toFixed(1)}</span>
-                      </div>
-                      {/* Distance */}
-                      <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
-                        <MapPin size={11} color="rgba(255,255,255,0.4)" />
-                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10.5px", color: "rgba(255,255,255,0.4)", letterSpacing: "0.1px" }}>{distanceKm} km</span>
-                      </div>
-                      {/* Experience */}
-                      <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
-                        <Award size={11} color="rgba(255,255,255,0.4)" />
-                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10.5px", color: "rgba(255,255,255,0.4)" }}>{prof.experience || 0}y</span>
-                      </div>
-                      {/* Spacer + Call pill */}
-                      <div style={{ flex: 1 }} />
-                      <button
-                        onClick={(e) => { e.stopPropagation(); window.location.href = `tel:${worker.phone}`; }}
+                  <div>
+                    <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", marginBottom: "16px" }}>
+                      <img
+                        src={photo}
+                        alt={worker.name}
                         style={{
-                          background: "#ffffff", color: "#17171c",
-                          border: "none", borderRadius: "99px",
-                          padding: "7px 14px",
-                          fontFamily: "'Inter', sans-serif",
-                          fontSize: "12.5px", fontWeight: 600,
-                          cursor: "pointer", whiteSpace: "nowrap",
-                          display: "flex", alignItems: "center", gap: "4px",
-                          transition: "background 0.15s",
+                          width: "72px",
+                          height: "72px",
+                          borderRadius: "14px",
+                          objectFit: "cover",
+                          border: `1.5px solid ${T.cardBorder}`,
+                          flexShrink: 0,
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = "#f0f0f0"}
-                        onMouseLeave={(e) => e.currentTarget.style.background = "#ffffff"}
-                      >
-                        <Phone size={11} />
-                        Call
-                      </button>
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <h3
+                          style={{
+                            fontFamily: "'Space Grotesk', 'Inter', sans-serif",
+                            fontSize: "18px",
+                            fontWeight: 600,
+                            color: isDark ? "#f0f1f5" : "#141413",
+                            margin: 0,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            letterSpacing: "-0.02em",
+                          }}
+                        >
+                          {worker.name}
+                        </h3>
+
+                        {/* Distance Indicator */}
+                        <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap", marginTop: "4px" }}>
+                          <span style={{ fontSize: "12px", color: isDark ? "#fbbf24" : "#e8a55a", fontWeight: 600 }}>
+                            ⚡ {distanceKm} {t("kmAway") || "km"}
+                          </span>
+                        </div>
+
+                        {/* Highlighted Skills in Transparent Pill(s) with Capital First Letter */}
+                        <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginTop: "8px" }}>
+                          {skillsList.map((sk, sIdx) => (
+                            <span
+                              key={sIdx}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                padding: "2.5px 10px",
+                                borderRadius: "9999px",
+                                border: isDark ? "1px solid rgba(255, 255, 255, 0.16)" : "1px solid rgba(20, 20, 19, 0.14)",
+                                background: isDark ? "rgba(255, 255, 255, 0.04)" : "rgba(20, 20, 19, 0.03)",
+                                fontSize: "11.5px",
+                                fontWeight: 500,
+                                color: isDark ? "#e2e4ee" : "#2d2d2a",
+                                letterSpacing: "0.01em",
+                              }}
+                            >
+                              {getLocalizedSkill(sk)}
+                            </span>
+                          ))}
+                        </div>
+
+                        {/* Rating */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "8px" }}>
+                          <Star size={13} fill="#e8a55a" color="#e8a55a" />
+                          <span
+                            style={{
+                              fontSize: "13px",
+                              fontWeight: 600,
+                              color: isDark ? "#f0f1f5" : "#141413",
+                              fontVariantNumeric: "tabular-nums",
+                            }}
+                          >
+                            {rating.toFixed(1)}
+                          </span>
+                          <span style={{ fontSize: "12px", color: T.muted2 }}>
+                            ({reviews})
+                          </span>
+                        </div>
+                      </div>
                     </div>
+
+                    <p
+                      style={{
+                        fontSize: "14px",
+                        color: isDark ? "#b2b5c5" : "#3d3d3a",
+                        lineHeight: 1.45,
+                        margin: "0 0 20px 0",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      "{prof.bio || "Available for home repairs and local village work requests."}"
+                    </p>
                   </div>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenWorkerModal(worker);
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "11px",
+                      background: T.accent,
+                      color: T.accentText,
+                      border: "none",
+                      borderRadius: "10px",
+                      fontSize: "14px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                      fontFamily: "'Inter', sans-serif",
+                      transition: "opacity 0.15s",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
+                    onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                  >
+                    <Phone size={15} /> {t("viewProfileCall")}
+                  </button>
                 </div>
               );
             })}
           </div>
+        ) : (
+          /* ── LIST VIEW ── */
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {filteredWorkers.map((worker) => {
+              const prof = worker.workerProfile || {};
+              const photo =
+                prof.proofOfWork?.[0]?.url ||
+                "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400";
+              const rating = prof.averageRating || 4.9;
+              const distanceKm = worker.calculatedDistance ? worker.calculatedDistance.toFixed(1) : "5.1";
+              const skillsList = prof.skills?.length ? prof.skills : (prof.skill ? [prof.skill] : ["Worker"]);
 
+              return (
+                <div
+                  key={worker.id || worker._id}
+                  style={{
+                    background: T.card,
+                    border: `1px solid ${T.cardBorder}`,
+                    borderRadius: "12px",
+                    padding: "16px 20px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "16px",
+                    cursor: "pointer",
+                    transition: "background 0.12s",
+                  }}
+                  onClick={() => handleOpenWorkerModal(worker)}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = isDark ? "#1a1c26" : "#f5f0e8")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = T.card)}
+                >
+                  <img
+                    src={photo}
+                    alt={worker.name}
+                    style={{
+                      width: "52px",
+                      height: "52px",
+                      borderRadius: "10px",
+                      objectFit: "cover",
+                      border: `1px solid ${T.cardBorder}`,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                      <span
+                        style={{
+                          fontFamily: "'Space Grotesk', 'Inter', sans-serif",
+                          fontSize: "16px",
+                          fontWeight: 600,
+                          color: isDark ? "#f0f1f5" : "#141413",
+                          letterSpacing: "-0.02em",
+                        }}
+                      >
+                        {worker.name}
+                      </span>
+                    </div>
+
+                    {/* Skills in Transparent Pills + Details */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "5px" }}>
+                      {skillsList.map((sk, sIdx) => (
+                        <span
+                          key={sIdx}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            padding: "2px 8px",
+                            borderRadius: "9999px",
+                            border: isDark ? "1px solid rgba(255, 255, 255, 0.16)" : "1px solid rgba(20, 20, 19, 0.14)",
+                            background: isDark ? "rgba(255, 255, 255, 0.04)" : "rgba(20, 20, 19, 0.03)",
+                            fontSize: "11px",
+                            fontWeight: 500,
+                            color: isDark ? "#e2e4ee" : "#2d2d2a",
+                          }}
+                        >
+                          {getLocalizedSkill(sk)}
+                        </span>
+                      ))}
+                      <span style={{ fontSize: "12px", color: T.muted }}>
+                        · {prof.experience || 0} {t("yrsExp") || "yrs"} · {distanceKm} {t("kmAway") || "km"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
+                    <Star size={13} fill="#e8a55a" color="#e8a55a" />
+                    <span style={{ fontSize: "13px", fontWeight: 600, color: isDark ? "#f0f1f5" : "#141413" }}>
+                      {rating.toFixed(1)}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenWorkerModal(worker);
+                    }}
+                    style={{
+                      padding: "8px 16px",
+                      background: T.accent,
+                      color: T.accentText,
+                      border: "none",
+                      borderRadius: "8px",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      flexShrink: 0,
+                      fontFamily: "'Inter', sans-serif",
+                    }}
+                  >
+                    {t("view")}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
 
-      {/* ── WORKER PROFILE POP-UP MODAL ── */}
+      {/* ── WORKER PROFILE MODAL ── */}
       {activeModalWorker && (
         <div
+          className="modal-backdrop-smooth"
           onClick={(e) => {
             if (e.target === e.currentTarget) setActiveModalWorker(null);
           }}
           style={{
-            position: "fixed", inset: 0, background: "rgba(23,23,28,0.5)", backdropFilter: "blur(4px)",
-            display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px"
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.55)",
+            backdropFilter: "blur(6px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "20px",
           }}
         >
-          <div style={{ background: "var(--ch-canvas)", borderRadius: "8px", width: "100%", maxWidth: "600px", maxHeight: "90vh", overflowY: "auto", border: "1px solid var(--ch-hairline)" }} onClick={(e) => e.stopPropagation()}>
-            {/* Header Band */}
-            <div style={{ background: "var(--ch-deep-green)", color: "var(--ch-canvas)", padding: "24px", position: "relative" }}>
+          <div
+            className="modal-card-smooth"
+            style={{
+              background: T.card,
+              border: `1px solid ${T.cardBorder}`,
+              borderRadius: "16px",
+              width: "100%",
+              maxWidth: "600px",
+              maxHeight: "90vh",
+              overflowY: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                background: T.modalHeader,
+                color: "#ffffff",
+                padding: "24px",
+                position: "relative",
+                borderRadius: "16px 16px 0 0",
+              }}
+            >
               <button
                 onClick={() => setActiveModalWorker(null)}
                 style={{
-                  position: "absolute", top: "16px", right: "16px", background: "rgba(255,255,255,0.2)", border: "none", color: "var(--ch-canvas)",
-                  borderRadius: "50%", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer"
+                  position: "absolute",
+                  top: "14px",
+                  right: "14px",
+                  background: "rgba(255,255,255,0.15)",
+                  border: "none",
+                  color: "#ffffff",
+                  borderRadius: "50%",
+                  width: "30px",
+                  height: "30px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
                 }}
               >
-                <X size={18} />
+                <X size={16} />
               </button>
-              
+
               <div style={{ display: "flex", gap: "20px", alignItems: "flex-start" }}>
                 <img
-                  src={activeModalWorker.workerProfile?.proofOfWork?.[0]?.url || "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400"}
+                  src={
+                    activeModalWorker.workerProfile?.proofOfWork?.[0]?.url ||
+                    "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=400"
+                  }
                   alt={activeModalWorker.name}
-                  style={{ width: "80px", height: "80px", borderRadius: "8px", objectFit: "cover", border: "2px solid var(--ch-canvas)" }}
+                  style={{
+                    width: "80px",
+                    height: "80px",
+                    borderRadius: "12px",
+                    objectFit: "cover",
+                    border: "2px solid rgba(255,255,255,0.3)",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => {
+                    const proofPhotos = activeModalWorker.workerProfile?.proofOfWork?.map((p) => p.url).filter(Boolean);
+                    if (proofPhotos?.length > 0) {
+                      setLightboxImages(proofPhotos);
+                      setLightboxIndex(0);
+                    }
+                  }}
                 />
                 <div>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.2px", marginBottom: "4px", color: "rgba(255,255,255,0.7)" }}>
-                    {activeModalWorker.workerProfile?.skill || "Worker"}
+                  {/* Skills highlighted in transparent pills */}
+                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "6px" }}>
+                    {(activeModalWorker.workerProfile?.skills?.length
+                      ? activeModalWorker.workerProfile.skills
+                      : [activeModalWorker.workerProfile?.skill || "Worker"]
+                    ).map((sk, sIdx) => (
+                      <span
+                        key={sIdx}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          padding: "2px 8px",
+                          borderRadius: "9999px",
+                          border: "1px solid rgba(255,255,255,0.25)",
+                          background: "rgba(255,255,255,0.1)",
+                          fontSize: "11px",
+                          fontWeight: 500,
+                          color: "#ffffff",
+                          letterSpacing: "0.2px",
+                        }}
+                      >
+                        {getLocalizedSkill(sk)}
+                      </span>
+                    ))}
                   </div>
-                  <h2 style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif", fontSize: "24px", fontWeight: 500, margin: "0 0 8px", letterSpacing: "-0.02em" }}>
+
+                  <h2
+                    style={{
+                      fontFamily: "'Space Grotesk', 'Inter', sans-serif",
+                      fontSize: "22px",
+                      fontWeight: 600,
+                      margin: "0 0 8px",
+                      letterSpacing: "-0.02em",
+                    }}
+                  >
                     {activeModalWorker.name}
                   </h2>
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <span style={{ fontSize: "13px", background: "rgba(255,255,255,0.1)", padding: "2px 8px", borderRadius: "32px", display: "flex", alignItems: "center", gap: "4px" }}>
-                      <MapPin size={12} /> {activeModalWorker.calculatedDistance ? activeModalWorker.calculatedDistance.toFixed(1) : "5.1"} km
+
+                  <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                    <span
+                      style={{
+                        fontSize: "13px",
+                        background: "rgba(255,255,255,0.12)",
+                        padding: "3px 10px",
+                        borderRadius: "32px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      <MapPin size={11} />{" "}
+                      {activeModalWorker.calculatedDistance ? activeModalWorker.calculatedDistance.toFixed(1) : "5.1"}{" "}
+                      {t("kmAway") || "km"}
                     </span>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      <Star size={14} fill="#f59e0b" color="#f59e0b" />
-                      <span style={{ fontSize: "14px", fontWeight: 500 }}>
+                      <Star size={13} fill="#f59e0b" color="#f59e0b" />
+                      <span style={{ fontSize: "13px", fontWeight: 600 }}>
                         {activeModalWorker.workerProfile?.averageRating || 4.9}
+                      </span>
+                      <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>
+                        (
+                        {activeModalWorker.workerProfile?.reviews?.length ||
+                          activeModalWorker.workerProfile?.reviewCount ||
+                          4}{" "}
+                        {t("reviews") || "reviews"})
                       </span>
                     </div>
                   </div>
@@ -684,21 +1379,89 @@ export default function BookService() {
             </div>
 
             <div style={{ padding: "24px" }}>
-              <div style={{ display: "flex", gap: "12px", marginBottom: "24px" }}>
-                <button
-                  onClick={() => window.location.href = `tel:${activeModalWorker.phone}`}
-                  style={{ flex: 1, padding: "12px", background: "var(--ch-primary)", color: "var(--ch-canvas)", border: "none", borderRadius: "32px", fontSize: "14px", fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+              <p
+                style={{
+                  fontSize: "14px",
+                  color: isDark ? "#b2b5c5" : "#3d3d3a",
+                  lineHeight: 1.55,
+                  margin: "0 0 20px",
+                  fontStyle: "italic",
+                }}
+              >
+                "{activeModalWorker.workerProfile?.bio || "24/7 Service available. Best working skills, no delay work."}"
+              </p>
+
+              <div style={{ display: "flex", gap: "10px", marginBottom: "24px" }}>
+                <a
+                  href={`tel:${activeModalWorker.phone}`}
+                  style={{
+                    flex: 1,
+                    padding: "13px",
+                    background: isDark ? "#003c33" : "#181715",
+                    color: "#ffffff",
+                    border: isDark ? "1px solid #34d399" : "none",
+                    borderRadius: "12px",
+                    fontSize: "15px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "10px",
+                    textDecoration: "none",
+                    fontFamily: "'Inter', sans-serif",
+                  }}
                 >
-                  <Phone size={16} /> {activeModalWorker.phone}
+                  <Phone size={18} /> {activeModalWorker.phone || "+91 98480 12345"}
+                </a>
+                <button
+                  onClick={() => handleCopyPhone(activeModalWorker.phone || "+919848012345")}
+                  style={{
+                    padding: "13px 18px",
+                    background: T.tagBg,
+                    border: `1px solid ${T.cardBorder}`,
+                    borderRadius: "12px",
+                    cursor: "pointer",
+                    color: T.ink,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontSize: "13px",
+                  }}
+                >
+                  {copiedNumber ? (
+                    <>
+                      <Check size={14} /> {t("copied")}
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={14} /> {t("copy")}
+                    </>
+                  )}
                 </button>
               </div>
 
-              {/* TABS */}
-              <div style={{ display: "flex", borderBottom: "1px solid var(--ch-hairline)", marginBottom: "20px" }}>
+              {/* Tabs */}
+              <div
+                style={{
+                  display: "flex",
+                  borderBottom: `1px solid ${T.hairline}`,
+                  marginBottom: "20px",
+                  gap: "4px",
+                }}
+              >
                 {[
-                  { id: "services", label: "Services" },
-                  { id: "gallery", label: "Gallery" },
-                  { id: "reviews", label: "Reviews" },
+                  { id: "services", label: t("services") || "Services", Icon: DollarSign },
+                  { id: "gallery", label: t("gallery") || "Gallery", Icon: Image },
+                  {
+                    id: "reviews",
+                    label: `${t("reviews") || "Reviews"} (${
+                      activeModalWorker.workerProfile?.reviews?.length ||
+                      activeModalWorker.workerProfile?.reviewCount ||
+                      0
+                    })`,
+                    Icon: MessageSquare,
+                  },
                 ].map((tab) => {
                   const active = activeTab === tab.id;
                   return (
@@ -706,72 +1469,209 @@ export default function BookService() {
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       style={{
-                        flex: 1, padding: "12px", background: "none", border: "none",
-                        borderBottom: active ? "2px solid var(--ch-action-blue)" : "2px solid transparent",
-                        color: active ? "var(--ch-action-blue)" : "var(--ch-muted)",
-                        fontSize: "14px", fontWeight: 500, cursor: "pointer"
+                        padding: "10px 16px",
+                        background: "none",
+                        border: "none",
+                        borderBottom: active ? `2px solid ${T.accent}` : "2px solid transparent",
+                        color: active ? T.accent : T.muted,
+                        fontSize: "13px",
+                        fontWeight: 500,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        fontFamily: "'Inter', sans-serif",
+                        transition: "color 0.12s",
                       }}
                     >
+                      <tab.Icon size={13} />
                       {tab.label}
                     </button>
                   );
                 })}
               </div>
 
-              {/* SERVICES TAB */}
+              {/* Services Tab */}
               {activeTab === "services" && (
                 <div>
-                  {(activeModalWorker.workerProfile?.services || [
-                    { name: "Fan Repair & Fitting", price: 100 }
-                  ]).map((svc, idx) => (
-                    <div key={idx} style={{
-                      display: "flex", justifyContent: "space-between", alignItems: "center",
-                      padding: "16px 0", borderBottom: "1px solid var(--ch-hairline)"
-                    }}>
-                      <span style={{ fontSize: "14px", color: "var(--ch-ink)" }}>{svc.name}</span>
-                      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--ch-deep-green)" }}>₹{svc.price}</span>
+                  {(
+                    activeModalWorker.workerProfile?.services || [
+                      { name: "Fan Repair & Fitting", price: 100 },
+                      { name: "Switchboard Fitting", price: 250 },
+                      { name: "Inverter Line Wiring", price: 450 },
+                    ]
+                  ).map((svc, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "14px 0",
+                        borderBottom: `1px solid ${T.hairline}`,
+                      }}
+                    >
+                      <span style={{ fontSize: "14px", color: isDark ? "#e0e1eb" : "#141413" }}>{svc.name}</span>
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: 700,
+                          color: T.deepGreen,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        ₹{svc.price}
+                      </span>
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* GALLERY TAB */}
+              {/* Gallery Tab */}
               {activeTab === "gallery" && (
-                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                  {(activeModalWorker.workerProfile?.gallery || []).map((imgUrl, idx, arr) => (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
+                  {(
+                    activeModalWorker.workerProfile?.gallery || [
+                      "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=400",
+                      "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=400",
+                      "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=400",
+                    ]
+                  ).map((imgUrl, idx, arr) => (
                     <img
-                      key={idx} src={imgUrl} alt="Work"
-                      onClick={() => { setLightboxImages(arr); setLightboxIndex(idx); }}
-                      style={{ width: "48px", height: "48px", borderRadius: "4px", objectFit: "cover", cursor: "pointer" }}
+                      key={idx}
+                      src={imgUrl}
+                      alt="Work"
+                      onClick={() => {
+                        setLightboxImages(arr);
+                        setLightboxIndex(idx);
+                      }}
+                      style={{
+                        width: "100%",
+                        aspectRatio: "1",
+                        objectFit: "cover",
+                        borderRadius: "10px",
+                        cursor: "pointer",
+                        border: `1px solid ${T.cardBorder}`,
+                      }}
                     />
                   ))}
                 </div>
               )}
 
-              {/* REVIEWS TAB */}
+              {/* Reviews Tab */}
               {activeTab === "reviews" && (
                 <div>
                   <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
                     <button
                       onClick={() => setShowReviewModal(true)}
-                      style={{ padding: "8px 16px", background: "var(--ch-canvas)", color: "var(--ch-action-blue)", border: "1px solid var(--ch-action-blue)", borderRadius: "32px", fontSize: "13px", cursor: "pointer" }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        padding: "8px 16px",
+                        background: T.tagBg,
+                        color: isDark ? "#34d399" : "#1863dc",
+                        border: `1px solid ${isDark ? "rgba(52,211,153,0.3)" : "#1863dc"}`,
+                        borderRadius: "32px",
+                        fontSize: "13px",
+                        cursor: "pointer",
+                        fontFamily: "'Inter', sans-serif",
+                      }}
                     >
-                      Write Review
+                      <Edit3 size={13} /> {t("writeReview")}
                     </button>
                   </div>
-                  {(activeModalWorker.workerProfile?.reviews || []).map((rev, idx) => (
-                    <div key={idx} style={{ padding: "16px 0", borderBottom: "1px solid var(--ch-hairline)" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                        <span style={{ fontSize: "14px", fontWeight: 500 }}>{rev.customerName}</span>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          <Star size={12} fill="#f59e0b" color="#f59e0b" />
-                          <span style={{ fontSize: "13px", fontWeight: 500 }}>{rev.rating}</span>
+                  {(
+                    activeModalWorker.workerProfile?.reviews || [
+                      { customerName: "Suresh Kumar", rating: 5, comment: "very good technician", date: "May 09, 2026" },
+                      {
+                        customerName: "Venkatesh P",
+                        rating: 5,
+                        comment: "nice explanation, reasonable prices",
+                        date: "Apr 07, 2026",
+                      },
+                    ]
+                  ).map((rev, idx) => {
+                    const isAuthorOrAdmin =
+                      rev.customerName === currentUser?.name || currentUser?.role === "Admin";
+                    return (
+                      <div
+                        key={idx}
+                        style={{
+                          padding: "14px",
+                          background: T.tagBg,
+                          border: `1px solid ${T.cardBorder}`,
+                          borderRadius: "10px",
+                          marginBottom: "10px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom: "8px",
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontSize: "14px", fontWeight: 600, color: isDark ? "#f0f1f5" : "#141413" }}>
+                              {rev.customerName}
+                            </span>
+                            {isAuthorOrAdmin && (
+                              <button
+                                type="button"
+                                onClick={() => setReviewToDelete({ rev, idx })}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  color: isDark ? "#f87171" : "#c64545",
+                                  cursor: "pointer",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  padding: 0,
+                                }}
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            )}
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "3px",
+                              background: isDark ? "rgba(251,191,36,0.12)" : "#fff5e6",
+                              padding: "2px 8px",
+                              borderRadius: "9999px",
+                              border: isDark ? "1px solid rgba(251,191,36,0.2)" : "1px solid #fce3b8",
+                            }}
+                          >
+                            <Star size={11} fill="#e8a55a" color="#e8a55a" />
+                            <span
+                              style={{
+                                fontSize: "12px",
+                                fontWeight: 600,
+                                color: isDark ? "#fbbf24" : "#141413",
+                              }}
+                            >
+                              {rev.rating.toFixed(1)}
+                            </span>
+                          </div>
                         </div>
+                        <p
+                          style={{
+                            fontSize: "13px",
+                            color: isDark ? "#b2b5c5" : "#3d3d3a",
+                            margin: "0 0 4px",
+                            lineHeight: 1.45,
+                          }}
+                        >
+                          "{rev.comment}"
+                        </p>
+                        <div style={{ fontSize: "11px", color: T.muted2 }}>{rev.date}</div>
                       </div>
-                      <p style={{ fontSize: "14px", color: "var(--ch-body-muted)", margin: "0 0 4px" }}>{rev.comment}</p>
-                      <div style={{ fontSize: "12px", color: "var(--ch-muted)" }}>{rev.date}</div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -779,47 +1679,199 @@ export default function BookService() {
         </div>
       )}
 
-      {/* ── WRITE REVIEW POP-UP MODAL ── */}
+      {/* ── WRITE REVIEW MODAL ── */}
       {showReviewModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(23,23,28,0.65)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: "20px" }}>
-          <div style={{ background: "var(--ch-canvas)", borderRadius: "8px", maxWidth: "440px", width: "100%", padding: "24px", border: "1px solid var(--ch-hairline)", boxShadow: "0 16px 40px rgba(0,0,0,0.3)" }}>
-            <h3 style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif", fontSize: "20px", color: "var(--ch-primary)", margin: "0 0 16px" }}>Write a Review</h3>
+        <div
+          className="modal-backdrop-smooth"
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.65)",
+            backdropFilter: "blur(6px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1100,
+            padding: "20px",
+          }}
+        >
+          <div
+            className="modal-card-smooth"
+            style={{
+              background: T.card,
+              border: `1px solid ${T.cardBorder}`,
+              borderRadius: "16px",
+              maxWidth: "440px",
+              width: "100%",
+              padding: "28px",
+              boxShadow: isDark ? "0 24px 60px rgba(0,0,0,0.6)" : "0 20px 40px rgba(0,0,0,0.18)",
+            }}
+          >
+            <h3
+              style={{
+                fontFamily: "'Space Grotesk', 'Inter', sans-serif",
+                fontSize: "20px",
+                fontWeight: 500,
+                color: isDark ? "#f0f1f5" : "#141413",
+                margin: "0 0 8px",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              {t("writeReview")}
+            </h3>
+            <p style={{ fontSize: "14px", color: T.muted, marginBottom: "20px" }}>
+              Share your experience with{" "}
+              <strong style={{ color: isDark ? "#f0f1f5" : "#141413" }}>{activeModalWorker?.name}</strong>.
+            </p>
             <form onSubmit={handleAddReviewSubmit}>
               <div style={{ marginBottom: "16px" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    color: T.muted,
+                    marginBottom: "8px",
+                    fontFamily: "'JetBrains Mono', monospace",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.2px",
+                  }}
+                >
+                  {t("rating")}
+                </label>
                 <div style={{ display: "flex", gap: "8px" }}>
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <button key={star} type="button" onClick={() => setReviewRating(star)} style={{ background: "none", border: "none", cursor: "pointer" }}>
-                      <Star size={24} fill={star <= reviewRating ? "#f59e0b" : "none"} color={star <= reviewRating ? "#f59e0b" : "var(--ch-hairline)"} />
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setReviewRating(star)}
+                      style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}
+                    >
+                      <Star
+                        size={26}
+                        fill={star <= reviewRating ? "#e8a55a" : "none"}
+                        color={star <= reviewRating ? "#e8a55a" : T.hairline}
+                      />
                     </button>
                   ))}
                 </div>
               </div>
-              <textarea
-                required rows="4" value={reviewComment} onChange={(e) => setReviewComment(e.target.value)}
-                placeholder="Share your experience..."
-                style={{ width: "100%", padding: "12px", background: "var(--ch-input-bg)", color: "var(--ch-ink)", border: "1px solid var(--ch-hairline)", borderRadius: "8px", marginBottom: "16px", fontFamily: "'Inter', sans-serif", outline: "none", boxSizing: "border-box" }}
-              />
-              <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-                <button type="button" onClick={() => setShowReviewModal(false)} style={{ padding: "8px 16px", border: "1px solid var(--ch-hairline)", borderRadius: "32px", background: "transparent", color: "var(--ch-body-muted)", cursor: "pointer" }}>Cancel</button>
-                <button type="submit" disabled={reviewSubmitting || reviewRating === 0} style={{ padding: "8px 16px", background: "var(--ch-primary)", color: "var(--ch-canvas)", border: "none", borderRadius: "32px", cursor: "pointer" }}>Submit</button>
+              <div style={{ marginBottom: "20px" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    color: T.muted,
+                    marginBottom: "6px",
+                    fontFamily: "'JetBrains Mono', monospace",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.2px",
+                  }}
+                >
+                  {t("yourFeedback")}
+                </label>
+                <textarea
+                  required
+                  rows="4"
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  placeholder={t("shareExperience")}
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    background: T.input,
+                    color: isDark ? "#e0e1eb" : "#141413",
+                    border: `1px solid ${T.inputBorder}`,
+                    borderRadius: "10px",
+                    fontSize: "14px",
+                    outline: "none",
+                    resize: "vertical",
+                    fontFamily: "'Inter', sans-serif",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowReviewModal(false)}
+                  style={{
+                    padding: "10px 18px",
+                    background: T.tagBg,
+                    color: T.muted,
+                    border: `1px solid ${T.cardBorder}`,
+                    borderRadius: "10px",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    fontFamily: "'Inter', sans-serif",
+                  }}
+                >
+                  {t("cancel")}
+                </button>
+                <button
+                  type="submit"
+                  disabled={reviewSubmitting || reviewRating === 0}
+                  style={{
+                    padding: "10px 18px",
+                    background: reviewRating === 0 ? T.hairline : T.accent,
+                    color: reviewRating === 0 ? T.muted : T.accentText,
+                    border: "none",
+                    borderRadius: "10px",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    cursor: reviewRating === 0 ? "not-allowed" : "pointer",
+                    fontFamily: "'Inter', sans-serif",
+                  }}
+                >
+                  {reviewSubmitting ? t("submitting") : t("submit")}
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {lightboxImages && <ImageLightbox images={lightboxImages} initialIndex={lightboxIndex} onClose={() => setLightboxImages(null)} />}
+      {lightboxImages && (
+        <ImageLightbox
+          images={lightboxImages}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxImages(null)}
+        />
+      )}
 
       <ConfirmModal
         isOpen={!!reviewToDelete}
-        title="Remove Review" message="Are you sure?"
+        title="Remove Review"
+        message="Are you sure you want to delete this review? This will recalculate the worker's average rating."
+        confirmText="Yes, Delete"
+        cancelText={t("cancel") || "Cancel"}
+        variant="danger"
         onCancel={() => setReviewToDelete(null)}
         onConfirm={() => {
           if (!reviewToDelete) return;
           const { rev, idx } = reviewToDelete;
           setReviewToDelete(null);
-          const deletePromise = (rev._id || rev.id) ? deleteReview(rev._id || rev.id) : deleteWorkerProfileReview(activeModalWorker._id || activeModalWorker.id, idx);
-          deletePromise.catch(err => showToast("Could not delete", "error"));
+          const previousWorker = { ...activeModalWorker };
+          const targetReviews = activeModalWorker.workerProfile?.reviews || [];
+          const updatedReviews = targetReviews.filter((_, i) => i !== idx);
+          setActiveModalWorker((prev) => ({
+            ...prev,
+            workerProfile: { ...prev.workerProfile, reviews: updatedReviews },
+          }));
+          showToast("Review removed.", "success");
+          const deletePromise =
+            rev._id || rev.id
+              ? deleteReview(rev._id || rev.id)
+              : deleteWorkerProfileReview(activeModalWorker._id || activeModalWorker.id, idx);
+          deletePromise
+            .then(() => {
+              if (fetchUsers) fetchUsers();
+            })
+            .catch(() => {
+              setActiveModalWorker(previousWorker);
+              showToast("Could not delete review.", "error");
+            });
         }}
       />
     </div>

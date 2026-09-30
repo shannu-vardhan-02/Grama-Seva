@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import { useTheme } from "../context/ThemeContext";
+import { useLanguage, LANGUAGE_OPTIONS } from "../context/LanguageContext";
+import ConfirmModal from "./ConfirmModal";
 import {
   LayoutDashboard,
   Wrench,
@@ -22,17 +24,22 @@ import {
   User,
   Sun,
   Moon,
+  Globe,
+  ChevronDown,
+  ChevronUp,
+  Check,
+  Fingerprint,
 } from "lucide-react";
 
 import GramaSevaLogo from "./GramaSevaLogo";
 import logoImg from "../assets/grama-seva-logo.jpg";
 
 const NAV = [
-  { to: "/book-service", label: "Search Workers", icon: Search },
-  { to: "/reviews",      label: "Reviews",        icon: MessageSquare },
-  { to: "/vetting-queue",label: "Vetting Queue",  icon: ShieldAlert },
-  { to: "/users",        label: "Manage Users",   icon: Users },
-  { to: "/settings",     label: "Settings",       icon: Settings },
+  { to: "/book-service", labelKey: "searchWorkers", defaultLabel: "Search Workers", icon: Search },
+  { to: "/reviews",      labelKey: "reviews",       defaultLabel: "Reviews",        icon: MessageSquare },
+  { to: "/vetting-queue",labelKey: "vettingQueue",  defaultLabel: "Vetting Queue",  icon: ShieldAlert },
+  { to: "/users",        labelKey: "manageUsers",   defaultLabel: "Manage Users",   icon: Users },
+  { to: "/settings",     labelKey: "settings",      defaultLabel: "Settings",       icon: Settings },
 ];
 
 const ROLE_ACCESS = {
@@ -73,13 +80,32 @@ export default function AppLayout({ children }) {
   const { currentUser, logout } = useAuth();
   const { notifications, markNotificationsAsRead } = useSocket();
   const { theme, isDark, toggleTheme } = useTheme();
+  const { lang, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
 
   const [showNotif, setShowNotif] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const langDropdownRef = useRef(null);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef(null);
   const [isOnline, setIsOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
   const [showReconnectedBanner, setShowReconnectedBanner] = useState(false);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) {
+        setLangDropdownOpen(false);
+      }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -116,6 +142,10 @@ export default function AppLayout({ children }) {
   if (!currentUser) return <>{children}</>;
 
   const handleLogout = () => {
+    setShowSignOutConfirm(true);
+  };
+
+  const doLogout = () => {
     logout();
     navigate("/auth");
   };
@@ -138,7 +168,8 @@ export default function AppLayout({ children }) {
     .join("")
     .toUpperCase();
 
-  const currentLabel = visibleNav.find((n) => location.pathname.startsWith(n.to))?.label || "Grama Seva";
+  const currentNav = visibleNav.find((n) => location.pathname.startsWith(n.to));
+  const currentLabel = currentNav ? (t(currentNav.labelKey) || currentNav.defaultLabel) : "Grama Seva";
   const roleStyle = ROLE_COLORS[currentUser.role] || ROLE_COLORS.Customer;
 
   return (
@@ -265,48 +296,288 @@ export default function AppLayout({ children }) {
               }}
             >
               <item.icon size={15} style={{ flexShrink: 0 }} />
-              {item.label}
+              {t(item.labelKey) || item.defaultLabel}
             </NavLink>
           ))}
         </nav>
 
-        {/* Bottom user strip */}
-        <div style={{
-          padding: "14px 14px 18px",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-          display: "flex", alignItems: "center", gap: "10px",
-        }}>
-          <div style={{
-            width: "30px", height: "30px", borderRadius: "50%",
-            background: "rgba(0,60,51,0.6)",
-            border: "1px solid rgba(0,150,100,0.4)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: "11px", fontWeight: 600, color: "#4ade80", flexShrink: 0,
-          }}>
-            {initials}
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              fontSize: "12.5px", fontWeight: 500, color: "rgba(255,255,255,0.9)",
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-              fontFamily: "'Inter', sans-serif",
-            }}>{currentUser.name}</div>
-          </div>
-          <button
-            onClick={handleLogout}
-            title="Sign out"
-            style={{
-              background: "none", border: "none", cursor: "pointer",
-              color: "rgba(255,255,255,0.3)", display: "flex",
-              alignItems: "center", justifyContent: "center",
-              padding: "4px", borderRadius: "4px", transition: "color 0.12s", flexShrink: 0,
+        {/* Bottom user strip with Popup Menu */}
+        <div ref={profileMenuRef} style={{ position: "relative", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          {/* Profile Menu Popup */}
+          {profileMenuOpen && (
+            <div
+              className="profile-popup-menu"
+              style={{
+                position: "absolute",
+                bottom: "calc(100% + 8px)",
+                left: "8px",
+                right: "8px",
+                background: isDark ? "#171822" : "#ffffff",
+                border: isDark ? "1px solid #282a3a" : "1px solid #e5e7eb",
+                borderRadius: "12px",
+                boxShadow: isDark
+                  ? "0 16px 40px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.05)"
+                  : "0 12px 32px rgba(20,20,19,0.12)",
+                padding: "6px",
+                zIndex: 120,
+                display: "flex",
+                flexDirection: "column",
+                gap: "2px",
+              }}
+            >
+              {/* Header with user info: first word of full name + role pill (no email) */}
+              <div style={{
+                padding: "8px 10px 9px",
+                borderBottom: isDark ? "1px solid #232532" : "1px solid #f0f0f2",
+                marginBottom: "4px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "8px",
+              }}>
+                <div style={{
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: isDark ? "#f3f4f8" : "#17171c",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  fontFamily: "'Inter', sans-serif",
+                }}>
+                  {(currentUser.name || "User").trim().split(" ")[0]}
+                </div>
+                <span style={{
+                  fontSize: "9px",
+                  padding: "2px 7px",
+                  borderRadius: "99px",
+                  background: roleStyle.bg,
+                  color: roleStyle.color,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.2px",
+                  flexShrink: 0,
+                }}>
+                  {currentUser.role}
+                </span>
+              </div>
+
+              {/* Theme Toggle */}
+              <button
+                type="button"
+                onClick={() => toggleTheme()}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "8px 10px",
+                  background: "transparent",
+                  border: "none",
+                  borderRadius: "6px",
+                  color: isDark ? "#e5e7eb" : "#374151",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  width: "100%",
+                  textAlign: "left",
+                  transition: "background 0.12s",
+                  fontFamily: "'Inter', sans-serif",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.06)" : "#f3f4f6";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
+              >
+                {isDark ? <Sun size={15} color="#fbbf24" /> : <Moon size={15} color="#6366f1" />}
+                <span style={{ flex: 1 }}>{isDark ? "Light Mode" : "Dark Mode"}</span>
+                <span style={{ fontSize: "11px", color: isDark ? "#7e8194" : "#9ca3af" }}>
+                  {isDark ? "Dark" : "Light"}
+                </span>
+              </button>
+
+              {/* Passkeys */}
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileMenuOpen(false);
+                  navigate("/settings#passkeys");
+                  setTimeout(() => {
+                    const el = document.getElementById("passkeys");
+                    if (el) el.scrollIntoView({ behavior: "smooth" });
+                  }, 120);
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "8px 10px",
+                  background: "transparent",
+                  border: "none",
+                  borderRadius: "6px",
+                  color: isDark ? "#e5e7eb" : "#374151",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  width: "100%",
+                  textAlign: "left",
+                  transition: "background 0.12s",
+                  fontFamily: "'Inter', sans-serif",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.06)" : "#f3f4f6";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
+              >
+                <Fingerprint size={15} color={isDark ? "#34d399" : "#003c33"} />
+                <span style={{ flex: 1 }}>Passkeys</span>
+                <span style={{ fontSize: "10px", padding: "1px 6px", borderRadius: "4px", background: isDark ? "rgba(52,211,153,0.15)" : "rgba(0,60,51,0.08)", color: isDark ? "#34d399" : "#003c33", fontWeight: 600 }}>
+                  🔑
+                </span>
+              </button>
+
+              {/* Settings */}
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileMenuOpen(false);
+                  navigate("/settings");
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "8px 10px",
+                  background: "transparent",
+                  border: "none",
+                  borderRadius: "6px",
+                  color: isDark ? "#e5e7eb" : "#374151",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  width: "100%",
+                  textAlign: "left",
+                  transition: "background 0.12s",
+                  fontFamily: "'Inter', sans-serif",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.06)" : "#f3f4f6";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
+              >
+                <Settings size={15} color={isDark ? "#9ca3af" : "#6b7280"} />
+                <span style={{ flex: 1 }}>Settings</span>
+              </button>
+
+              <div style={{ height: "1px", background: isDark ? "#232532" : "#f0f0f2", margin: "4px 0" }} />
+
+              {/* Sign out */}
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileMenuOpen(false);
+                  handleLogout();
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "8px 10px",
+                  background: "transparent",
+                  border: "none",
+                  borderRadius: "6px",
+                  color: isDark ? "#f87171" : "#dc2626",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  width: "100%",
+                  textAlign: "left",
+                  transition: "background 0.12s",
+                  fontFamily: "'Inter', sans-serif",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = isDark ? "rgba(239, 68, 68, 0.12)" : "rgba(239, 68, 68, 0.08)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
+              >
+                <LogOut size={15} color={isDark ? "#f87171" : "#dc2626"} />
+                <span style={{ flex: 1 }}>Sign Out</span>
+              </button>
+            </div>
+          )}
+
+          {/* Trigger row */}
+          <div
+            onClick={() => setProfileMenuOpen((v) => !v)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setProfileMenuOpen((v) => !v);
+              }
             }}
-            onMouseEnter={(e) => e.currentTarget.style.color = "rgba(255,255,255,0.8)"}
-            onMouseLeave={(e) => e.currentTarget.style.color = "rgba(255,255,255,0.3)"}
+            title="Account Menu (Theme, Passkeys, Settings, Sign Out)"
+            style={{
+              padding: "12px 14px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              cursor: "pointer",
+              background: profileMenuOpen ? "rgba(255,255,255,0.06)" : "transparent",
+              transition: "background 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+            }}
+            onMouseLeave={(e) => {
+              if (!profileMenuOpen) {
+                e.currentTarget.style.background = "transparent";
+              }
+            }}
           >
-            <LogOut size={14} />
-          </button>
+            <div style={{
+              width: "30px", height: "30px", borderRadius: "50%",
+              background: "rgba(0,60,51,0.6)",
+              border: "1px solid rgba(0,150,100,0.4)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: "11px", fontWeight: 600, color: "#4ade80", flexShrink: 0,
+            }}>
+              {initials}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{
+                fontSize: "12.5px", fontWeight: 500, color: "rgba(255,255,255,0.9)",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                fontFamily: "'Inter', sans-serif",
+              }}>{currentUser.name}</div>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleLogout();
+              }}
+              title="Sign out directly"
+              style={{
+                background: "none", border: "none", cursor: "pointer",
+                color: "rgba(255,255,255,0.3)", display: "flex",
+                alignItems: "center", justifyContent: "center",
+                padding: "4px", borderRadius: "4px", transition: "color 0.12s", flexShrink: 0,
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = "rgba(255,255,255,0.8)"}
+              onMouseLeave={(e) => e.currentTarget.style.color = "rgba(255,255,255,0.3)"}
+            >
+              <LogOut size={14} />
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -321,7 +592,7 @@ export default function AppLayout({ children }) {
           backdropFilter: "saturate(180%) blur(16px)",
           WebkitBackdropFilter: "saturate(180%) blur(16px)",
           borderBottom: isDark ? "1px solid #232532" : "1px solid #e5e7eb",
-          position: "sticky", top: 0, zIndex: 40,
+          position: "sticky", top: 0, zIndex: 100,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <button
@@ -346,6 +617,132 @@ export default function AppLayout({ children }) {
 
           {/* Right cluster */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+
+            {/* Language Selector Dropdown (LEFT to dark/light toggle) */}
+            <div ref={langDropdownRef} style={{ position: "relative" }}>
+              <button
+                onClick={() => setLangDropdownOpen((v) => !v)}
+                title="Change language / భాష మార్చండి / भाषा बदलें"
+                style={{
+                  height: "34px",
+                  padding: "0 10px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: isDark ? "rgba(255,255,255,0.06)" : "transparent",
+                  border: isDark ? "1px solid #282a3a" : "1px solid #e5e7eb",
+                  borderRadius: "20px",
+                  cursor: "pointer",
+                  color: isDark ? "#f3f4f8" : "#17171c",
+                  transition: "all 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = isDark ? "#383b4e" : "#d9d9dd";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = isDark ? "#282a3a" : "#e5e7eb";
+                }}
+                aria-label="Select Language"
+              >
+                <Globe size={14} style={{ color: isDark ? "#34d399" : "#003c33" }} />
+                <span style={{ fontSize: "12px", fontWeight: 600, letterSpacing: "0.2px" }}>
+                  {LANGUAGE_OPTIONS.find((o) => o.code === lang)?.short || "EN"}
+                </span>
+                <ChevronDown
+                  size={12}
+                  style={{
+                    color: isDark ? "#7e8194" : "#93939f",
+                    transform: langDropdownOpen ? "rotate(180deg)" : "none",
+                    transition: "transform 0.15s",
+                  }}
+                />
+              </button>
+
+              {langDropdownOpen && (
+                <div
+                  className="lang-dropdown-menu"
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    top: "calc(100% + 8px)",
+                    background: isDark ? "#171822" : "#ffffff",
+                    border: isDark ? "1px solid #282a3a" : "1px solid #e5e7eb",
+                    borderRadius: "10px",
+                    boxShadow: isDark
+                      ? "0 10px 30px rgba(0,0,0,0.5)"
+                      : "0 8px 24px rgba(20,20,19,0.1)",
+                    padding: "6px",
+                    minWidth: "155px",
+                    zIndex: 100,
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "6px 8px 4px",
+                      fontSize: "10px",
+                      fontFamily: "'JetBrains Mono', monospace",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.2px",
+                      color: isDark ? "#7e8194" : "#93939f",
+                    }}
+                  >
+                    {t("language") || "Language"}
+                  </div>
+                  {LANGUAGE_OPTIONS.map((opt) => {
+                    const active = lang === opt.code;
+                    return (
+                      <button
+                        key={opt.code}
+                        onClick={() => {
+                          setLanguage(opt.code);
+                          setLangDropdownOpen(false);
+                        }}
+                        style={{
+                          width: "100%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "8px 10px",
+                          borderRadius: "6px",
+                          border: "none",
+                          background: active
+                            ? (isDark ? "rgba(52,211,153,0.12)" : "rgba(0,60,51,0.06)")
+                            : "transparent",
+                          color: active
+                            ? (isDark ? "#34d399" : "#003c33")
+                            : (isDark ? "#f3f4f8" : "#17171c"),
+                          fontWeight: active ? 600 : 400,
+                          fontSize: "13px",
+                          cursor: "pointer",
+                          textAlign: "left",
+                          transition: "background 0.12s",
+                        }}
+                      >
+                        <span style={{ display: "flex", flexDirection: "column" }}>
+                          <span style={{ fontSize: "13px", fontWeight: active ? 600 : 500 }}>
+                            {opt.nativeLabel}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: "10px",
+                              color: isDark ? "#7e8194" : "#93939f",
+                            }}
+                          >
+                            {opt.label}
+                          </span>
+                        </span>
+                        {active && (
+                          <Check
+                            size={14}
+                            style={{ color: isDark ? "#34d399" : "#003c33" }}
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
             {/* Dark Mode Toggle */}
             <button
@@ -462,7 +859,7 @@ export default function AppLayout({ children }) {
               onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
             >
               <LogOut size={13} />
-              Sign Out
+              {t("signOut") || "Sign Out"}
             </button>
           </div>
         </header>
@@ -525,6 +922,18 @@ export default function AppLayout({ children }) {
           );
         })}
       </nav>
+
+      {/* Sign Out Confirmation */}
+      <ConfirmModal
+        isOpen={showSignOutConfirm}
+        title={t("signOut") || "Sign Out"}
+        message={t("signOutConfirm") || "Are you sure you want to sign out of your account?"}
+        confirmText={t("yesSignOut") || "Yes, Sign Out"}
+        cancelText={t("cancel") || "Cancel"}
+        variant="danger"
+        onCancel={() => setShowSignOutConfirm(false)}
+        onConfirm={doLogout}
+      />
     </div>
   );
 }

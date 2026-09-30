@@ -35,7 +35,7 @@ function CustomerSearchDashboard({ user, users }) {
   const verifiedWorkers = users.filter(u => u.role === 'Worker' && u.workerProfile?.isVerified);
 
   return (
-    <div style={{ background: "var(--ch-canvas, #ffffff)", minHeight: "100vh", fontFamily: "'Inter', sans-serif", padding: "32px 40px", transition: "background 0.3s ease" }}>
+    <div style={{ background: "var(--ch-canvas, #faf9f5)", minHeight: "100vh", fontFamily: "'Inter', sans-serif", padding: "32px 40px", transition: "background 0.3s ease" }}>
       <div style={{ maxWidth: "900px", margin: "0 auto" }}>
 
         {/* Welcome Header */}
@@ -147,7 +147,7 @@ function WorkerView({ user }) {
   const { isDark } = useTheme();
 
   return (
-    <div style={{ background: "var(--ch-canvas, #ffffff)", minHeight: "100vh", fontFamily: "'Inter', sans-serif", padding: "32px 40px", transition: "background 0.3s ease" }}>
+    <div style={{ background: "var(--ch-canvas, #faf9f5)", minHeight: "100vh", fontFamily: "'Inter', sans-serif", padding: "32px 40px", transition: "background 0.3s ease" }}>
       <div style={{ maxWidth: "800px", margin: "0 auto" }}>
         
         {/* Worker Quick Action / Header */}
@@ -256,7 +256,7 @@ function AdminView({ users, verifyWorker }) {
   const { isDark } = useTheme();
 
   return (
-    <div style={{ background: "var(--ch-canvas, #ffffff)", minHeight: "100vh", fontFamily: "'Inter', sans-serif", padding: "32px 40px", transition: "background 0.3s ease" }}>
+    <div style={{ background: "var(--ch-canvas, #faf9f5)", minHeight: "100vh", fontFamily: "'Inter', sans-serif", padding: "32px 40px", transition: "background 0.3s ease" }}>
       <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
         
         {/* Admin Quick Action Banner */}

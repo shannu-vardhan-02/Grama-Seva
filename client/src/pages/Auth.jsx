@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   Eye, EyeOff, Mail, User, Phone,
   MapPin, Briefcase, FileText, CheckCircle2,
-  ArrowRight, Shield, Star, Users, Sun, Moon,
+  ArrowRight, ArrowLeft, Shield, Star, Users, Sun, Moon, Fingerprint, AlertTriangle,
 } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
 import { useTheme } from "../context/ThemeContext";
@@ -151,7 +151,7 @@ function RolePill({ active, onClick, emoji, label, desc }) {
 }
 
 export default function Auth() {
-  const { login, register, loginWithGoogle } = useAuth();
+  const { login, register, loginWithGoogle, loginWithPasskey, registerPasskey } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -162,8 +162,14 @@ export default function Auth() {
   const [pwdFocused, setPwdFocused] = useState(false);
   const [loading, setLoading]   = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [error, setError]       = useState("");
   const [success, setSuccess]   = useState("");
+
+  /* Post-registration passkey prompt */
+  const [showPasskeyPrompt, setShowPasskeyPrompt] = useState(false);
+  const [passkeyPromptLoading, setPasskeyPromptLoading] = useState(false);
+  const [passkeyLabelInput, setPasskeyLabelInput] = useState("My Device");
 
   /* Form fields */
   const [name, setName]           = useState("");
@@ -212,7 +218,8 @@ export default function Auth() {
           });
         }
         await register({ name, email, password, role, phone, workerProfile: wp });
-        navigate("/book-service", { replace: true });
+        // Show passkey setup prompt after successful registration
+        setShowPasskeyPrompt(true);
       }
     } catch (err) {
       setError(
@@ -241,7 +248,29 @@ export default function Auth() {
     }
   };
 
-  const isAnyLoading = loading || googleLoading;
+  const handlePasskeyLogin = async () => {
+    setError("");
+    setPasskeyLoading(true);
+    try {
+      await loginWithPasskey(email.trim());
+      navigate("/book-service", { replace: true });
+    } catch (err) {
+      if (err.name === "NotAllowedError") {
+        setError("Passkey sign-in was cancelled.");
+      } else {
+        setError(
+          err.response?.data?.message ||
+          err.response?.data?.error ||
+          err.message ||
+          "Passkey sign-in failed. Please try again."
+        );
+      }
+    } finally {
+      setPasskeyLoading(false);
+    }
+  };
+
+  const isAnyLoading = loading || googleLoading || passkeyLoading;
 
   return (
     <>
@@ -249,7 +278,7 @@ export default function Auth() {
         .auth-container { display: flex; height: 100vh; overflow: hidden; font-family: 'Inter', sans-serif; }
         .auth-left { width: 45%; background-color: #003c33; padding: 48px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
         .auth-right { width: 55%; background-color: ${isDark ? "var(--ch-canvas)" : "#ffffff"}; display: flex; flex-direction: column; overflow-y: auto; transition: background-color 0.3s ease; }
-        .auth-mobile-header { display: none; padding: 14px 20px; border-bottom: 1px solid ${isDark ? "var(--ch-hairline)" : "#d9d9dd"}; background: ${isDark ? "var(--ch-canvas)" : "#ffffff"}; }
+        
         @keyframes auth-spin { to { transform: rotate(360deg); } }
         @media (max-width: 900px) {
           .auth-left { display: none; }
@@ -259,6 +288,50 @@ export default function Auth() {
         }
         .google-btn-wrapper > div { width: 100% !important; }
         .google-btn-wrapper iframe { width: 100% !important; }
+        .passkey-btn {
+          width: 100%;
+          height: 42px;
+          border-radius: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          box-sizing: border-box;
+          cursor: pointer;
+          font-family: 'Inter', sans-serif;
+          font-size: 14px;
+          font-weight: 600;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          background: ${isDark ? "rgba(52, 211, 153, 0.1)" : "rgba(0, 60, 51, 0.04)"};
+          border: 1.5px solid ${isDark ? "#34d399" : "#003c33"};
+          color: ${isDark ? "#ffffff" : "#003c33"};
+          box-shadow: ${isDark ? "0 0 12px rgba(52, 211, 153, 0.15)" : "0 2px 8px rgba(0, 60, 51, 0.06)"};
+        }
+        .passkey-btn:hover:not(:disabled) {
+          background: ${isDark ? "rgba(52, 211, 153, 0.18)" : "rgba(0, 60, 51, 0.08)"};
+          border-color: ${isDark ? "#4ade80" : "#002822"};
+          box-shadow: ${isDark ? "0 0 20px rgba(52, 211, 153, 0.3)" : "0 4px 14px rgba(0, 60, 51, 0.15)"};
+          transform: translateY(-1px);
+        }
+        .passkey-btn:active:not(:disabled) {
+          transform: translateY(0);
+        }
+        .passkey-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        .passkey-badge {
+          background: ${isDark ? "#34d399" : "#003c33"};
+          color: ${isDark ? "#003c33" : "#ffffff"};
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          padding: 2px 8px;
+          border-radius: 9999px;
+          line-height: 1.3;
+          display: inline-flex;
+          align-items: center;
+        }
         .tab-btn { flex: 1; padding: 12px; text-align: center; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; border-bottom: 2px solid transparent; color: ${isDark ? "#9ca3af" : "#75758a"}; }
         .tab-btn.active { color: ${isDark ? "#34d399" : "#003c33"}; border-bottom-color: ${isDark ? "#34d399" : "#003c33"}; font-weight: 600; }
         
@@ -366,7 +439,38 @@ export default function Auth() {
           </div>
 
           {/* Desktop Theme Toggle Bar */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '16px 24px 0', width: '100%', boxSizing: 'border-box' }} className="mobile-hide-logo">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px 0', width: '100%', boxSizing: 'border-box' }}>
+            <Link
+              to="/"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "6px 14px",
+                borderRadius: "9999px",
+                border: `1px solid ${isDark ? "var(--ch-hairline)" : "#e5e7eb"}`,
+                background: isDark ? "var(--ch-card-bg)" : "#f9fafb",
+                color: isDark ? "#e5e7eb" : "#4b5563",
+                fontSize: "12px",
+                fontWeight: 500,
+                textDecoration: "none",
+                transition: "all 0.18s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = isDark ? "#34d399" : "#003c33";
+                e.currentTarget.style.color = isDark ? "#34d399" : "#003c33";
+                e.currentTarget.style.background = isDark ? "rgba(52, 211, 153, 0.08)" : "rgba(0, 60, 51, 0.04)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = isDark ? "var(--ch-hairline)" : "#e5e7eb";
+                e.currentTarget.style.color = isDark ? "#e5e7eb" : "#4b5563";
+                e.currentTarget.style.background = isDark ? "var(--ch-card-bg)" : "#f9fafb";
+              }}
+              title="Return to Grama Seva homepage"
+            >
+              <ArrowLeft size={14} />
+              <span>Back to Home</span>
+            </Link>
             <button
               type="button"
               onClick={toggleTheme}
@@ -392,7 +496,7 @@ export default function Auth() {
           </div>
 
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 24px 40px' }}>
-            <div style={{ width: '100%', maxWidth: '440px' }}>
+            <div style={{ width: '100%', maxWidth: '400px' }}>
               
               <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                 <div style={{ display: 'inline-flex', marginBottom: '16px' }} className="mobile-hide-logo">
@@ -416,7 +520,7 @@ export default function Auth() {
               {/* Banners */}
               {error && (
                 <div style={{ padding: '12px 16px', background: isDark ? 'rgba(239, 68, 68, 0.15)' : '#fff0f0', border: `1px solid ${isDark ? 'rgba(239, 68, 68, 0.3)' : '#ffcdd2'}`, borderRadius: '8px', color: isDark ? '#f87171' : '#b30000', fontSize: '13px', marginBottom: '24px', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-                  <span style={{ marginTop: '2px' }}>⚠</span>
+                  <AlertTriangle size={16} style={{ marginTop: '2px', flexShrink: 0 }} />
                   <div>{error}</div>
                 </div>
               )}
@@ -424,6 +528,29 @@ export default function Auth() {
                 <div style={{ padding: '12px 16px', background: isDark ? 'rgba(52, 211, 153, 0.15)' : '#f0fdf4', border: `1px solid ${isDark ? 'rgba(52, 211, 153, 0.3)' : '#bbf7d0'}`, borderRadius: '8px', color: isDark ? '#34d399' : '#166534', fontSize: '13px', marginBottom: '24px', display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <CheckCircle2 size={16} />
                   <div>{success}</div>
+                </div>
+              )}
+
+              {/* Passkey Auth (Login only) */}
+              {isLogin && (
+                <div style={{ marginBottom: '12px' }}>
+                  <button
+                    type="button"
+                    className="passkey-btn"
+                    onClick={handlePasskeyLogin}
+                    disabled={isAnyLoading}
+                    aria-label="Sign in with Passkey"
+                  >
+                    {passkeyLoading ? (
+                      <Spinner size={18} color={isDark ? "#34d399" : "#003c33"} />
+                    ) : (
+                      <>
+                        <Fingerprint size={18} style={{ color: isDark ? "#34d399" : "#003c33", flexShrink: 0 }} />
+                        <span>Sign in with Passkey</span>
+                        <span className="passkey-badge">NEW</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               )}
 
@@ -442,7 +569,7 @@ export default function Auth() {
                       theme={isDark ? "filled_black" : "outline"}
                       size="large"
                       text={isLogin ? "signin_with" : "signup_with"}
-                      width="440"
+                      width="400"
                     />
                   </div>
                 )}
@@ -594,10 +721,162 @@ export default function Auth() {
                   )}
                 </button>
               </form>
+
+              {/* Footer attribution */}
+              <div style={{ marginTop: '28px', textAlign: 'center', fontSize: '11px', color: isDark ? '#9ca3af' : '#93939f', letterSpacing: '0.01em' }}>
+                Developed by <span style={{ fontWeight: 600, color: isDark ? '#e5e7eb' : '#4b5563' }}>Pedapatruni Shanmukh Vardhan</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* ── Post-Registration Passkey Prompt Modal ── */}
+      {showPasskeyPrompt && (
+        <div style={{
+          position: 'fixed', inset: 0,
+          background: 'rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999,
+          animation: 'butterModalBackdrop 0.35s ease-out forwards',
+        }}>
+          <style>{`
+            @keyframes passkey-modal-in {
+              from { opacity: 0; }
+              to   { opacity: 1; }
+            }
+            @keyframes passkey-card-in {
+              from { opacity: 0; transform: translateY(20px) scale(0.96); }
+              to   { opacity: 1; transform: translateY(0) scale(1); }
+            }
+          `}</style>
+          <div style={{
+            background: isDark ? '#171822' : '#ffffff',
+            border: isDark ? '1px solid #282a3a' : '1px solid #e5e7eb',
+            borderRadius: '20px',
+            padding: '32px 28px',
+            maxWidth: '420px',
+            width: '90%',
+            boxShadow: isDark
+              ? '0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)'
+              : '0 20px 60px rgba(0,0,0,0.15)',
+            animation: 'butterModalCard 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+          }}>
+            <div style={{
+              width: 64, height: 64, borderRadius: '16px',
+              background: isDark ? 'rgba(52,211,153,0.12)' : 'rgba(0,60,51,0.07)',
+              border: `1px solid ${isDark ? 'rgba(52,211,153,0.25)' : 'rgba(0,60,51,0.15)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 20px',
+            }}>
+              <Fingerprint size={32} color={isDark ? '#34d399' : '#003c33'} />
+            </div>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{
+                fontFamily: "'Space Grotesk', 'Inter', sans-serif",
+                fontSize: '22px', fontWeight: 600,
+                color: isDark ? '#f1f2f6' : '#17171c',
+                letterSpacing: '-0.02em', marginBottom: '8px',
+              }}>
+                Enable Passkey Login?
+              </div>
+              <div style={{ fontSize: '14px', color: isDark ? '#9ca3af' : '#75758a', lineHeight: 1.5 }}>
+                Skip passwords forever. Sign in with your fingerprint, face, or device PIN — faster and more secure.
+              </div>
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                marginTop: '12px', padding: '4px 12px',
+                background: isDark ? 'rgba(52,211,153,0.1)' : 'rgba(0,60,51,0.06)',
+                border: `1px solid ${isDark ? 'rgba(52,211,153,0.2)' : 'rgba(0,60,51,0.12)'}`,
+                borderRadius: '9999px',
+                fontSize: '12px', fontWeight: 600,
+                color: isDark ? '#34d399' : '#003c33',
+              }}>
+                ✦ Recommended for security
+              </div>
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{
+                fontSize: '11px', fontWeight: 600,
+                color: isDark ? '#9ca3af' : '#75758a',
+                textTransform: 'uppercase', letterSpacing: '0.07em',
+                marginBottom: '6px',
+                fontFamily: "'JetBrains Mono', monospace",
+              }}>Name this passkey</div>
+              <input
+                type="text"
+                value={passkeyLabelInput}
+                onChange={(e) => setPasskeyLabelInput(e.target.value)}
+                placeholder="e.g. MacBook Touch ID, iPhone Face ID"
+                maxLength={64}
+                style={{
+                  width: '100%', padding: '10px 14px',
+                  background: isDark ? 'rgba(255,255,255,0.05)' : '#f9fafb',
+                  color: isDark ? '#f1f2f6' : '#212121',
+                  border: `1px solid ${isDark ? '#282a3a' : '#d9d9dd'}`,
+                  borderRadius: '10px', fontSize: '14px', outline: 'none',
+                  boxSizing: 'border-box', fontFamily: "'Inter', sans-serif",
+                  transition: 'border-color 0.15s',
+                }}
+                onFocus={(e) => e.target.style.borderColor = isDark ? '#34d399' : '#003c33'}
+                onBlur={(e) => e.target.style.borderColor = isDark ? '#282a3a' : '#d9d9dd'}
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                type="button"
+                disabled={passkeyPromptLoading}
+                onClick={async () => {
+                  setPasskeyPromptLoading(true);
+                  try {
+                    await registerPasskey(passkeyLabelInput.trim() || 'My Device');
+                  } catch (_) { /* cancelled or dupe — still navigate */ }
+                  finally {
+                    setPasskeyPromptLoading(false);
+                    setShowPasskeyPrompt(false);
+                    navigate('/book-service', { replace: true });
+                  }
+                }}
+                style={{
+                  width: '100%', padding: '12px',
+                  background: isDark ? '#34d399' : '#003c33',
+                  color: isDark ? '#0d1117' : '#ffffff',
+                  border: 'none', borderRadius: '12px',
+                  fontSize: '14px', fontWeight: 600,
+                  cursor: passkeyPromptLoading ? 'not-allowed' : 'pointer',
+                  opacity: passkeyPromptLoading ? 0.7 : 1,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {passkeyPromptLoading
+                  ? <Spinner size={18} color={isDark ? '#0d1117' : '#ffffff'} />
+                  : <><Fingerprint size={16} />Set Up Passkey Now</>
+                }
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowPasskeyPrompt(false); navigate('/book-service', { replace: true }); }}
+                style={{
+                  width: '100%', padding: '11px',
+                  background: 'transparent',
+                  color: isDark ? '#9ca3af' : '#75758a',
+                  border: `1px solid ${isDark ? '#232532' : '#e5e7eb'}`,
+                  borderRadius: '12px',
+                  fontSize: '14px', fontWeight: 500,
+                  cursor: 'pointer', transition: 'all 0.15s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.04)' : '#f9fafb'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+              >
+                Maybe later — take me to the app
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
+

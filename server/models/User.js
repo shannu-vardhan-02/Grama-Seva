@@ -12,7 +12,7 @@ const UserSchema = new mongoose.Schema(
     },
     role: { type: String, enum: ['Customer', 'Worker', 'Admin'], default: 'Customer' },
     phone: { type: String, default: '' },
-    authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
+    authProvider: { type: String, enum: ['local', 'google', 'passkey'], default: 'local' },
     googleId: { type: String, sparse: true, unique: true },
     createdAt: { type: Date, default: Date.now },
     workerProfile: {

@@ -64,6 +64,47 @@ export const AuthProvider = ({ children }) => {
     return user;
   };
 
+  // Log in using a passkey (biometric / device PIN).
+  // email is optional — if provided, the server narrows the credential list.
+  const loginWithPasskey = async (email = '') => {
+    // 1. Get authentication options from server (generates a challenge)
+    const { data: options } = await api.post('/api/auth/passkey/login/options', { email });
+
+    // 2. Trigger the browser's passkey picker / biometric prompt
+    const { startAuthentication } = await import('@simplewebauthn/browser');
+    const authResp = await startAuthentication({ optionsJSON: options });
+
+    // 3. Send signed assertion to server for verification → get JWT
+    const { data } = await api.post('/api/auth/passkey/login/verify', {
+      response:    authResp,
+      challengeId: options.challenge,
+    });
+
+    const { token, user } = data;
+    localStorage.setItem('gs_token', token);
+    setCurrentUser(user);
+    fetchUsers();
+    return user;
+  };
+
+  // Register a new passkey for the currently logged-in user.
+  // label: a human-readable name for the passkey (e.g. "MacBook Touch ID")
+  const registerPasskey = async (label = 'My Passkey') => {
+    // 1. Get registration options from server (generates a challenge)
+    const { data: options } = await api.post('/api/auth/passkey/register/options');
+
+    // 2. Trigger the browser's passkey creation ceremony (biometric / PIN)
+    const { startRegistration } = await import('@simplewebauthn/browser');
+    const attResp = await startRegistration({ optionsJSON: options });
+
+    // 3. Send the attestation to server for verification & storage
+    const { data } = await api.post('/api/auth/passkey/register/verify', {
+      ...attResp,
+      label,
+    });
+    return data; // { verified: true, passkeyId }
+  };
+
   const register = async (userData) => {
     const { name, email, password, role, phone, workerProfile } = userData;
     const body = { name, email, password, role, phone };
@@ -266,7 +307,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ currentUser, users, login, loginWithGoogle, register, logout, updateWorkerProfile, deleteUser, addUser, verifyWorker, fetchUsers, removeWorkerProfileReview }}>
+    <AuthContext.Provider value={{ currentUser, users, login, loginWithGoogle, loginWithPasskey, registerPasskey, register, logout, updateWorkerProfile, deleteUser, addUser, verifyWorker, fetchUsers, removeWorkerProfileReview }}>
       {children}
     </AuthContext.Provider>
   );

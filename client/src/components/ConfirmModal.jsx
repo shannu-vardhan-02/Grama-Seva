@@ -70,7 +70,7 @@ export default function ConfirmModal({
         justifyContent: "center",
         zIndex: 9999,
         padding: "20px",
-        animation: "modalFadeIn 0.2s ease-out forwards",
+        animation: "butterModalBackdrop 0.35s ease-out forwards",
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget && !isLoading) {
@@ -87,7 +87,7 @@ export default function ConfirmModal({
           width: "100%",
           maxWidth: "420px",
           boxShadow: "0 24px 48px rgba(0, 0, 0, 0.28), 0 8px 16px rgba(0, 0, 0, 0.12)",
-          animation: "modalScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+          animation: "butterModalCard 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards",
           fontFamily: "'Inter', sans-serif",
         }}
       >
@@ -193,13 +193,13 @@ export default function ConfirmModal({
       </div>
 
       <style>{`
-        @keyframes modalFadeIn {
+        @keyframes butterModalBackdrop {
           from { opacity: 0; }
           to { opacity: 1; }
         }
-        @keyframes modalScaleIn {
-          from { opacity: 0; transform: scale(0.94) translateY(8px); }
-          to { opacity: 1; transform: scale(1) translateY(0); }
+        @keyframes butterModalCard {
+          from { opacity: 0; transform: translateY(22px) scale(0.92); filter: blur(3px); }
+          to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
       `}</style>
     </div>

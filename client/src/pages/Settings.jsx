@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import api from "../api";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { useToast } from "../context/ToastContext";
-import { Power, Plus, Trash2, MapPin, Crosshair, X, Sun, Moon, Check } from "lucide-react";
+import { Power, Plus, Trash2, MapPin, Crosshair, X, Sun, Moon, Check, Key, Fingerprint } from "lucide-react";
 import ImageUpload from "../components/ImageUpload";
+import ConfirmModal from "../components/ConfirmModal";
 
 export default function Settings() {
-  const { currentUser, updateWorkerProfile } = useAuth();
+  const { currentUser, updateWorkerProfile, registerPasskey } = useAuth();
   const { theme, isDark, setTheme } = useTheme();
   const { showToast } = useToast();
 
@@ -35,8 +37,78 @@ export default function Settings() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Passkey management state
+  const [passkeys, setPasskeys] = React.useState([]);
+  const [passkeysLoading, setPasskeysLoading] = React.useState(true);
+  const [passkeyAdding, setPasskeyAdding] = React.useState(false);
+  const [passkeyLabel, setPasskeyLabel] = React.useState('');
+  const [showLabelInput, setShowLabelInput] = useState(false);
+  const [passkeyToDelete, setPasskeyToDelete] = useState(null);
+  const [isDeletingPasskey, setIsDeletingPasskey] = useState(false);
+
   if (!currentUser) return null;
   const profile = currentUser.workerProfile;
+
+  // Fetch registered passkeys for this user
+  const fetchPasskeys = useCallback(async () => {
+    setPasskeysLoading(true);
+    try {
+      const res = await api.get('/api/auth/passkeys');
+      setPasskeys(res.data);
+    } catch { setPasskeys([]); }
+    finally { setPasskeysLoading(false); }
+  }, []);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchPasskeys(); }, []);
+
+  const handleAddPasskey = async () => {
+    if (!passkeyLabel.trim()) { showToast('Please enter a name for this passkey.', 'error'); return; }
+    setPasskeyAdding(true);
+    try {
+      await registerPasskey(passkeyLabel.trim());
+      showToast('Passkey added successfully! 🔑', 'success');
+      setPasskeyLabel('');
+      setShowLabelInput(false);
+      await fetchPasskeys();
+    } catch (err) {
+      const isCancel = err?.name === 'NotAllowedError' || err?.message?.includes('cancelled');
+      const isAlreadyRegistered = err?.name === 'InvalidStateError' || err?.message?.includes('already registered') || err?.response?.status === 409;
+      if (isCancel) {
+        showToast('Passkey setup was cancelled.', 'info');
+      } else if (isAlreadyRegistered) {
+        showToast('This device already has a registered passkey for your account.', 'warning');
+      } else {
+        showToast(err.response?.data?.message || err.message || 'Failed to add passkey.', 'error');
+      }
+    } finally { setPasskeyAdding(false); }
+  };
+
+  const handleConfirmDeletePasskey = async () => {
+    if (!passkeyToDelete) return;
+    setIsDeletingPasskey(true);
+    try {
+      await api.delete(`/api/auth/passkeys/${passkeyToDelete._id}`);
+      setPasskeys(prev => prev.filter(pk => pk._id !== passkeyToDelete._id));
+      showToast(`Removed "${passkeyToDelete.label}" passkey.`, 'success');
+    } catch {
+      showToast('Failed to remove passkey.', 'error');
+    } finally {
+      setIsDeletingPasskey(false);
+      setPasskeyToDelete(null);
+    }
+  };
+
+  const formatRelativeTime = (dateStr) => {
+    if (!dateStr) return null;
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return mins <= 1 ? 'Just now' : `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    return `${days}d ago`;
+  };
 
   const handleToggleAvailability = () => {
     if (!profile.isVerified) { showToast("Your profile must be verified by an administrator before you can toggle availability.", "error"); return; }
@@ -154,94 +226,6 @@ export default function Settings() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-          {/* ── THEME PREFERENCES SECTION ── */}
-          <div style={cardStyle}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "6px" }}>
-              <div>
-                <h2 style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif", fontSize: "20px", color: "var(--ch-primary)", margin: 0 }}>
-                  Appearance & Theme
-                </h2>
-                <p style={{ fontSize: "14px", color: "var(--ch-body-muted)", margin: "4px 0 20px" }}>
-                  Choose how Grama Seva looks to you. Light mode is the default.
-                </p>
-              </div>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-              {/* Light Mode Card */}
-              <div
-                onClick={() => setTheme("light")}
-                style={{
-                  padding: "16px 20px",
-                  borderRadius: "10px",
-                  border: theme === "light" ? "2px solid #10b981" : "1px solid var(--ch-hairline)",
-                  background: theme === "light" ? (isDark ? "#172b22" : "#f0fdf4") : "var(--ch-input-bg)",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "14px",
-                  transition: "all 0.15s",
-                }}
-              >
-                <div style={{
-                  width: "36px", height: "36px", borderRadius: "50%",
-                  background: theme === "light" ? "#10b981" : "rgba(120,120,130,0.15)",
-                  color: theme === "light" ? "#ffffff" : "var(--ch-muted)",
-                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                }}>
-                  <Sun size={18} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ fontSize: "14.5px", fontWeight: 600, color: "var(--ch-primary)" }}>
-                      Light Mode <span style={{ fontSize: "11px", fontWeight: 400, color: "var(--ch-muted)" }}>(Default)</span>
-                    </div>
-                    {theme === "light" && <Check size={16} color="#10b981" />}
-                  </div>
-                  <div style={{ fontSize: "12.5px", color: "var(--ch-body-muted)", marginTop: "4px", lineHeight: 1.4 }}>
-                    Crisp daylight canvas with warm, high-contrast text.
-                  </div>
-                </div>
-              </div>
-
-              {/* Dark Mode Card */}
-              <div
-                onClick={() => setTheme("dark")}
-                style={{
-                  padding: "16px 20px",
-                  borderRadius: "10px",
-                  border: theme === "dark" ? "2px solid #34d399" : "1px solid var(--ch-hairline)",
-                  background: theme === "dark" ? (isDark ? "rgba(52, 211, 153, 0.12)" : "#f0fdf4") : "var(--ch-input-bg)",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "14px",
-                  transition: "all 0.15s",
-                }}
-              >
-                <div style={{
-                  width: "36px", height: "36px", borderRadius: "50%",
-                  background: theme === "dark" ? "#34d399" : "rgba(120,120,130,0.15)",
-                  color: theme === "dark" ? "#0d0e12" : "var(--ch-muted)",
-                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                }}>
-                  <Moon size={18} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ fontSize: "14.5px", fontWeight: 600, color: "var(--ch-primary)" }}>
-                      Dark Mode
-                    </div>
-                    {theme === "dark" && <Check size={16} color="#34d399" />}
-                  </div>
-                  <div style={{ fontSize: "12.5px", color: "var(--ch-body-muted)", marginTop: "4px", lineHeight: 1.4 }}>
-                    Deep obsidian slate with softened emerald accents.
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {currentUser.role === "Worker" && profile && (
             <div style={cardStyle}>
               <h2 style={{ fontFamily: "'Space Grotesk', 'Inter', sans-serif", fontSize: "20px", color: "var(--ch-primary)", marginBottom: "4px", margin: 0 }}>Public Availability</h2>
@@ -417,9 +401,170 @@ export default function Settings() {
                 </button>
               </div>
             </form>
+
+            {/* ── Security & Passkeys Card ────────────────────────── */}
+            <div id="passkeys" style={{ marginTop: '32px', background: 'var(--ch-card-bg)', border: '1px solid var(--ch-hairline)', borderRadius: '12px', padding: '24px 28px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '10px', background: isDark ? 'rgba(52,211,153,0.12)' : 'rgba(0,60,51,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Fingerprint size={18} color={isDark ? '#34d399' : '#003c33'} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '15px', color: 'var(--ch-ink)' }}>Passkeys</div>
+                    <div style={{ fontSize: '12px', color: 'var(--ch-muted, #75758a)', marginTop: '1px' }}>Sign in with biometrics or PIN — no password needed</div>
+                  </div>
+                </div>
+                {!showLabelInput && (
+                  <button
+                    type="button"
+                    onClick={() => setShowLabelInput(true)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: isDark ? 'rgba(52,211,153,0.12)' : 'rgba(0,60,51,0.08)', color: isDark ? '#34d399' : '#003c33', border: `1px solid ${isDark ? 'rgba(52,211,153,0.3)' : 'rgba(0,60,51,0.2)'}`, borderRadius: '32px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', transition: 'all 0.18s' }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
+                    onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                  >
+                    <Plus size={14} /> Add Passkey
+                  </button>
+                )}
+              </div>
+
+              {/* Add passkey — label input */}
+              {showLabelInput && (
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', padding: '16px', background: isDark ? 'rgba(52,211,153,0.06)' : 'rgba(0,60,51,0.04)', borderRadius: '10px', border: `1px solid ${isDark ? 'rgba(52,211,153,0.2)' : 'rgba(0,60,51,0.12)'}` }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '11px', fontWeight: 600, color: isDark ? '#9ca3af' : '#75758a', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px', fontFamily: "'JetBrains Mono', monospace" }}>Name this passkey</div>
+                    <input
+                      type="text"
+                      value={passkeyLabel}
+                      onChange={e => setPasskeyLabel(e.target.value)}
+                      placeholder="e.g. MacBook Touch ID, iPhone Face ID"
+                      maxLength={64}
+                      autoFocus
+                      style={{ width: '100%', padding: '9px 12px', background: isDark ? 'var(--ch-input-bg)' : '#fff', color: 'var(--ch-ink)', border: '1px solid var(--ch-hairline)', borderRadius: '8px', fontSize: '13px', outline: 'none', boxSizing: 'border-box', fontFamily: "'Inter', sans-serif" }}
+                      onKeyDown={e => { if (e.key === 'Enter') handleAddPasskey(); if (e.key === 'Escape') { setShowLabelInput(false); setPasskeyLabel(''); } }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-end' }}>
+                    <button type="button" onClick={handleAddPasskey} disabled={passkeyAdding || !passkeyLabel.trim()} style={{ padding: '9px 16px', background: isDark ? '#34d399' : '#003c33', color: isDark ? '#0d1117' : '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: passkeyAdding || !passkeyLabel.trim() ? 'not-allowed' : 'pointer', opacity: passkeyAdding || !passkeyLabel.trim() ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: '6px', transition: 'opacity 0.15s' }}>
+                      {passkeyAdding ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg> : <Key size={14} />}
+                      Create
+                    </button>
+                    <button type="button" onClick={() => { setShowLabelInput(false); setPasskeyLabel(''); }} style={{ padding: '9px 12px', background: 'transparent', border: '1px solid var(--ch-hairline)', borderRadius: '8px', fontSize: '13px', color: 'var(--ch-ink)', cursor: 'pointer', opacity: 0.7 }}>
+                      <X size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Passkey list */}
+              {passkeysLoading ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--ch-muted, #75758a)', fontSize: '13px', padding: '8px 0' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: 'spin 0.8s linear infinite' }}><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+                  Loading passkeys…
+                </div>
+              ) : passkeys.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--ch-muted, #75758a)', fontSize: '13px' }}>
+                  <div style={{ fontSize: '32px', marginBottom: '8px', opacity: 0.4 }}>🔑</div>
+                  No passkeys registered yet.<br />Add one above to enable passwordless sign-in.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {passkeys.map(pk => (
+                    <div key={pk._id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', background: isDark ? 'rgba(255,255,255,0.03)' : '#f9fafb', border: '1px solid var(--ch-hairline)', borderRadius: '10px', transition: 'background 0.15s' }}>
+                      <div style={{ width: 36, height: 36, borderRadius: '9px', background: isDark ? 'rgba(255,255,255,0.06)' : '#f0f0f4', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Key size={16} color={isDark ? '#9ca3af' : '#6b7280'} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 500, fontSize: '14px', color: 'var(--ch-ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{pk.label}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--ch-muted, #75758a)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ textTransform: 'capitalize' }}>{pk.deviceType === 'multiDevice' ? '☁ Synced' : '📱 Device'}</span>
+                          {pk.lastUsedAt && <span>· Last used {formatRelativeTime(pk.lastUsedAt)}</span>}
+                          {!pk.lastUsedAt && <span style={{ opacity: 0.6 }}>· Never used</span>}
+                          {pk.backedUp && <span style={{ color: isDark ? '#34d399' : '#059669' }}>· Backed up</span>}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setPasskeyToDelete(pk)}
+                        title="Remove passkey"
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: '8px', background: 'transparent', border: '1px solid transparent', color: isDark ? '#9ca3af' : '#9ca3af', cursor: 'pointer', transition: 'all 0.15s', flexShrink: 0 }}
+                        onMouseEnter={e => { e.currentTarget.style.background = isDark ? 'rgba(239,68,68,0.1)' : '#fff0f0'; e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = isDark ? '#9ca3af' : '#9ca3af'; e.currentTarget.style.borderColor = 'transparent'; }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ── Compact Appearance Toggle ── */}
+          <div style={{
+            ...cardStyle,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '14px 20px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {isDark ? <Moon size={16} color="#fbbf24" /> : <Sun size={16} color="#f59e0b" />}
+              <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--ch-ink)' }}>
+                Appearance
+              </span>
+            </div>
+            {/* Horizontal segmented toggle */}
+            <div style={{
+              display: 'flex',
+              background: isDark ? 'rgba(255,255,255,0.06)' : '#f0f0f4',
+              borderRadius: '9999px',
+              padding: '3px',
+              gap: '2px',
+            }}>
+              {[
+                { value: 'light', icon: <Sun size={13} />, label: 'Light' },
+                { value: 'dark',  icon: <Moon size={13} />, label: 'Dark'  },
+              ].map((opt) => {
+                const isActive = theme === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setTheme(opt.value)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '5px',
+                      padding: '5px 12px', borderRadius: '9999px',
+                      border: 'none', cursor: 'pointer',
+                      fontSize: '12px', fontWeight: isActive ? 600 : 400,
+                      background: isActive
+                        ? (isDark ? '#34d399' : '#17171c')
+                        : 'transparent',
+                      color: isActive
+                        ? (isDark ? '#0d1117' : '#ffffff')
+                        : (isDark ? '#9ca3af' : '#6b7280'),
+                      transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+                    }}
+                  >
+                    {opt.icon}
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal for Passkey Removal */}
+      <ConfirmModal
+        isOpen={!!passkeyToDelete}
+        title="Remove Passkey?"
+        message={`Are you sure you want to remove "${passkeyToDelete?.label || 'this passkey'}"? You will no longer be able to use this device to sign in with biometrics or PIN.`}
+        confirmText="Remove Passkey"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={isDeletingPasskey}
+        onCancel={() => setPasskeyToDelete(null)}
+        onConfirm={handleConfirmDeletePasskey}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { SocketProvider } from "./context/SocketContext";
 import { ToastProvider } from "./context/ToastContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { LanguageProvider } from "./context/LanguageContext";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import AppLayout from "./components/AppLayout";
 import Home from "./pages/Home";
@@ -120,15 +121,17 @@ export default function App() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <ThemeProvider>
-        <AuthProvider>
-          <SocketProvider>
-            <ToastProvider>
-              <BrowserRouter>
-                <AppRoutes />
-              </BrowserRouter>
-            </ToastProvider>
-          </SocketProvider>
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <SocketProvider>
+              <ToastProvider>
+                <BrowserRouter>
+                  <AppRoutes />
+                </BrowserRouter>
+              </ToastProvider>
+            </SocketProvider>
+          </AuthProvider>
+        </LanguageProvider>
       </ThemeProvider>
     </GoogleOAuthProvider>
   );

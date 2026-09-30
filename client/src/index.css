@@ -1533,9 +1533,10 @@ html.dark body {
   border: 1px solid #14352b;
 }
 .dark .ch-hero {
-  background: var(--ch-canvas);
+  background: transparent;
   border-bottom: 1px solid var(--ch-hairline);
 }
+/* In dark mode, fade the bg image into the dark canvas */
 .dark .ch-hero-headline {
   color: var(--ch-primary);
 }
@@ -1694,7 +1695,9 @@ html.dark body {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--ch-canvas);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--ch-hairline);
   height: 64px;
   display: flex;
@@ -1899,14 +1902,106 @@ html.dark body {
   background: var(--ch-soft-stone);
 }
 
+/* ── Landing Hero Background Image (smooth fade-out at bottom) ── */
+.ch-landing-hero-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: clamp(660px, 86vh, 760px);
+  background-image: url('/layout_bg.png');
+  background-size: cover;
+  background-position: top center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  z-index: 0;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 48%,
+    rgba(0, 0, 0, 0.72) 68%,
+    rgba(0, 0, 0, 0.22) 86%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 48%,
+    rgba(0, 0, 0, 0.72) 68%,
+    rgba(0, 0, 0, 0.22) 86%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  transition: opacity 0.3s ease;
+}
+
+.ch-landing-hero-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent 45%,
+    rgba(255, 255, 255, 0.45) 72%,
+    var(--ch-canvas) 100%
+  );
+  pointer-events: none;
+}
+
+.dark .ch-landing-hero-bg {
+  opacity: 0.28;
+  mix-blend-mode: screen;
+  filter: brightness(0.9) contrast(1.2);
+}
+
+.dark .ch-landing-hero-bg::after {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent 45%,
+    rgba(13, 14, 18, 0.45) 72%,
+    var(--ch-canvas) 100%
+  );
+}
+
+@media (max-width: 767px) {
+  .ch-landing-hero-bg {
+    height: 600px;
+  }
+}
+
 /* ── Hero Section ───────────────────────────────────────────── */
 .ch-hero {
-  background: var(--ch-canvas);
+  position: relative;
+  z-index: 1;
+  background: transparent;
   padding: 100px 32px 80px;
   text-align: center;
   border-bottom: 1px solid var(--ch-hairline);
 }
+/* -- Page-level background image (light mode only � rendered conditionally in JSX) -- */
+.ch-page-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* Cover the viewport height so it feels like a full-page bg like the reference */
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.ch-page-bg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+/* Ensure inner content floats above the bg */
 .ch-hero-inner {
+  position: relative;
+  z-index: 1;
   max-width: 860px;
   margin: 0 auto;
 }
@@ -2709,4 +2804,171 @@ html.dark {
     #161720 75%
   );
   --ch-surface-subtle: #14151d;
+}
+
+/* ── Multilingual Font Support ───────────────────────────────── */
+html[data-lang="te"],
+[data-lang="te"] {
+  font-family: 'Noto Sans Telugu', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+html[data-lang="te"] h1,
+html[data-lang="te"] h2,
+html[data-lang="te"] h3,
+html[data-lang="te"] .font-display {
+  font-family: 'Noto Sans Telugu', 'Space Grotesk', sans-serif !important;
+}
+
+html[data-lang="hi"],
+[data-lang="hi"] {
+  font-family: 'Noto Sans Devanagari', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+html[data-lang="hi"] h1,
+html[data-lang="hi"] h2,
+html[data-lang="hi"] h3,
+html[data-lang="hi"] .font-display {
+  font-family: 'Noto Sans Devanagari', 'Space Grotesk', sans-serif !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   BUTTER-SMOOTH LUXURY ANIMATIONS
+   Silky, fluid opening curves with natural deceleration.
+   Designed to feel tactile, slightly slower, and gracefully opening up.
+───────────────────────────────────────────────────────── */
+
+/* 1. Popups opening upwards (Profile popup) */
+@keyframes butterPopupUp {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.93);
+    filter: blur(3px);
+  }
+  65% {
+    opacity: 0.96;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* 2. Dropdowns opening downwards (Language, Notifications, Filters) */
+@keyframes butterPopupDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.94);
+    filter: blur(2px);
+  }
+  65% {
+    opacity: 0.96;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* 3. Modal Backdrop fade */
+@keyframes butterModalBackdrop {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* 4. Modal Dialog Card "Opening Up" */
+@keyframes butterModalCard {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) scale(0.92);
+    filter: blur(3px);
+  }
+  50% {
+    opacity: 0.88;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* 5. Staggered Card & Section Fade-Up */
+@keyframes butterFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Applied classes */
+.profile-popup-menu {
+  animation: butterPopupUp 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: bottom center;
+  will-change: transform, opacity, filter;
+}
+
+.notif-dropdown {
+  animation: butterPopupDown 0.36s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top right;
+  will-change: transform, opacity, filter;
+}
+
+.lang-dropdown-menu {
+  animation: butterPopupDown 0.36s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top right;
+  will-change: transform, opacity, filter;
+}
+
+.filter-dropdown-menu {
+  animation: butterPopupDown 0.36s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top left;
+  will-change: transform, opacity, filter;
+}
+
+.modal-backdrop-smooth {
+  animation: butterModalBackdrop 0.35s ease-out forwards;
+  will-change: opacity;
+}
+
+.modal-card-smooth {
+  animation: butterModalCard 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: center center;
+  will-change: transform, opacity, filter;
+}
+
+/* Settings page entrance */
+.settings-page-padding > div > div > div {
+  animation: butterFadeUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.settings-page-padding > div > div > div:nth-child(1) { animation-delay: 0ms; }
+.settings-page-padding > div > div > div:nth-child(2) { animation-delay: 70ms; }
+.settings-page-padding > div > div > div:nth-child(3) { animation-delay: 140ms; }
+.settings-page-padding > div > div > div:nth-child(4) { animation-delay: 210ms; }
+
+/* Passkey list item entrance */
+@keyframes passkeyItemIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Auth form transition */
+.auth-container .auth-right form {
+  animation: butterFadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Compact theme toggle pill animation */
+@keyframes pillActive {
+  from { transform: scale(0.92); }
+  to   { transform: scale(1); }
 }
